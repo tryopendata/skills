@@ -1,0 +1,78 @@
+name: Version Bump
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/**'
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed plugins and bump versions
+        run: |
+          MARKETPLACE_JSON=".claude-plugin/marketplace.json"
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+          BUMPED=""
+
+          # Check each plugin directory for changes
+          for PLUGIN_DIR in plugins/*/; do
+            PLUGIN_NAME=$(basename "$PLUGIN_DIR")
+            PLUGIN_JSON="${PLUGIN_DIR}.claude-plugin/plugin.json"
+
+            # Skip if plugin.json doesn't exist
+            [ -f "$PLUGIN_JSON" ] || continue
+
+            # Skip if no files changed in this plugin
+            if ! echo "$CHANGED_FILES" | grep -q "^${PLUGIN_DIR}"; then
+              continue
+            fi
+
+            # Skip if only plugin.json changed (avoid bumping on version-only commits)
+            NON_META_CHANGES=$(echo "$CHANGED_FILES" | grep "^${PLUGIN_DIR}" | grep -v ".claude-plugin/" || true)
+            if [ -z "$NON_META_CHANGES" ]; then
+              continue
+            fi
+
+            # Read current version and bump patch
+            CURRENT_VERSION=$(jq -r '.version' "$PLUGIN_JSON")
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+            NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+
+            echo "Bumping $PLUGIN_NAME: $CURRENT_VERSION -> $NEW_VERSION"
+
+            # Update plugin.json
+            jq --arg v "$NEW_VERSION" '.version = $v' "$PLUGIN_JSON" > tmp.json && mv tmp.json "$PLUGIN_JSON"
+
+            # Update matching entry in marketplace.json
+            jq --arg name "$PLUGIN_NAME" --arg v "$NEW_VERSION" \
+              '(.plugins[] | select(.name == $name)).version = $v' \
+              "$MARKETPLACE_JSON" > tmp.json && mv tmp.json "$MARKETPLACE_JSON"
+
+            BUMPED="${BUMPED}${PLUGIN_NAME} (${NEW_VERSION}) "
+          done
+
+          if [ -z "$BUMPED" ]; then
+            echo "No plugin content changes detected, skipping version bump"
+            echo "SKIP_COMMIT=true" >> "$GITHUB_ENV"
+          else
+            echo "Bumped: $BUMPED"
+          fi
+
+      - name: Commit version bump
+        if: env.SKIP_COMMIT != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add plugins/*/.claude-plugin/plugin.json .claude-plugin/marketplace.json
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: bump plugin versions [skip ci]"
+          git push

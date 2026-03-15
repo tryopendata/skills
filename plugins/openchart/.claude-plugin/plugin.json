@@ -1,0 +1,13 @@
+{
+  "name": "openchart",
+  "description": "OpenChart visualization skills for generating charts, tables, graphs, and SVG graphics",
+  "version": "0.1.0",
+  "author": {
+    "name": "OpenData",
+    "url": "https://github.com/tryopendata"
+  },
+  "homepage": "https://github.com/tryopendata/openchart",
+  "repository": "https://github.com/tryopendata/skills",
+  "license": "MIT",
+  "keywords": ["openchart", "visualization", "charts", "svg", "d3"]
+}

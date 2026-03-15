@@ -1,0 +1,10 @@
+# Ignore everything, allowlist what matters
+/*
+!/plugins/
+!/.claude-plugin/
+!/.github/
+!/CLAUDE.md
+!README.md
+!LICENSE.md
+!.gitignore
+.DS_Store

@@ -1,0 +1,50 @@
+{
+  "name": "opendata-skills",
+  "owner": {
+    "name": "OpenData",
+    "url": "https://github.com/tryopendata"
+  },
+  "metadata": {
+    "description": "OpenData and OpenChart skills for Claude Code",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "opendata",
+      "source": "./plugins/opendata/",
+      "description": "OpenData API skills for querying, filtering, and analyzing public datasets",
+      "version": "0.1.0",
+      "author": {
+        "name": "OpenData",
+        "url": "https://github.com/tryopendata"
+      },
+      "homepage": "https://github.com/tryopendata/skills",
+      "repository": "https://github.com/tryopendata/skills",
+      "license": "MIT",
+      "keywords": ["opendata", "api", "datasets", "data-analysis"],
+      "category": "workflows",
+      "skills": [
+        "./skills/opendata-api"
+      ]
+    },
+    {
+      "name": "openchart",
+      "source": "./plugins/openchart/",
+      "description": "OpenChart visualization skills for generating charts, tables, graphs, and SVG graphics",
+      "version": "0.1.0",
+      "author": {
+        "name": "OpenData",
+        "url": "https://github.com/tryopendata"
+      },
+      "homepage": "https://github.com/tryopendata/openchart",
+      "repository": "https://github.com/tryopendata/skills",
+      "license": "MIT",
+      "keywords": ["openchart", "visualization", "charts", "svg", "d3"],
+      "category": "workflows",
+      "skills": [
+        "./skills/openchart",
+        "./skills/svg-design"
+      ]
+    }
+  ]
+}
