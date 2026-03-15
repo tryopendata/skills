@@ -13,7 +13,7 @@
       "name": "opendata",
       "source": "./plugins/opendata/",
       "description": "OpenData API skills for querying, filtering, and analyzing public datasets",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"
@@ -21,7 +21,12 @@
       "homepage": "https://github.com/tryopendata/skills",
       "repository": "https://github.com/tryopendata/skills",
       "license": "MIT",
-      "keywords": ["opendata", "api", "datasets", "data-analysis"],
+      "keywords": [
+        "opendata",
+        "api",
+        "datasets",
+        "data-analysis"
+      ],
       "category": "workflows",
       "skills": [
         "./skills/opendata-api"
@@ -31,7 +36,7 @@
       "name": "openchart",
       "source": "./plugins/openchart/",
       "description": "OpenChart visualization skills for generating charts, tables, graphs, and SVG graphics",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"
@@ -39,7 +44,13 @@
       "homepage": "https://github.com/tryopendata/openchart",
       "repository": "https://github.com/tryopendata/skills",
       "license": "MIT",
-      "keywords": ["openchart", "visualization", "charts", "svg", "d3"],
+      "keywords": [
+        "openchart",
+        "visualization",
+        "charts",
+        "svg",
+        "d3"
+      ],
       "category": "workflows",
       "skills": [
         "./skills/openchart",
