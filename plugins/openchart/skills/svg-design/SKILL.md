@@ -11,15 +11,14 @@ description: Generates and edits SVG logos, icons, and graphics. Use when creati
 
 | Task | Load reference |
 |------|---------------|
-| Writing or editing path `d` data | [references/path-commands.md](references/path-commands.md) |
-| Choosing shapes vs paths, styling | [references/shapes-and-styling.md](references/shapes-and-styling.md) |
+| Arc flag combinations, common path shapes | [references/path-patterns.md](references/path-patterns.md) |
 | Logo design, typography, negative space | [references/logo-techniques.md](references/logo-techniques.md) |
 | Icon design, grid systems, pixel alignment | [references/icon-design.md](references/icon-design.md) |
-| Gradients, masks, clips, filters, transforms | [references/advanced-techniques.md](references/advanced-techniques.md) |
+| Gradients, masks, clips, filters, transforms (design decisions) | [references/advanced-techniques.md](references/advanced-techniques.md) |
 | Animation (CSS keyframes, stagger, GPU, easing, SVG-specific) | [references/animation.md](references/animation.md) |
-| Optimization, sprites, defs/use/symbol | [references/optimization.md](references/optimization.md) |
-| Accessibility, common pitfalls | [references/accessibility-and-pitfalls.md](references/accessibility-and-pitfalls.md) |
-| Editing workflow, combining shapes | [references/editing-workflow.md](references/editing-workflow.md) |
+| Optimization, sprites, SVGO config | [references/optimization.md](references/optimization.md) |
+| Accessibility, browser pitfalls | [references/accessibility-and-pitfalls.md](references/accessibility-and-pitfalls.md) |
+| Editing workflow, boolean operations, combining SVGs | [references/editing-workflow.md](references/editing-workflow.md) |
 
 ## SVG Skeleton
 
@@ -69,22 +68,53 @@ Set these on the root `<svg>` element to avoid repetition on children:
 
 **`currentColor` is your friend.** It lets the SVG inherit whatever color the parent element has, making icons themeable with zero extra CSS.
 
-## Quick Path Reference
+## Stroke-Width Relative to ViewBox
 
-| Command | Name | Parameters | What it does |
-|---------|------|-----------|--------------|
-| `M`/`m` | Move to | `x y` | Move cursor (no drawing) |
-| `L`/`l` | Line to | `x y` | Straight line |
-| `H`/`h` | Horizontal line | `x` | Horizontal line |
-| `V`/`v` | Vertical line | `y` | Vertical line |
-| `C`/`c` | Cubic bezier | `x1 y1 x2 y2 x y` | Curve with 2 control points |
-| `S`/`s` | Smooth cubic | `x2 y2 x y` | Continues previous curve smoothly |
-| `Q`/`q` | Quadratic bezier | `x1 y1 x y` | Curve with 1 control point |
-| `T`/`t` | Smooth quadratic | `x y` | Continues previous quadratic |
-| `A`/`a` | Arc | `rx ry rotation large-arc sweep x y` | Elliptical arc |
-| `Z`/`z` | Close path | (none) | Close back to last M |
+`stroke-width` is in viewBox units, not pixels. Always set relative to your canvas dimensions:
 
-Uppercase = absolute coordinates. Lowercase = relative (offset from current point).
+| viewBox | Typical stroke-width | Visual result |
+|---------|---------------------|---------------|
+| 16x16 | 1.5 | ~9.4% of canvas |
+| 24x24 | 2 | ~8.3% of canvas |
+| 32x32 | 2-2.5 | ~6.3-7.8% of canvas |
+| 48x48 | 3 | ~6.3% of canvas |
+| 256x256 | 16 | ~6.3% of canvas |
+
+## When to Convert Shapes to Paths
+
+**Convert when:**
+- Combining multiple shapes into a single compound path (boolean operations)
+- You need the shape as part of a larger path composition
+- Distributing to environments that only support `<path>`
+- Optimizing for minimal DOM elements
+
+**Keep as shapes when:**
+- Code readability matters (a `<circle>` is self-documenting)
+- You need to animate specific properties (animating `r` on a circle is cleaner than animating path data)
+- The SVG will be programmatically modified
+
+### Rounded rect-to-path template
+
+The arc parameters here are error-prone to derive. Use this as a reference:
+
+```xml
+<!-- <rect x="2" y="2" width="20" height="20" rx="3" /> becomes: -->
+<path d="M 5 2 h 14 a 3 3 0 0 1 3 3 v 14 a 3 3 0 0 1 -3 3 h -14 a 3 3 0 0 1 -3 -3 v -14 a 3 3 0 0 1 3 -3 Z" />
+```
+
+## fill-rule: evenodd vs nonzero
+
+Use `evenodd` when you have compound shapes with holes. It's simpler because you don't need to worry about winding direction:
+
+```xml
+<!-- Donut using evenodd (direction doesn't matter) -->
+<path fill-rule="evenodd" d="
+  M 12 2 A 10 10 0 1 1 12 22 A 10 10 0 1 1 12 2 Z
+  M 12 7 A 5 5 0 1 1 12 17 A 5 5 0 1 1 12 7 Z
+" fill="black" />
+```
+
+With `nonzero` (default), the inner circle must wind in the opposite direction to create the hole.
 
 ## Logo Design Process
 
@@ -92,7 +122,7 @@ When creating logos (not icons), follow this process:
 
 1. **Explore multiple metaphors, not multiple layouts of one metaphor.** If asked for 10 logo options, don't make 10 network graphs. Make 3 network graphs, 2 isometric shapes, 2 abstract symbols, etc. Conceptual diversity matters more than layout variations.
 2. **Start with what the product *does*, not what it *looks like*.** A data platform could be: a network graph, stacked layers, a prism, a compass, an open book, overlapping circles, a rising chart, a cube, a broken ring. List 8-10 metaphors before drawing anything.
-3. **Build an HTML preview page immediately.** Show every variant at 16px, 32px, and 64px on both light and dark backgrounds, plus a nav-bar mockup with the wordmark. This accelerates feedback cycles dramatically.
+3. **Build an HTML preview page and auto-open it.** Follow the template in [references/editing-workflow.md](references/editing-workflow.md) for multi-size rendering, context mockups (favicon strip, nav bar), click-to-compare, and live reload. Open with `open preview.html` (macOS) or `xdg-open preview.html` (Linux).
 4. **For colored logos, always create a `-dark.svg` variant.** Dark navy edges (#1E3A5F) that look great on white disappear on dark backgrounds. Dark variants need lighter edges (#4B8BBE), lighter rings (#3B6B8A), and off-white centers (#E2E8F0).
 5. **Plan your vertical budget before drawing.** On a 32x32 canvas with 3 stacked elements, you have ~30 usable units. Sketch the vertical distribution first (e.g., box=12, gap=2, layer=5, gap=2, layer=5) to avoid clipping at viewBox edges.
 

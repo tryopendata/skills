@@ -17,12 +17,6 @@
 - SVGs that need to be searchable/indexable
 - When file size matters (text is tiny compared to outlined paths)
 
-```xml
-<text x="10" y="20" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="currentColor">
-  OpenData
-</text>
-```
-
 ### When to convert text to paths
 
 - Logo wordmarks distributed as standalone files
@@ -30,34 +24,7 @@
 - Icons containing letterforms (like a "B" for bold icon)
 - Print/brand assets
 
-```xml
-<!-- "A" as a path (font-independent) -->
-<path d="M 12 3 L 4 21 h 3 l 1.5 -4 h 7 l 1.5 4 h 3 Z M 9 14 l 3 -8 l 3 8 Z" />
-```
-
 **Trade-off:** Outlined text bloats file size significantly. A single word can go from ~200 bytes as `<text>` to 5-10KB as paths. Only outline when portability is required.
-
-### Text styling attributes
-
-```xml
-<text
-  font-family="Inter, system-ui, sans-serif"
-  font-size="16"
-  font-weight="700"
-  letter-spacing="0.05em"
-  text-anchor="middle"      <!-- "start" | "middle" | "end" -->
-  dominant-baseline="central" <!-- vertical alignment -->
-  fill="currentColor"
->
-```
-
-| Attribute | Purpose |
-|-----------|---------|
-| `text-anchor` | Horizontal alignment relative to x position |
-| `dominant-baseline` | Vertical alignment relative to y position |
-| `letter-spacing` | Tracking (space between letters) |
-| `font-variant` | Small caps, etc. |
-| `textLength` | Force text to fit a specific width |
 
 ## Negative Space Techniques
 

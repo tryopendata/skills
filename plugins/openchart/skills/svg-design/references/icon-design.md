@@ -12,35 +12,6 @@
 | **Material** | 0 0 24 24 | 2 | n/a | n/a | varies | 24 |
 | **Phosphor** | 0 0 256 256 | ~16 | round | round | none | 256 (scaled) |
 
-### Standard SVG Skeleton (Lucide convention, most widely adopted)
-
-```xml
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-  viewBox="0 0 24 24" fill="none" stroke="currentColor"
-  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <!-- icon content -->
-</svg>
-```
-
-### Heroicons outline convention
-
-```xml
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-  viewBox="0 0 24 24" fill="none" stroke="currentColor"
-  stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-  <!-- icon content -->
-</svg>
-```
-
-### Heroicons solid/mini/micro convention
-
-```xml
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-  viewBox="0 0 24 24" fill="currentColor">
-  <!-- filled paths, often with fill-rule="evenodd" -->
-</svg>
-```
-
 ## Pixel-Perfect Alignment
 
 Icons at small sizes (16-24px) render on actual device pixels. Misalignment causes blurry edges.
@@ -137,30 +108,9 @@ The keylines ensure different-shaped icons occupy similar visual space.
 | < 8px | 1px |
 | Interior corners | 0px (square) |
 
-## Allowed SVG Elements (Lucide convention)
+## Lucide Element Constraints
 
-Lucide is the most restrictive and produces the cleanest output:
-
-**Allowed:**
-- `<path>` with `d` attribute
-- `<line>` with coordinate attributes
-- `<polyline>` with `points`
-- `<polygon>` with `points`
-- `<circle>` with `cx`, `cy`, `r`
-- `<ellipse>` with `cx`, `cy`, `rx`, `ry`
-- `<rect>` with `x`, `y`, `width`, `height`, `rx`
-
-**Prohibited:**
-- `<g>` groups (flatten everything)
-- `transform` attributes (bake transforms into coordinates)
-- `<use>` references
-- `<defs>` definitions
-- `<filter>` effects
-- Inline `fill` or `stroke` on individual elements (set on root `<svg>`)
-- `<text>` elements
-- `style` attributes or `<style>` blocks
-
-This strictness ensures maximum compatibility and the smallest possible file size. When building an icon set, follow these constraints. For standalone icons or logos, you can be more flexible.
+Lucide convention prohibits `<g>`, `transform`, `<use>`, `<defs>`, `<filter>`, inline styles, and `<text>`. Flatten everything to bare shape/path elements with styling on the root `<svg>`. Follow these constraints when building icon sets. For standalone icons or logos, you can be more flexible.
 
 ## Naming Conventions
 
