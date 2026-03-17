@@ -79,9 +79,10 @@ The preview page should include:
 
 ### Required sections per card
 
-1. **Size ramp** (16, 32, 64px) to catch detail that doesn't scale
-2. **Dark background row** using the actual site dark bg color
-3. **Realistic context mockups** showing the logo where it will actually live:
+1. **Size ramp** (16, 32, 64px) on a white background with rounded corners, to catch detail that doesn't scale and remain visible when the page is viewed in dark contexts
+2. **Dark background row** (16, 32, 64px) using the actual site dark bg color, matching the same three sizes as the light row for symmetry
+3. **Fixed-height description** so cards align symmetrically even when descriptions vary in length (`min-height: 2.5em` on the description paragraph)
+4. **Realistic context mockups** showing the logo where it will actually live:
 
 | Mockup | What to show | Why |
 |--------|-------------|-----|
@@ -116,15 +117,17 @@ The template below includes two interactive features (no dependencies, vanilla J
   .section h2 { font-size: 16px; color: #888; text-transform: uppercase; letter-spacing: 0.05em;
     margin-bottom: 16px; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; }
-  .card { background: white; border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb;
+  .card { background: white; border-radius: 12px; padding: 12px; border: 1px solid #e5e7eb;
     cursor: pointer; transition: outline 0.15s; }
   .card h3 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-  .card p { font-size: 11px; color: #9ca3af; margin-bottom: 12px; line-height: 1.4; }
-  .sizes { display: flex; align-items: flex-end; gap: 16px; }
+  .card p { font-size: 11px; color: #9ca3af; margin-bottom: 12px; line-height: 1.4;
+    min-height: 2.5em; }
+  .sizes { display: flex; align-items: flex-end; gap: 16px;
+    background: white; border-radius: 8px; padding: 12px; }
   .size-label { font-size: 10px; color: #9ca3af; text-align: center; }
   .size-label img { display: block; margin: 0 auto 4px; }
-  .dark-row { background: #0d1117; padding: 16px; border-radius: 8px; margin-top: 12px;
-    display: flex; gap: 16px; }
+  .dark-row { background: #0d1117; padding: 12px; border-radius: 8px; margin-top: 8px;
+    display: flex; align-items: flex-end; gap: 16px; }
   .dark-row .size-label { color: #666; }
 
   /* Context mockups */
@@ -163,6 +166,7 @@ The template below includes two interactive features (no dependencies, vanilla J
         <div class="size-label"><img src="logo.svg" width="64" height="64">64</div>
       </div>
       <div class="dark-row">
+        <div class="size-label"><img src="logo-dark.svg" width="16" height="16">16</div>
         <div class="size-label"><img src="logo-dark.svg" width="32" height="32">32</div>
         <div class="size-label"><img src="logo-dark.svg" width="64" height="64">64</div>
       </div>
@@ -225,8 +229,8 @@ setInterval(() => {
 
 - **Group by concept** (e.g., "Geometric", "Network / Graph", "Abstract") so the user evaluates ideas, not just shapes
 - **Description per card** explaining the metaphor and what it conveys
-- **Three sizes** (16, 32, 64) to catch detail that doesn't scale
-- **Dark background row** using the actual site dark bg color
+- **Three sizes** (16, 32, 64) on a white-background container to catch detail that doesn't scale
+- **Dark background row** with the same three sizes (16, 32, 64) for symmetry
 - **Favicon mockup** showing 16px logo in a browser tab strip
 - **Nav bar mockup** showing the logo next to the wordmark at realistic size, light and dark
 - For colored logos, use the `-dark.svg` variant in dark rows (not CSS filters)
