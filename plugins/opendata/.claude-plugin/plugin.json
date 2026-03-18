@@ -1,7 +1,7 @@
 {
   "name": "opendata",
   "description": "OpenData API skills for querying, filtering, and analyzing public datasets",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "author": {
     "name": "OpenData",
     "url": "https://github.com/tryopendata"
