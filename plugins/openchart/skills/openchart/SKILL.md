@@ -13,6 +13,14 @@ description: >
 
 **Core concept:** Write a VizSpec JSON object, render with `<Chart spec={spec} />` / `<DataTable spec={spec} />` / `<Graph spec={spec} />` (React) or `createChart(container, spec)` / `createTable(container, spec)` / `createGraph(container, spec)` (vanilla JS). The engine validates, compiles, and renders. Specs are plain JSON, no imperative drawing. See https://github.com/tryopendata/openchart for the rendering engine.
 
+**CSS is required.** OpenChart's stylesheet must be loaded for proper rendering (chrome, tables, tooltips, brand watermark). Framework imports handle this automatically, but CDN/standalone HTML needs an explicit `<link>`:
+
+```html
+<link rel="stylesheet" href="https://esm.sh/@opendata-ai/openchart-vanilla/styles.css">
+```
+
+See [rendering reference](references/rendering.md) for details.
+
 ## Chart Selection Decision Tree
 
 ```
@@ -223,12 +231,33 @@ overrides?: {
 }
 ```
 
+## Data Resolution
+
+**Keep data arrays under 150 rows per series.** More data doesn't make a better chart - it makes a slower, harder-to-read one. Reduce resolution before building the spec, not after.
+
+| Time span | Resolution | Typical rows | Example |
+| --- | --- | --- | --- |
+| < 1 year | Daily or weekly | 50-200 | Stock price last 6 months |
+| 1-5 years | Monthly | 12-60 | Unemployment rate 2020-2025 |
+| 5-25 years | Quarterly or annual | 20-100 | GDP since 2000 |
+| 25-100+ years | Annual or decade | 25-100 | CO2 emissions since 1900 |
+
+**How to reduce:** When querying APIs, aggregate before passing data to the spec:
+- Use `group_by=year` with `aggregate=avg(value)` to go from monthly to annual
+- Sample every Nth row for evenly-spaced data
+- Filter to the time range that matters (don't chart 75 years when the story is about the last 10)
+
+**Multi-series charts are multiplicative.** A 3-series line chart with 300 points per series = 900 data rows. Reduce each series to ~50-80 points for a clean result. For the same 25-year span, annual data (25 points x 3 series = 75 rows) reads better than monthly (300 x 3 = 900 rows).
+
+**Why this matters beyond readability:** Large data arrays inflate the spec JSON, slow rendering, and generate massive accessibility tables in the DOM. A 900-row chart produces a ~19,000px tall screen-reader table that can break page layout if styles don't load correctly.
+
 ## First Draft Checklist
 
 Run these checks before outputting a spec. These catch the issues that most often require iteration after rendering.
 
 | Check | What to verify |
 | --- | --- |
+| **Data resolution is appropriate** | Check total rows in the data array. Over 150 per series? Aggregate to a coarser time grain or sample. A 25-year time series should use annual or quarterly data, not monthly. See Data Resolution table. |
 | **Color encodes the story** | If one variable drives the narrative, color should reinforce it. Use the decision table in [color-strategy.md](references/color-strategy.md) to pick the right strategy and `theme.colors` array. Don't leave a scatter plot monochrome when a gradient would make the pattern obvious. |
 | **Y-domain fits the data** | Domain ceiling should be ~5-10% above the highest data value. `[0, 55]` for data peaking at 48.8 wastes space. Use `[0, 52]`. |
 | **Annotations clear of data AND each other** | The engine auto-resolves annotation-to-annotation collisions, but start with good separation for cleaner results. Prefer 0-2 text annotations; use reflines for additional callouts. On scatter/bubble, use 40-100px offsets into empty quadrants with connectors. When using 2+ text annotations, verify with `playwright-cli`. |
@@ -243,7 +272,7 @@ Run these checks before outputting a spec. These catch the issues that most ofte
 | --- | --- |
 | Using `nominal` for numeric field | Use `quantitative` for numbers, `temporal` for dates |
 | Using `ordinal` for temporal data | Use `temporal`; ordinal is for ordered categories |
-| Huge inline data arrays (500+ rows) | Aggregate or sample before passing to spec |
+| Too many data points (>150 per series) | Aggregate or sample before building the spec. See Data Resolution table above. Monthly data over 25 years = 300 rows per series, use annual instead |
 | Forgetting encoding.color for multi-series | Line/bar with groups needs `color` channel |
 | Bar chart for time series | Use line or column for temporal data |
 | Using chart for network data | Use `type: "graph"` with nodes + edges |

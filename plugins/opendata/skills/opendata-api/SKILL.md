@@ -9,6 +9,35 @@ Query datasets stored as Parquet files through a REST API backed by DuckDB. The 
 
 **Base URL:** `https://api.tryopendata.ai` (production) or `http://localhost:8000` (local dev). Default to use production
 
+## Authentication
+
+All endpoints require authentication in production. Pass an API key via `Authorization: Bearer` header:
+
+```bash
+curl -H "Authorization: Bearer od_live_..." \
+  "https://api.tryopendata.ai/v1/datasets/fred/cpi?limit=5"
+```
+
+Local dev (`localhost:8000`) does not require auth when running the standalone opendata server (`make quickstart`). The backend server (`make dev-all`) requires auth for write endpoints but allows unauthenticated reads.
+
+## Quick Start
+
+The dataset path IS the query endpoint. Just GET the dataset path with query params:
+
+```bash
+# Get the 5 most recent CPI values
+curl -H "Authorization: Bearer od_live_..." \
+  "https://api.tryopendata.ai/v1/datasets/fred/cpi?limit=5&sort=-date"
+#                                           ^^^^^^^^^^^^^^^^
+#                              This path returns data directly.
+
+# Filter, sort, aggregate - all via query params on the same path
+curl -H "Authorization: Bearer od_live_..." \
+  'https://api.tryopendata.ai/v1/datasets/owid/gdp?filter[year][gte]=2020&sort=-gdp_per_capita&limit=10'
+```
+
+**Do NOT append `/query` to GET requests.** `GET /v1/datasets/fred/cpi/query` will fail with a `SUBDATASET_NOT_FOUND` error because the API interprets `query` as a subdataset name. The `POST /query` endpoint is a separate SQL interface (see below).
+
 All data endpoints live under `/v1/datasets/`.
 
 ## Endpoints
@@ -23,6 +52,15 @@ All data endpoints live under `/v1/datasets/`.
 | GET    | `/v1/datasets/{provider}/{dataset}/views`          | List available views                                         |
 | POST   | `/v1/datasets/{provider}/{dataset}/query`          | Execute SQL query (authenticated)                            |
 | GET    | `/v1/discover`                                     | Search datasets with enriched metadata for LLM agents        |
+
+## Subdatasets
+
+Some datasets contain multiple tables (e.g., multi-sheet Excel workbooks, BLS series groups). For these:
+
+- `GET /v1/datasets/{provider}/{dataset}` returns data for the default subdataset, or lists available subdatasets
+- `GET /v1/datasets/{provider}/{dataset}/{subdataset}` queries a specific subdataset
+
+If you get a `SUBDATASET_NOT_FOUND` error, the dataset likely has subdatasets. Check the error response's `suggestions` field - it includes a link to browse available subdatasets. Any unrecognized path segment after the dataset slug is interpreted as a subdataset name, which is why paths like `/query` or `/search` appended to a dataset path produce this error.
 
 ## Query Parameters
 

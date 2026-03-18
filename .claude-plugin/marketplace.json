@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "OpenData and OpenChart skills for Claude Code",
-    "version": "0.1.0"
+    "version": "0.1.1"
   },
   "plugins": [
     {
       "name": "opendata",
       "source": "./plugins/opendata/",
       "description": "OpenData API skills for querying, filtering, and analyzing public datasets",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"

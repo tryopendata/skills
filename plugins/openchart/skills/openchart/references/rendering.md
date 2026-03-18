@@ -97,6 +97,24 @@ import { Chart, DataTable, Graph, ThemeProvider } from '@opendata-ai/openchart-s
 <Graph {spec} />
 ```
 
+## CDN / Standalone HTML
+
+When using OpenChart via CDN (esm.sh, unpkg, etc.) or in a standalone HTML file, you must load the CSS separately. Without it, chrome elements (source, byline), the brand watermark, table styling, tooltips, and accessibility tables will be broken.
+
+```html
+<!-- Load the stylesheet -->
+<link rel="stylesheet" href="https://esm.sh/@opendata-ai/openchart-vanilla/styles.css">
+
+<script type="module">
+import { createChart, createTable } from 'https://esm.sh/@opendata-ai/openchart-vanilla';
+
+createChart(document.getElementById('chart'), spec);
+createTable(document.getElementById('table'), tableSpec);
+</script>
+```
+
+The CSS is required for: table styling (borders, alignment, heatmaps, bars), chart chrome (source, footer, byline text), brand watermark ("OpenData" in footer-right), tooltip appearance, legend layout, and screen-reader accessibility tables (hidden via `viz-sr-only` class).
+
 ## Vanilla JS
 
 ```typescript
