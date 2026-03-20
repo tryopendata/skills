@@ -8,7 +8,7 @@ Execute raw SQL against a dataset. Requires authentication.
 POST /v1/datasets/{provider}/{dataset}/query
 ```
 
-**Auth required:** API key (`X-API-Key` header) or session cookie.
+**Auth required:** API key (`Authorization: Bearer` header) or session cookie.
 
 ## Request
 
@@ -65,7 +65,7 @@ Use `data` for single-dataset queries. The qualified name is useful for clarity 
 | Category | Allowed |
 |----------|---------|
 | Statements | SELECT only |
-| JOINs | All JOIN types (against same dataset) |
+| JOINs | All JOIN types, including cross-dataset joins via `POST /v1/query` |
 | Subqueries | Yes |
 | CTEs | Non-recursive only (`WITH ... AS`) |
 | Window functions | Yes |
@@ -97,6 +97,69 @@ Use `data` for single-dataset queries. The qualified name is useful for clarity 
 - Multiple statements (semicolon-separated)
 - System functions and information_schema access
 
+## Cross-Dataset Joins
+
+Use `POST /v1/query` to join data across multiple datasets in a single SQL query.
+
+### Cross-Dataset Endpoint
+
+```
+POST /v1/query
+```
+
+Same auth, request body, and response shape as the per-dataset endpoint. The difference: table references in your SQL are resolved to datasets automatically.
+
+### Table Reference Syntax
+
+Reference datasets as `provider.dataset` (dot notation) or `"provider/dataset"` (quoted slash notation):
+
+```sql
+-- Dot notation (clean, works for simple names)
+FROM fred.gdp g JOIN fred.cpi c ON g.date = c.date
+
+-- Quoted slash notation (works for all names, including hyphens)
+FROM "fred/gdp" g JOIN "fred/unemployment-rate" u ON g.date = u.date
+```
+
+Use quoted slash notation for dataset names with hyphens (dot notation won't parse `fred.unemployment-rate` because the hyphen is a minus operator).
+
+### Cross-Dataset Examples
+
+**Economic indicators:**
+```bash
+curl -X POST 'https://api.tryopendata.ai/v1/query' \
+  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{"sql": "SELECT g.date, g.value as gdp, u.value as unemployment FROM fred.gdp g JOIN \"fred/unemployment-rate\" u ON g.date = u.date WHERE EXTRACT(YEAR FROM g.date) >= 2020 ORDER BY g.date"}'
+```
+
+**With CTEs:**
+```bash
+curl -X POST 'https://api.tryopendata.ai/v1/query' \
+  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{"sql": "WITH recent_gdp AS (SELECT date, value FROM fred.gdp WHERE EXTRACT(YEAR FROM date) >= 2020) SELECT r.date, r.value as gdp, c.value as cpi FROM recent_gdp r JOIN fred.cpi c ON r.date = c.date ORDER BY r.date"}'
+```
+
+### Cross-Dataset Limits
+
+| Limit | Value |
+|-------|-------|
+| Max datasets per query | 5 |
+| Combined parquet size | 150 MB |
+| Timeout | Same as per-dataset (5s default, 10s max) |
+| Row limit | Same as per-dataset (10,000 max) |
+
+### Cross-Dataset Error Codes
+
+| Status | Code | When |
+|--------|------|------|
+| 400 | `INVALID_TABLE_REF` | Bare table name without provider (use `provider.dataset` notation) |
+| 400 | `DATASET_LIMIT_EXCEEDED` | More than 5 datasets referenced |
+| 400 | `SIZE_LIMIT_EXCEEDED` | Combined parquet files exceed 150 MB |
+| 400 | `NO_DATASETS` | No dataset references found in query |
+| 404 | - | Referenced dataset not found |
+
 ## Resource Limits
 
 | Limit | Default | Max |
@@ -118,7 +181,7 @@ Use `data` for single-dataset queries. The qualified name is useful for clarity 
 **Basic filter and sort:**
 ```bash
 curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/query' \
-  -H 'X-API-Key: your-key' \
+  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"sql": "SELECT * FROM data WHERE year >= 2020 ORDER BY year DESC LIMIT 10"}'
 ```
@@ -126,7 +189,7 @@ curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/query' \
 **Aggregation with GROUP BY:**
 ```bash
 curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/query' \
-  -H 'X-API-Key: your-key' \
+  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"sql": "SELECT jurisdiction, AVG(score) as avg_score FROM data WHERE year = 2024 GROUP BY jurisdiction ORDER BY avg_score DESC"}'
 ```
@@ -134,7 +197,7 @@ curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/query' \
 **Window function:**
 ```bash
 curl -X POST 'https://api.tryopendata.ai/v1/datasets/worldbank/gdp-per-capita/query' \
-  -H 'X-API-Key: your-key' \
+  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"sql": "SELECT country_name, year, gdp_per_capita, LAG(gdp_per_capita) OVER (PARTITION BY country_name ORDER BY year) as prev_year FROM data WHERE country_name = '\''United States'\'' ORDER BY year DESC LIMIT 10"}'
 ```
@@ -142,7 +205,15 @@ curl -X POST 'https://api.tryopendata.ai/v1/datasets/worldbank/gdp-per-capita/qu
 **CTE for top-N per group:**
 ```bash
 curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/query' \
-  -H 'X-API-Key: your-key' \
+  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"sql": "WITH ranked AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY subject ORDER BY score DESC) as rn FROM data WHERE year = 2024) SELECT * FROM ranked WHERE rn <= 5"}'
+```
+
+**Year-over-year percent change:**
+```bash
+curl -X POST 'https://api.tryopendata.ai/v1/datasets/fred/gdp/query' \
+  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{"sql": "SELECT date, value as gdp, ROUND(100.0 * (value - LAG(value) OVER (ORDER BY date)) / LAG(value) OVER (ORDER BY date), 1) as yoy_pct_change FROM data WHERE EXTRACT(YEAR FROM date) >= 2020 ORDER BY date"}'
 ```
