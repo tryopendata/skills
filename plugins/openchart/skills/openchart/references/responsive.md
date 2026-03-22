@@ -75,7 +75,7 @@ Use the `overrides` field to provide different chrome, labels, legend, or annota
 
 ```js
 {
-  type: "line",
+  mark: "line",
   data: [...],
   encoding: { ... },
   chrome: {
@@ -110,7 +110,7 @@ Set `legend: { show: false }` to suppress the legend entirely. Useful for bar ch
 
 ```js
 {
-  type: "bar",
+  mark: "bar",
   encoding: {
     x: { field: "value", type: "quantitative" },
     y: { field: "platform", type: "nominal" },
@@ -178,10 +178,10 @@ Horizontal bar charts handle narrow containers better than column charts when yo
 
 ```js
 // Good for narrow containers - 7 categories read fine
-{ type: "bar", encoding: { x: { field: "value" }, y: { field: "category" } } }
+{ mark: "bar", encoding: { x: { field: "value" }, y: { field: "category" } } }
 
 // Works now with auto-rotation, but bar is still better for 7+ categories
-{ type: "column", encoding: { x: { field: "category" }, y: { field: "value" } } }
+{ mark: "bar", encoding: { x: { field: "category" }, y: { field: "value" } } }
 ```
 
 Column charts work fine with few categories (2-5) or when x-axis labels are short. With many categories, labels auto-rotate to -45 degrees to avoid overlap.

@@ -58,7 +58,7 @@ import type { ChartSpec, ElementEdit, TextAnnotation, RangeAnnotation, RefLineAn
 
 function EditableChart() {
   const [spec, setSpec] = useState<ChartSpec>({
-    type: 'line',
+    mark: 'line',
     data: myData,
     encoding: { x: { field: 'date', type: 'temporal' }, y: { field: 'value', type: 'quantitative' } },
     chrome: {

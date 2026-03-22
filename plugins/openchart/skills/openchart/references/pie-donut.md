@@ -1,6 +1,9 @@
 # Pie & Donut Charts
 
-Part-to-whole composition. Donut is preferred over pie (center space can show total).
+Part-to-whole composition. Both use `mark: "arc"`. Donut is preferred over pie (center space can show total).
+
+- **Pie:** `mark: "arc"` (no innerRadius, or `innerRadius: 0`)
+- **Donut:** `mark: { type: "arc", innerRadius: 40 }`
 
 **Important:** Keep categories under 6. For 7+ categories, group the smallest into "Other" or use a bar chart instead. Pie/donut shows composition of ONE whole. Don't use it for comparing across groups.
 
@@ -20,7 +23,7 @@ No x-axis. The `y` channel is the slice value, `color` is the category.
 
 ```typescript
 {
-  type: "pie" | "donut",
+  mark: "arc" | { type: "arc", innerRadius?: number },
   data: DataRow[],
   encoding: {
     y: { field: string, type: "quantitative" },
@@ -42,6 +45,8 @@ No x-axis. The `y` channel is the slice value, `color` is the category.
 import { pieChart } from "@opendata-ai/openchart-core";
 
 // pieChart(data, category, value) - category maps to color, value maps to y
+// For a pie: pieChart produces mark: "arc"
+// For a donut: pieChart(data, cat, val, { innerRadius: 40 }) produces mark: { type: "arc", innerRadius: 40 }
 const spec = pieChart(data, "source", "share", {
   chrome: { title: "Energy mix breakdown" },
 });
@@ -51,7 +56,7 @@ const spec = pieChart(data, "source", "share", {
 
 ```json
 {
-  "type": "donut",
+  "mark": { "type": "arc", "innerRadius": 40 },
   "data": [
     { "source": "Solar", "share": 42 },
     { "source": "Wind", "share": 31 },

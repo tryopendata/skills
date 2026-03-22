@@ -1,6 +1,6 @@
 # Dot Chart (Strip Plot)
 
-Distribution and spread of values across categories.
+Distribution and spread of values across categories. Uses `mark: "circle"`.
 
 ## Encoding Rules
 
@@ -16,7 +16,7 @@ Distribution and spread of values across categories.
 
 ```typescript
 {
-  type: "dot",
+  mark: "circle",
   data: DataRow[],
   encoding: {
     x: { field: string, type: "quantitative", axis?, scale? },
@@ -38,7 +38,7 @@ Distribution and spread of values across categories.
 
 ```json
 {
-  "type": "dot",
+  "mark": "circle",
   "data": [
     { "dept": "Engineering", "salary": 145000 },
     { "dept": "Engineering", "salary": 132000 },

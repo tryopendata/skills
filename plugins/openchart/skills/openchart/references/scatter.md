@@ -1,6 +1,6 @@
 # Scatter Chart
 
-Correlation between two quantitative variables. Optional size and color for 3rd/4th dimensions.
+Correlation between two quantitative variables. Optional size and color for 3rd/4th dimensions. Uses `mark: "point"`.
 
 ## Encoding Rules
 
@@ -16,7 +16,7 @@ Correlation between two quantitative variables. Optional size and color for 3rd/
 
 ```typescript
 {
-  type: "scatter",
+  mark: "point",
   data: DataRow[],
   encoding: {
     x: { field: string, type: "quantitative", axis?, scale? },
@@ -66,7 +66,7 @@ const spec = scatterChart(data, "spending", "lifeExp", {
 
 ```json
 {
-  "type": "scatter",
+  "mark": "point",
   "data": [
     { "country": "US", "spending": 12555, "lifeExp": 77.5, "pop": 331 },
     { "country": "Germany", "spending": 7383, "lifeExp": 81.7, "pop": 83 },

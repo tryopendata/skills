@@ -8,14 +8,14 @@ Cleveland & McGill (1984) measured how accurately humans read different visual e
 
 | Rank | Encoding | Accuracy | Example charts |
 | --- | --- | --- | --- |
-| 1 | Position on common scale | Highest | Bar, dot plot, line |
+| 1 | Position on common scale | Highest | Bar, circle (dot plot), line |
 | 2 | Position on non-aligned scales | High | Small multiples |
 | 3 | Length | High | Bar (length comparison) |
-| 4 | Direction / Angle | Medium | Pie, donut |
+| 4 | Direction / Angle | Medium | Arc (pie/donut) |
 | 5 | Area | Low | Bubble, treemap |
 | 6 | Color saturation | Lowest | Heatmap |
 
-Position-based encodings (bars, lines, scatter) beat area and angle-based ones (pie, bubble) for accurate reading. Choose the encoding that matches the precision your story needs.
+Position-based encodings (bars, lines, point/scatter) beat area and angle-based ones (arc, bubble) for accurate reading. Choose the encoding that matches the precision your story needs.
 
 ## Story Type to Chart Type
 
@@ -23,11 +23,11 @@ Position-based encodings (bars, lines, scatter) beat area and angle-based ones (
 | --- | --- | --- |
 | Change over time | Line | Position on common axis reveals trend |
 | Ranking | Bar (horizontal) | Position + length, category labels stay readable |
-| Part-to-whole | Donut (2-5 categories) | Angle is adequate for small category counts |
-| Correlation | Scatter | Two position channels show relationship directly |
-| Distribution / spread | Dot (strip plot) | Individual values visible, shows density |
+| Part-to-whole | Arc/donut (2-5 categories) | Angle is adequate for small category counts |
+| Correlation | Point (scatter) | Two position channels show relationship directly |
+| Distribution / spread | Circle (dot/strip plot) | Individual values visible, shows density |
 | Composition over time | Stacked area | Volume + trend together in one view |
-| Before / after comparison | Grouped column | Side-by-side position makes difference obvious |
+| Before / after comparison | Grouped bar (vertical) | Side-by-side position makes difference obvious |
 
 ## Data-Ink Ratio
 

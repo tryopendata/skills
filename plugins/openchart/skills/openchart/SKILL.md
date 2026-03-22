@@ -26,10 +26,10 @@ See [rendering reference](references/rendering.md) for details.
 ```
 Single value to highlight    -> Use chrome.title as a big number display
 Temporal x-axis column?      -> 1 series: line | 2-5 series: line + color | 6+: filter to top 5
-Categorical + numeric?       -> Ranked list: bar (horizontal) | Periodic (Q1, Jan): column | 2-6 composition: donut
-Two numeric columns?         -> scatter (optional size/color for 3rd/4th dims)
-Categorical + series + num?  -> stacked bar or stacked column (use color for series)
-Distribution/spread?         -> dot (strip plot)
+Categorical + numeric?       -> Ranked list: bar (horizontal) | Periodic (Q1, Jan): bar (vertical) | 2-6 composition: arc
+Two numeric columns?         -> point (optional size/color for 3rd/4th dims)
+Categorical + series + num?  -> stacked bar (use color for series)
+Distribution/spread?         -> circle (strip plot)
 Nodes + edges / network?     -> graph (force/radial/hierarchical layout)
 Tabular data overview?       -> table (with sparklines, heatmaps, bars)
 Default                      -> bar
@@ -39,18 +39,26 @@ Default                      -> bar
 
 Each type has a detailed reference with full spec, encoding rules, and examples. Load the reference when you need the details.
 
-| Type | Best for | Data model | Reference |
+| Mark / Type | Best for | Data model | Reference |
 | --- | --- | --- | --- |
-| `line` | Trends over time | x: temporal/ordinal, y: quantitative | [references/line.md](references/line.md) |
-| `area` | Trends with volume emphasis | x: temporal/ordinal, y: quantitative | [references/area.md](references/area.md) |
-| `bar` | Rankings, comparisons (horizontal) | x: quantitative, y: nominal/ordinal | [references/bar.md](references/bar.md) |
-| `column` | Periodic data, categories (vertical) | x: nominal/ordinal/temporal, y: quantitative | [references/column.md](references/column.md) |
-| `pie` | Part-to-whole (2-5 categories) | y: quantitative, color: nominal/ordinal | [references/pie-donut.md](references/pie-donut.md) |
-| `donut` | Part-to-whole (preferred over pie) | y: quantitative, color: nominal/ordinal | [references/pie-donut.md](references/pie-donut.md) |
-| `dot` | Distribution, strip plots | x: quantitative, y: nominal/ordinal | [references/dot.md](references/dot.md) |
-| `scatter` | Correlation between two variables | x: quantitative, y: quantitative | [references/scatter.md](references/scatter.md) |
-| `table` | Data tables with visual features | columns + data rows | [references/table.md](references/table.md) |
-| `graph` | Networks, relationships, hierarchies | nodes + edges | [references/graph.md](references/graph.md) |
+| `mark: "line"` | Trends over time | x: temporal/ordinal, y: quantitative | [references/line.md](references/line.md) |
+| `mark: "area"` | Trends with volume emphasis | x: temporal/ordinal, y: quantitative | [references/area.md](references/area.md) |
+| `mark: "bar"` | Rankings (horizontal) or periodic/categorical (vertical) | Orientation inferred from encoding (see below) | [references/bar.md](references/bar.md) |
+| `mark: "arc"` | Part-to-whole (2-5 categories) | y: quantitative, color: nominal/ordinal | [references/pie-donut.md](references/pie-donut.md) |
+| `mark: "point"` | Correlation between two variables | x: quantitative, y: quantitative | [references/scatter.md](references/scatter.md) |
+| `mark: "circle"` | Distribution, strip plots | x: quantitative, y: nominal/ordinal | [references/dot.md](references/dot.md) |
+| `mark: "text"` | Text labels positioned by x/y | x: any, y: any, text: nominal | - |
+| `mark: "rule"` | Reference lines (horizontal or vertical) | x or y: quantitative/temporal | - |
+| `mark: "tick"` | Tick marks for distributions | x: quantitative, y: nominal/ordinal | - |
+| `mark: "rect"` | Rectangles for heatmaps | x: ordinal/nominal, y: ordinal/nominal, color: quantitative | - |
+| `type: "table"` | Data tables with visual features | columns + data rows | [references/table.md](references/table.md) |
+| `type: "graph"` | Networks, relationships, hierarchies | nodes + edges | [references/graph.md](references/graph.md) |
+
+**Bar orientation:** The engine infers orientation from encoding. `x: nominal/ordinal + y: quantitative` = vertical (column-style). `x: quantitative + y: nominal/ordinal` = horizontal bar. Override with `mark: { type: "bar", orient: "horizontal" | "vertical" }`.
+
+**Arc variants:** `mark: "arc"` renders a pie chart by default. Add `innerRadius > 0` to get a donut: `mark: { type: "arc", innerRadius: 40 }`.
+
+**Collapsed types:** The old `column`, `pie`, `donut`, `scatter`, and `dot` types have been replaced. Use `bar` (orientation inferred), `arc` (with/without innerRadius), `point`, and `circle` respectively.
 
 **Cross-cutting references:**
 - [Annotations](references/annotations.md) (spec syntax for text callouts, ranges, reference lines)
@@ -74,37 +82,87 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 
 ## Shared Spec Structure
 
-All visualization types share these properties:
+Charts use `mark` as their discriminant. Tables and graphs use `type`.
 
 ```typescript
+// Charts
 {
-  type: string,              // REQUIRED: discriminant ("line", "table", "graph", etc.)
-  chrome?: {                 // editorial text elements
-    title?: string | { text: string, style?: ChromeTextStyle },
-    subtitle?: string | { text: string, style?: ChromeTextStyle },
-    source?: string | { text: string, style?: ChromeTextStyle },
-    byline?: string | { text: string, style?: ChromeTextStyle },
-    footer?: string | { text: string, style?: ChromeTextStyle },
-  },
-  theme?: ThemeConfig,       // see references/theme.md
-  darkMode?: "auto"|"force"|"off",  // default: "off"
-  responsive?: boolean,      // default: true
+  mark: string | MarkDef,    // REQUIRED: "line", "bar", "arc", etc. (see Mark section)
+  chrome?: { ... },
+  theme?: ThemeConfig,
+  darkMode?: "auto"|"force"|"off",
+  responsive?: boolean,
+}
+
+// Tables and graphs
+{
+  type: "table" | "graph",   // REQUIRED: discriminant for non-chart specs
+  chrome?: { ... },
+  theme?: ThemeConfig,
+  darkMode?: "auto"|"force"|"off",
+  responsive?: boolean,
+}
+```
+
+**Chrome** (shared by all types):
+```typescript
+chrome?: {
+  title?: string | { text: string, style?: ChromeTextStyle },
+  subtitle?: string | { text: string, style?: ChromeTextStyle },
+  source?: string | { text: string, style?: ChromeTextStyle },
+  byline?: string | { text: string, style?: ChromeTextStyle },
+  footer?: string | { text: string, style?: ChromeTextStyle },
 }
 ```
 
 **ChromeTextStyle:** `{ fontSize?: number, fontWeight?: number, fontFamily?: string, color?: string }`
 
+## Mark (Charts Only)
+
+`mark` can be a string or an object with additional properties:
+
+```typescript
+// Simple string form
+mark: "line" | "area" | "bar" | "arc" | "point" | "circle" | "text" | "rule" | "tick" | "rect"
+
+// Object form with additional config
+mark: {
+  type: MarkType,                        // REQUIRED: same values as the string form
+  point?: boolean | "transparent",       // show point markers on line/area marks
+  interpolate?: "linear" | "monotone" | "step" | "step-before" | "step-after" | "basis" | "cardinal" | "natural",
+  orient?: "horizontal" | "vertical",   // override inferred bar orientation
+  innerRadius?: number,                  // >0 makes arc marks render as donuts
+}
+```
+
+**Examples:**
+```json
+{ "mark": "bar" }
+{ "mark": { "type": "line", "point": true, "interpolate": "monotone" } }
+{ "mark": { "type": "arc", "innerRadius": 40 } }
+{ "mark": { "type": "bar", "orient": "horizontal" } }
+```
+
 ## Encoding Channels (Charts Only)
 
-Charts (line, area, bar, column, pie, donut, dot, scatter) use encoding channels to map data fields to visual properties:
+Charts (line, area, bar, arc, point, circle, text, rule, tick, rect) use encoding channels to map data fields to visual properties:
 
 ```typescript
 encoding: {
-  x?: EncodingChannel,      // horizontal position
-  y?: EncodingChannel,      // vertical position
-  color?: EncodingChannel,  // series differentiation
-  size?: EncodingChannel,   // bubble/dot scaling (quantitative)
-  detail?: EncodingChannel, // grouping without visual mapping
+  x?: EncodingChannel,           // horizontal position
+  y?: EncodingChannel,           // vertical position
+  color?: EncodingChannel,       // series differentiation
+  size?: EncodingChannel,        // bubble/dot scaling (quantitative)
+  detail?: EncodingChannel,      // grouping without visual mapping
+  opacity?: EncodingChannel,     // data-driven opacity
+  shape?: EncodingChannel,       // point shape (circle, square, diamond, etc.)
+  strokeDash?: EncodingChannel,  // data-driven dash patterns
+  text?: EncodingChannel,        // text content for text marks
+  tooltip?: EncodingChannel | EncodingChannel[],  // tooltip fields
+  x2?: EncodingChannel,          // secondary x (ranges)
+  y2?: EncodingChannel,          // secondary y (ranges)
+  theta?: EncodingChannel,       // angular position (arc marks)
+  radius?: EncodingChannel,      // radial position (arc marks)
 }
 ```
 
@@ -115,19 +173,80 @@ encoding: {
   type: FieldType,           // REQUIRED: "quantitative"|"temporal"|"nominal"|"ordinal"
   aggregate?: AggregateOp,   // "count"|"sum"|"mean"|"median"|"min"|"max"
   axis?: {
-    label?: string,          // axis label (default: field name)
+    title?: string,          // axis title (default: field name). Deprecated alias: `label`
     format?: string,         // d3-format string, e.g. ",.0f" "$,.2f" ".1%"
     tickCount?: number,      // override tick count
     grid?: boolean,          // show gridlines
+    labelAngle?: number,     // tick label rotation in degrees. Deprecated alias: `tickAngle`
   },
   scale?: {
     domain?: [number, number] | string[],  // explicit domain
-    type?: "linear"|"log"|"time"|"band"|"point"|"ordinal",
+    type?: "linear"|"log"|"time"|"band"|"point"|"ordinal"|"utc"|"pow"|"sqrt"|"symlog"|"quantile"|"quantize"|"threshold",
     nice?: boolean,          // clean tick values (default: true)
     zero?: boolean,          // include zero (default: true for quantitative)
   },
+  condition?: {              // conditional encoding
+    test: FilterPredicate,   // e.g. { "field": "value", "gte": 0 }
+    value: any,              // value when test is true
+  },
+  value?: any,               // fallback value when condition test is false
 }
 ```
+
+**Conditional encoding example:**
+```json
+{
+  "encoding": {
+    "color": {
+      "condition": { "test": { "field": "value", "gte": 0 }, "value": "#4CAF50" },
+      "value": "#F44336"
+    }
+  }
+}
+```
+
+## Data Transforms (Charts Only)
+
+Apply transforms to data before encoding. Transforms run in array order.
+
+```typescript
+transform?: Transform[]
+```
+
+**FilterTransform** - subset rows by predicate:
+```json
+{ "filter": { "field": "value", "gte": 100 } }
+```
+
+**BinTransform** - bin a continuous field:
+```json
+{ "bin": true, "field": "temperature", "as": "tempBin" }
+```
+
+**CalculateTransform** - derive new fields:
+```json
+{ "calculate": { "op": "/", "field": "revenue", "field2": "cost" }, "as": "margin" }
+```
+
+**TimeUnitTransform** - truncate temporal fields:
+```json
+{ "timeUnit": "yearmonth", "field": "date", "as": "month" }
+```
+
+## Layer Composition (Charts Only)
+
+Overlay multiple marks in a single chart using `layer`. Each layer is a standalone spec with its own mark, data, and encoding.
+
+```json
+{
+  "layer": [
+    { "mark": "bar", "data": [...], "encoding": { ... } },
+    { "mark": "line", "data": [...], "encoding": { ... } }
+  ]
+}
+```
+
+Layers share the same coordinate space. Use this for combo charts (bar + line), adding reference lines, or overlaying annotations.
 
 ## Legend Configuration (Charts Only)
 
@@ -274,13 +393,14 @@ Run these checks before outputting a spec. These catch the issues that most ofte
 | Using `ordinal` for temporal data | Use `temporal`; ordinal is for ordered categories |
 | Too many data points (>150 per series) | Aggregate or sample before building the spec. See Data Resolution table above. Monthly data over 25 years = 300 rows per series, use annual instead |
 | Forgetting encoding.color for multi-series | Line/bar with groups needs `color` channel |
-| Bar chart for time series | Use line or column for temporal data |
-| Using chart for network data | Use `type: "graph"` with nodes + edges |
+| Bar chart for time series | Use line for temporal data; bar with vertical orientation for periodic categories |
+| Using chart mark for network data | Use `type: "graph"` with nodes + edges |
 | Not specifying axis format for currency/pct | Add `axis: { format: "$,.0f" }` or `".1f%"` |
 | Using `".1%"` when data is already in percent form | `".1%"` multiplies by 100 (d3 convention). If data is `12.5` meaning 12.5%, use `".1f%"` (literal suffix) |
 | Axis format and label format inconsistent | Set both `axis.format` and `labels.format` to the same pattern so ticks and data labels match |
 | Using `darkMode: "auto"` in class-based dark mode apps | `"auto"` checks `prefers-color-scheme` only. For class-based toggles (Astro, Next.js), observe DOM and map to `"force"`/`"off"`. See [rendering](references/rendering.md) |
 | Temporal scale with `nice: true` (default) creating dead space | `nice` rounds the domain outward (e.g., `2010-01` becomes `2008`). Set `scale: { domain: ["2010-01", "2026-01"], nice: false }` for precise control |
+| Using `type` instead of `mark` for charts | Charts use `mark: "line"` (not `type: "line"`). Only tables and graphs use `type`. |
 
 For design anti-patterns (titles, color, annotations), see [design review](references/design-review.md).
 

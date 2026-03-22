@@ -71,7 +71,7 @@ import { VizThemeProvider } from '@opendata-ai/openchart-react';
 
 ```json
 {
-  "type": "bar",
+  "mark": "bar",
   "data": [{ "cat": "A", "val": 10 }, { "cat": "B", "val": 20 }],
   "encoding": {
     "x": { "field": "val", "type": "quantitative" },

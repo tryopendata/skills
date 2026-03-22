@@ -11,6 +11,9 @@ Trends over time or ordered sequences. Connects data points with lines.
 | color | No | nominal, ordinal |
 | size | No | quantitative |
 | detail | No | nominal |
+| opacity | No | quantitative |
+| strokeDash | No | nominal, ordinal |
+| tooltip | No | any |
 
 Use `color` to differentiate 2-5 series. For 6+ series, filter to the top 5 or use `detail` to group without color encoding.
 
@@ -18,7 +21,7 @@ Use `color` to differentiate 2-5 series. For 6+ series, filter to the top 5 or u
 
 ```typescript
 {
-  type: "line",
+  mark: "line" | { type: "line", point?: boolean | "transparent", interpolate?: "linear"|"monotone"|"step"|"step-before"|"step-after"|"basis"|"cardinal"|"natural" },
   data: DataRow[],
   encoding: {
     x: { field: string, type: "temporal"|"ordinal", axis?, scale? },
@@ -26,6 +29,9 @@ Use `color` to differentiate 2-5 series. For 6+ series, filter to the top 5 or u
     color?: { field: string, type: "nominal"|"ordinal" },
     size?: { field: string, type: "quantitative" },
     detail?: { field: string, type: "nominal" },
+    opacity?: { field: string, type: "quantitative" },
+    strokeDash?: { field: string, type: "nominal"|"ordinal" },
+    tooltip?: { field: string } | { field: string }[],
   },
   chrome?: Chrome,
   annotations?: Annotation[],
@@ -62,7 +68,7 @@ const spec = lineChart(data, "date", "revenue", {
 
 ```json
 {
-  "type": "line",
+  "mark": "line",
   "data": [
     { "year": "2020", "rate": 5.4 },
     { "year": "2021", "rate": 8.1 },

@@ -150,7 +150,7 @@ Two text annotations placed on opposite sides of the chart. The trough annotatio
 
 ```json
 {
-  "type": "line",
+  "mark": "line",
   "data": [
     { "month": "2023-01", "price": 48200 },
     { "month": "2023-04", "price": 29100 },

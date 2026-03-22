@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "OpenData and OpenChart skills for Claude Code",
-    "version": "0.1.1"
+    "version": "0.2.0"
   },
   "plugins": [
     {
@@ -36,7 +36,7 @@
       "name": "openchart",
       "source": "./plugins/openchart/",
       "description": "OpenChart visualization skills for generating charts, tables, graphs, and SVG graphics",
-      "version": "0.1.6",
+      "version": "0.2.0",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"

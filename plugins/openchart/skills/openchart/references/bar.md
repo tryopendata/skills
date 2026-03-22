@@ -1,8 +1,8 @@
 # Bar Chart
 
-Rankings and comparisons. Horizontal bars with category labels on the y-axis.
+Rankings, comparisons, and categorical data. Covers both horizontal bars and vertical columns.
 
-**Bar vs Column:** Bar = horizontal (category on y-axis, value on x-axis). Use bar for ranked lists where category labels need room to read. Use column for time periods.
+**Orientation:** The engine infers orientation from encoding types. x=quantitative + y=nominal/ordinal = horizontal bar. x=nominal/ordinal + y=quantitative = vertical column. You can override with `mark: { type: "bar", orient: "horizontal" | "vertical" }`.
 
 ## Encoding Rules
 
@@ -18,7 +18,7 @@ Rankings and comparisons. Horizontal bars with category labels on the y-axis.
 
 ```typescript
 {
-  type: "bar",
+  mark: "bar" | { type: "bar", orient?: "horizontal" | "vertical" },
   data: DataRow[],
   encoding: {
     x: { field: string, type: "quantitative", axis?, scale? },
@@ -54,7 +54,7 @@ const spec = barChart(data, "country", "gdp", {
 
 ```json
 {
-  "type": "bar",
+  "mark": "bar",
   "data": [
     { "country": "Luxembourg", "gdp": 126598 },
     { "country": "Ireland", "gdp": 106899 },

@@ -11,6 +11,9 @@ Trends with volume emphasis. Filled region below the line.
 | color | No | nominal, ordinal |
 | size | No | quantitative |
 | detail | No | nominal |
+| opacity | No | quantitative |
+| strokeDash | No | nominal, ordinal |
+| tooltip | No | any |
 
 Same encoding as line charts. Use area when you want to emphasize the magnitude (volume under the curve), not just the trend direction.
 
@@ -18,7 +21,7 @@ Same encoding as line charts. Use area when you want to emphasize the magnitude 
 
 ```typescript
 {
-  type: "area",
+  mark: "area" | { type: "area", interpolate?: "linear"|"monotone"|"step"|"step-before"|"step-after"|"basis"|"cardinal"|"natural" },
   data: DataRow[],
   encoding: {
     x: { field: string, type: "temporal"|"ordinal", axis?, scale? },
@@ -26,6 +29,9 @@ Same encoding as line charts. Use area when you want to emphasize the magnitude 
     color?: { field: string, type: "nominal"|"ordinal" },
     size?: { field: string, type: "quantitative" },
     detail?: { field: string, type: "nominal" },
+    opacity?: { field: string, type: "quantitative" },
+    strokeDash?: { field: string, type: "nominal"|"ordinal" },
+    tooltip?: { field: string } | { field: string }[],
   },
   chrome?: Chrome,
   annotations?: Annotation[],
@@ -41,7 +47,7 @@ Same encoding as line charts. Use area when you want to emphasize the magnitude 
 
 ```json
 {
-  "type": "area",
+  "mark": "area",
   "data": [
     { "quarter": "Q1 2023", "revenue": 1200 },
     { "quarter": "Q2 2023", "revenue": 1450 },

@@ -1,5 +1,7 @@
 # Column Chart
 
+> **Note:** `column` is now `mark: "bar"` with vertical orientation. The engine infers vertical orientation when x=nominal/ordinal/temporal and y=quantitative. You can also explicitly set `mark: { type: "bar", orient: "vertical" }`.
+
 Periodic data and categorical comparisons. Vertical bars with category labels on the x-axis.
 
 **Column vs Bar:** Column = vertical (category on x-axis, value on y-axis). Use column for time periods (Q1, Jan, 2023) or when comparing a small number of categories. Use bar for ranked lists.
@@ -18,7 +20,7 @@ Periodic data and categorical comparisons. Vertical bars with category labels on
 
 ```typescript
 {
-  type: "column",
+  mark: "bar" | { type: "bar", orient?: "horizontal" | "vertical" },
   data: DataRow[],
   encoding: {
     x: { field: string, type: "nominal"|"ordinal"|"temporal", axis?, scale? },
@@ -34,6 +36,8 @@ Periodic data and categorical comparisons. Vertical bars with category labels on
   darkMode?: DarkMode,
 }
 ```
+
+Orientation is inferred from encoding: x=nominal/ordinal/temporal + y=quantitative = vertical (column). x=quantitative + y=nominal/ordinal = horizontal (bar). Override with `mark: { type: "bar", orient: "vertical" }` if needed.
 
 Use `color` with a nominal/ordinal field to create stacked or grouped columns.
 
@@ -54,7 +58,7 @@ const spec = columnChart(data, "quarter", "revenue", {
 
 ```json
 {
-  "type": "column",
+  "mark": "bar",
   "data": [
     { "quarter": "Q1", "sales": 420 },
     { "quarter": "Q2", "sales": 510 },
