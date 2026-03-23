@@ -26,11 +26,12 @@ interface GraphEdge {
 ```typescript
 {
   type: "graph",
-  nodes: GraphNode[],          // REQUIRED: array of {id, ...data}
-  edges: GraphEdge[],          // REQUIRED: array of {source, target, ...data}
-  encoding?: GraphEncoding,    // visual mappings for nodes/edges
-  layout?: GraphLayoutConfig,  // force, radial, or hierarchical
-  chrome?: Chrome,             // title, subtitle, source, etc.
+  nodes: GraphNode[],                          // REQUIRED: array of {id, ...data}
+  edges: GraphEdge[],                          // REQUIRED: array of {source, target, ...data}
+  encoding?: GraphEncoding,                    // visual mappings for nodes/edges
+  layout?: GraphLayoutConfig,                  // force, radial, or hierarchical
+  nodeOverrides?: Record<string, NodeOverride>, // per-node visual overrides by id
+  chrome?: Chrome,                             // title, subtitle, source, etc.
   annotations?: Annotation[],
   theme?: ThemeConfig,
   darkMode?: DarkMode,
@@ -39,25 +40,58 @@ interface GraphEdge {
 
 ## Graph Encoding
 
-Graph encoding channels are different from chart encoding channels. All are optional since a graph renders fine with uniform appearance.
+Graph encoding channels use `GraphEncodingChannel` which supports `field`, optional `type`, and optional `scale` (same `ScaleConfig` as chart encodings). All channels are optional since a graph renders fine with uniform appearance.
 
 ```typescript
 encoding?: {
-  nodeColor?: { field: string, type?: "nominal"|"ordinal" },
-  nodeSize?: { field: string, type?: "quantitative" },
-  edgeColor?: { field: string, type?: "nominal"|"ordinal" },
-  edgeWidth?: { field: string, type?: "quantitative" },
-  nodeLabel?: { field: string, type?: FieldType },
+  nodeColor?: { field: string, type?: FieldType, scale?: ScaleConfig },
+  nodeSize?: { field: string, type?: "quantitative", scale?: ScaleConfig },
+  edgeColor?: { field: string, type?: FieldType, scale?: ScaleConfig },
+  edgeWidth?: { field: string, type?: "quantitative", scale?: ScaleConfig },
+  edgeStyle?: { field: string, type?: "nominal"|"ordinal" },
+  nodeLabel?: { field: string },
+}
+```
+
+When `scale.domain` and `scale.range` are provided, the engine uses them directly instead of auto-deriving from data. This controls deterministic color assignment:
+
+```typescript
+encoding: {
+  nodeColor: {
+    field: "dept",
+    type: "nominal",
+    scale: {
+      domain: ["Engineering", "Design", "Product"],
+      range: ["#58a6ff", "#3fb950", "#d29922"],
+    },
+  },
 }
 ```
 
 | Channel | Effect | Type constraint |
 | --- | --- | --- |
-| nodeColor | Color nodes by category | nominal, ordinal |
-| nodeSize | Scale node radius by value (3-20px) | quantitative |
-| edgeColor | Color edges by category | nominal, ordinal |
+| nodeColor | Color nodes by category or value | nominal, ordinal, quantitative |
+| nodeSize | Scale node radius by value (3-12px) | quantitative |
+| edgeColor | Color edges by category or value | nominal, ordinal, quantitative |
 | edgeWidth | Scale edge width by value (0.5-4px) | quantitative |
+| edgeStyle | Map edge line style (solid/dashed/dotted) | nominal, ordinal |
 | nodeLabel | Display text labels on nodes | any |
+
+When `nodeColor` encoding is set, it takes precedence over community-based coloring from `layout.clustering`. Communities still affect spatial grouping, but colors come from the encoding.
+
+## Node Overrides
+
+Per-node visual overrides keyed by node id. Useful for highlighting seed nodes or applying custom styling.
+
+```typescript
+nodeOverrides?: Record<string, {
+  fill?: string,          // override fill color
+  radius?: number,        // override node radius
+  strokeWidth?: number,   // override stroke width
+  stroke?: string,        // override stroke color
+  alwaysShowLabel?: boolean, // force label visibility
+}>
+```
 
 ## Layout Configuration
 
@@ -67,6 +101,9 @@ layout?: {
   clustering?: { field: string },  // group nodes by field for cluster forces
   chargeStrength?: number,         // repulsion (negative values, default varies)
   linkDistance?: number,            // target distance between linked nodes
+  collisionPadding?: number,       // extra px for collision detection (default 2)
+  linkStrength?: number,           // link force strength override
+  centerForce?: boolean,           // apply center force (default true)
 }
 ```
 
@@ -169,7 +206,14 @@ Graphs support these built-in interactions:
     { "source": "alice", "target": "eve", "weight": 8 }
   ],
   "encoding": {
-    "nodeColor": { "field": "dept", "type": "nominal" },
+    "nodeColor": {
+      "field": "dept",
+      "type": "nominal",
+      "scale": {
+        "domain": ["Design", "Engineering", "Product"],
+        "range": ["#3fb950", "#58a6ff", "#d29922"]
+      }
+    },
     "nodeSize": { "field": "commits", "type": "quantitative" },
     "edgeWidth": { "field": "weight", "type": "quantitative" },
     "nodeLabel": { "field": "name" }
@@ -177,6 +221,9 @@ Graphs support these built-in interactions:
   "layout": {
     "type": "force",
     "clustering": { "field": "dept" }
+  },
+  "nodeOverrides": {
+    "alice": { "fill": "#22c55e", "radius": 10, "alwaysShowLabel": true }
   },
   "chrome": {
     "title": "Engineering drives cross-team collaboration",
