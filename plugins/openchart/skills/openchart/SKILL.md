@@ -291,7 +291,7 @@ Both `axis.format` and `labels.format` accept [d3-format](https://d3js.org/d3-fo
 | `".1%"` | 0.125 | `12.5%` | d3 native percent (multiplies by 100) |
 | `"~s"` | 10000 | `10k` | SI suffix (k, M, G) for large numbers |
 | `"~s"` | 1500000 | `1.5M` | SI suffix, auto-scales |
-| `"$~s"` | 78000 | `$78k` | Currency with SI suffix |
+| `"$~s"` | 78000 | `$78k` | Currency with SI suffix. **Caution:** non-round thousands show decimals (60420 → $60.42k). Round data values to clean thousands or use "$,.0f" for exact values |
 | `",.0f"` | 132979 | `132,979` | Comma-separated, no decimals |
 
 **When data is already in percentage form** (e.g., `12.5` meaning 12.5%), use `".1f%"` not `".1%"`. The d3 `%` type multiplies by 100, so `0.125` becomes `12.5%` but `12.5` becomes `1,250.0%`.
@@ -378,7 +378,7 @@ Run these checks before outputting a spec. These catch the issues that most ofte
 | --- | --- |
 | **Data resolution is appropriate** | Check total rows in the data array. Over 150 per series? Aggregate to a coarser time grain or sample. A 25-year time series should use annual or quarterly data, not monthly. See Data Resolution table. |
 | **Color encodes the story** | If one variable drives the narrative, color should reinforce it. Use the decision table in [color-strategy.md](references/color-strategy.md) to pick the right strategy and `theme.colors` array. Don't leave a scatter plot monochrome when a gradient would make the pattern obvious. |
-| **Y-domain fits the data** | Domain ceiling should be ~5-10% above the highest data value. `[0, 55]` for data peaking at 48.8 wastes space. Use `[0, 52]`. |
+| **Y-domain fits the data** | Domain ceiling should be ~5-10% above the highest data value. `[0, 55]` for data peaking at 48.8 wastes space. Use `[0, 52]`. **For bar/column charts with narrow data ranges** (e.g., values between 200 and 280), don't default the floor to 0 — it makes variations invisible. Set the domain floor near the minimum value. Exception: charts where zero is a meaningful baseline (percent change from 0, counts). |
 | **Annotations clear of data AND each other** | The engine auto-resolves annotation-to-annotation collisions, but start with good separation for cleaner results. Prefer 0-2 text annotations; use reflines for additional callouts. On scatter/bubble, use 40-100px offsets into empty quadrants with connectors. When using 2+ text annotations, verify with `playwright-cli`. |
 | **Subtitle fits one line** | If the subtitle wraps, the orphaned fragment looks broken. Abbreviate or restructure. Use shorthand keys in the subtitle (e.g., `"LI = low-income"`) rather than spelling everything out. |
 | **Endpoint labels won't eat the chart** | `labels: { density: "endpoints" }` with series names > 15 chars reserves a huge right margin. Use `"none"` + `legend: { position: "top" }` instead, or abbreviate series names. |
@@ -403,6 +403,17 @@ Run these checks before outputting a spec. These catch the issues that most ofte
 | Using `type` instead of `mark` for charts | Charts use `mark: "line"` (not `type: "line"`). Only tables and graphs use `type`. |
 
 For design anti-patterns (titles, color, annotations), see [design review](references/design-review.md).
+
+## Known Gotchas
+
+Rendering and component behaviors that aren't obvious from the spec alone.
+
+| Gotcha | Behavior | Fix |
+| --- | --- | --- |
+| Refline labels only support top/bottom | `labelAnchor` on refline annotations only accepts `"top"` or `"bottom"`. Left/right values are accepted in the type but have no visible effect on reflines (they do work on range annotations). | Set `label: ""` on the refline and add a separate `type: "text"` annotation positioned where you want a side label. |
+| Endpoint labels don't wrap | `\n` in series names does NOT create line breaks in endpoint labels. Long names consume chart width. | Shorten series names in the data instead. |
+| DataTable CSS overrides unreliable | Custom CSS targeting `.viz-table-wrapper td` may not apply due to CSS cascade layer ordering. | Use the DataTable `style` prop for inline overrides: `<DataTable style={{ paddingLeft: 10 }} spec={...} />`. |
+| Scatter plots auto-set `zero: false` | Unlike other chart types, scatter/point marks automatically set `scale.zero: false` on both axes if not explicitly configured. This means scatter domains fit tightly to data. | To include zero, explicitly set `scale: { zero: true }` on the relevant axis. Be aware that scatter and bar/line charts handle zero differently by default. |
 
 ## Custom D3.js Infographics
 

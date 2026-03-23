@@ -81,3 +81,13 @@ Without `group_by`, the entire (filtered) dataset collapses to a single summary 
 **Only allowlisted functions.** Anything outside `count, sum, avg, min, max, count_distinct` is rejected. This is a security measure against SQL injection.
 
 **`count(*)` is the only function that accepts `*`.** Using `avg(*)` or `sum(*)` returns a 400 error.
+
+## Sorting on Computed Columns
+
+You can sort results by aggregated column names. Use the auto-generated alias as the sort field:
+
+```bash
+curl '.../datasets/provider/dataset?aggregate=count(event_id)&group_by=year&sort=-count_event_id'
+```
+
+Invalid sort fields return a 400 error with a `valid_values` array showing available column names.

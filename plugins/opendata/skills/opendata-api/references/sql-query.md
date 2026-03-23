@@ -168,6 +168,10 @@ curl -X POST 'https://api.tryopendata.ai/v1/query' \
 | Row limit | 10,000 | 10,000 |
 | Memory | 512 MB | 512 MB |
 
+## Fallback Strategy
+
+**If the SQL endpoint fails with a 5xx error**, use the REST aggregation endpoint (`?aggregate=...&group_by=...`) for the same analysis. REST aggregation is more reliable for common operations like counts, averages, and group-by queries.
+
 ## Error Codes
 
 | Status | Code | When |

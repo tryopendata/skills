@@ -79,6 +79,26 @@ When to use: scatter plots, bubble charts, or any chart where a quantitative dim
 
 Where `poverty_tier` is a derived field with values like "Low", "Medium", "High" bucketed from the continuous `poverty_rate`.
 
+## Per-Row Color Assignment
+
+When different bars need different colors based on their value (e.g., above vs below a target), add a categorical field to the data and map it to `encoding.color`:
+
+```json
+{
+  "data": [
+    { "label": "Product A", "revenue": 142000, "zone": "Above target" },
+    { "label": "Product B", "revenue": 89000, "zone": "Below target" },
+    { "label": "Product C", "revenue": 156000, "zone": "Above target" }
+  ],
+  "encoding": {
+    "color": { "field": "zone", "type": "nominal" }
+  },
+  "theme": { "colors": ["#1b7fa3", "#c44e52"] }
+}
+```
+
+This is preferable to a flat `theme.colors` array when color assignment depends on data values rather than row position.
+
 ## How Many Colors
 
 | Count | Guidance |
@@ -87,6 +107,15 @@ Where `poverty_tier` is a derived field with values like "Low", "Medium", "High"
 | 2-3 | Good for direct comparison between specific groups |
 | 4-5 | Maximum for categorical. Beyond this, hues become hard to distinguish. |
 | 6+ | Regroup into "Other", use highlight+gray, or switch to small multiples |
+
+## Color Failures (Never Do These)
+
+| Failure | Why it's wrong | Fix |
+| --- | --- | --- |
+| Uniform color on bar/column where values cross a threshold | A chart with a reference line dividing above/below but all same-color bars misses the visual argument | Add a categorical field for above/below, map to `encoding.color` with semantic colors |
+| All-blue or all-teal bars | Most common failure mode. 5+ same-color bars means something worth highlighting is being ignored. | Identify the key element (highest, lowest, threshold-crossing) and use highlight+gray |
+| Categorical color without semantic assignment | "Danger" or "decline" series should be red, "growth" should be green — don't let the engine assign arbitrary colors to meaningful categories | Explicitly map semantic categories to colors in `theme.colors` |
+| Monochrome scatter when axis has good/bad valence | A meaningful quantitative dimension on an axis but all dots the same color wastes a visual channel | Use `encoding.color` to double-encode the key dimension (see Double-Encoding section) |
 
 ## Color Ramps
 

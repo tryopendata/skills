@@ -105,6 +105,10 @@ curl 'https://api.tryopendata.ai/v1/datasets/nces/naep?filter%5Byear%5D=2024'
 
 **`aggregate` and `nest_fields` are mutually exclusive.** You get a 400 error if you combine them. Aggregation produces flat summary rows; nesting produces grouped hierarchical data.
 
+**SQL endpoint may return 5xx errors.** The POST `/query` endpoint can fail with server-side errors. When this happens, fall back to REST aggregation (`aggregate` + `group_by` params) for the same analysis. The REST endpoint is more reliable for straightforward aggregations.
+
+**Sorting on computed aggregation columns works.** When using `aggregate` + `group_by`, you can sort on the computed column names (e.g., `sort=-count_event_id` for `aggregate=count(event_id)`). Invalid sort fields return a 400 with `valid_values` showing available options.
+
 ## SQL Query
 
 The `POST /v1/datasets/{provider}/{dataset}/query` endpoint accepts raw SQL and executes it against the dataset. Requires authentication (API key or session). The dataset table is available as `data` or `"provider/dataset"`. SQL is validated against an allowlist (SELECT only, no DDL/DML/IO) and runs with resource limits (5s timeout, 10k rows, 512MB memory).

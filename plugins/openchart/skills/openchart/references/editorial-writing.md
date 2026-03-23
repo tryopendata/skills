@@ -48,6 +48,8 @@ Always include. Always format as "Source: Organization Name".
 
 No URLs (they're not readable in a chart). No periods at the end. If multiple sources, separate with commas.
 
+**Avoid duplicating source attribution.** If the chart spec includes `chrome.source`, that text renders inside the chart chrome. Don't repeat the same source in a wrapper component's caption or an adjacent paragraph. Use captions only for context not already in the chart (methodology notes, caveats).
+
 ## Annotations
 
 Amanda Cox, editor of the NYT Upshot: "The annotation layer is the most important thing we do."

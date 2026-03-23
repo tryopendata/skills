@@ -68,6 +68,16 @@ If the reader looks at this chart for 5 seconds and walks away, what's the one t
 | Pie with 7+ slices | Switch to horizontal bar chart |
 | Chart feels cluttered | Remove background fill, reduce gridlines, increase whitespace |
 
+## Chart-Type Design Checklist
+
+| Type | Checklist |
+| --- | --- |
+| Line | Use `labels: { density: "endpoints" }` for start/end values. Add range annotations for context periods. If one series is the primary subject, highlight it and gray the rest. |
+| Bar/column | Never uniform color when values have different significance. If a reference line divides bars, color each side differently. Sort by value for rankings, by category for comparisons. |
+| Scatter | Label notable outliers directly with text annotations. Use `size` for a third variable. Use `color` to reinforce the key dimension (bucket continuous → ordinal tiers). |
+| Area | Stacked for composition shifts. Most important layer gets the strongest visual weight (most saturated color). |
+| Donut | 2-6 categories max. Highlight the one slice the reader should notice first. `mark: { type: "arc", innerRadius: 40 }`. |
+
 ## Rendered Output Verification
 
 The checklist above covers the spec. After rendering, also verify the actual screenshot. Load [visual-qa.md](visual-qa.md) for the full defect catalog. Quick version:
