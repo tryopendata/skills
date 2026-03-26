@@ -60,25 +60,28 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 
 **Collapsed types:** The old `column`, `pie`, `donut`, `scatter`, and `dot` types have been replaced. Use `bar` (orientation inferred), `arc` (with/without innerRadius), `point`, and `circle` respectively.
 
-**Cross-cutting references:**
-- [Annotations](references/annotations.md) (spec syntax for text callouts, ranges, reference lines)
-- [Editing](references/editing.md) (onEdit callback, ElementEdit type, persisting drag positions for all elements)
-- [Responsive](references/responsive.md) (breakpoints, layout strategies, designing for mobile)
-- [Theme customization](references/theme.md) (colors, fonts, spacing config)
-- [Rendering & APIs](references/rendering.md) (React, Vue, Svelte, Vanilla JS, events, builders)
+## Reference Routing
 
-**Design philosophy references:**
+**Always load when generating a new chart spec:** [encoding-channels.md](references/encoding-channels.md), [format-strings.md](references/format-strings.md), [color-strategy.md](references/color-strategy.md)
 
-| Designing... | Load | Reference |
-| --- | --- | --- |
-| Chart type for a story | Story-driven chart selection | [references/chart-selection.md](references/chart-selection.md) |
-| Color palette, emphasis | Color as narrative | [references/color-strategy.md](references/color-strategy.md) |
-| Titles, subtitles, annotations | Editorial writing | [references/editorial-writing.md](references/editorial-writing.md) |
-| Type sizing, hierarchy | Typography | [references/typography.md](references/typography.md) |
-| Whether a chart is "done" | Design review | [references/design-review.md](references/design-review.md) |
-| Rendered output QA | Visual defect scanning | [references/visual-qa.md](references/visual-qa.md) |
-| Mobile / narrow containers | Responsive design | [references/responsive.md](references/responsive.md) |
-| Rendered output verification | Visual defect scanning | [references/visual-qa.md](references/visual-qa.md) |
+| When the task involves... | Load |
+| --- | --- |
+| Adding annotations, callouts, reference lines | [annotations.md](references/annotations.md) |
+| onEdit callback, selection, inline editing | [editing.md](references/editing.md) |
+| Responsive layout, mobile, breakpoint overrides | [responsive.md](references/responsive.md) |
+| Theme customization (colors, fonts, spacing) | [theme.md](references/theme.md) |
+| Rendering setup (React, Vue, Svelte, vanilla) | [rendering.md](references/rendering.md) |
+| Choosing chart type for a story | [chart-selection.md](references/chart-selection.md) |
+| Writing titles, subtitles, annotation text | [editorial-writing.md](references/editorial-writing.md) |
+| Font sizing, type hierarchy | [typography.md](references/typography.md) |
+| Per-series visual overrides (dashed lines, opacity) | [series-styles.md](references/series-styles.md) |
+| Final design quality check | [design-review.md](references/design-review.md) |
+| Checking rendered output for defects | [visual-qa.md](references/visual-qa.md) |
+
+**Common reference bundles:**
+- **New chart:** encoding-channels + format-strings + color-strategy + editorial-writing + (mark-specific ref)
+- **Design polish:** design-review + visual-qa + editorial-writing
+- **D3 infographic:** d3-core-patterns + infographic-design + (topic-specific D3 ref)
 
 ## Shared Spec Structure
 
@@ -145,26 +148,7 @@ mark: {
 
 ## Encoding Channels (Charts Only)
 
-Charts (line, area, bar, arc, point, circle, text, rule, tick, rect) use encoding channels to map data fields to visual properties:
-
-```typescript
-encoding: {
-  x?: EncodingChannel,           // horizontal position
-  y?: EncodingChannel,           // vertical position
-  color?: EncodingChannel,       // series differentiation
-  size?: EncodingChannel,        // bubble/dot scaling (quantitative)
-  detail?: EncodingChannel,      // grouping without visual mapping
-  opacity?: EncodingChannel,     // data-driven opacity
-  shape?: EncodingChannel,       // point shape (circle, square, diamond, etc.)
-  strokeDash?: EncodingChannel,  // data-driven dash patterns
-  text?: EncodingChannel,        // text content for text marks
-  tooltip?: EncodingChannel | EncodingChannel[],  // tooltip fields
-  x2?: EncodingChannel,          // secondary x (ranges)
-  y2?: EncodingChannel,          // secondary y (ranges)
-  theta?: EncodingChannel,       // angular position (arc marks)
-  radius?: EncodingChannel,      // radial position (arc marks)
-}
-```
+Charts map data to visuals via encoding channels: x, y, color, size, detail, opacity, shape, strokeDash, text, tooltip, x2, y2, theta, radius. See [encoding channels reference](references/encoding-channels.md) for the full channel list and conditional encoding examples.
 
 **EncodingChannel:**
 ```typescript
@@ -185,53 +169,14 @@ encoding: {
     nice?: boolean,          // clean tick values (default: true)
     zero?: boolean,          // include zero (default: true for quantitative)
   },
-  condition?: {              // conditional encoding
-    test: FilterPredicate,   // e.g. { "field": "value", "gte": 0 }
-    value: any,              // value when test is true
-  },
-  value?: any,               // fallback value when condition test is false
-}
-```
-
-**Conditional encoding example:**
-```json
-{
-  "encoding": {
-    "color": {
-      "condition": { "test": { "field": "value", "gte": 0 }, "value": "#4CAF50" },
-      "value": "#F44336"
-    }
-  }
+  condition?: { test: FilterPredicate, value: any },  // conditional encoding
+  value?: any,               // fallback when condition test is false
 }
 ```
 
 ## Data Transforms (Charts Only)
 
-Apply transforms to data before encoding. Transforms run in array order.
-
-```typescript
-transform?: Transform[]
-```
-
-**FilterTransform** - subset rows by predicate:
-```json
-{ "filter": { "field": "value", "gte": 100 } }
-```
-
-**BinTransform** - bin a continuous field:
-```json
-{ "bin": true, "field": "temperature", "as": "tempBin" }
-```
-
-**CalculateTransform** - derive new fields:
-```json
-{ "calculate": { "op": "/", "field": "revenue", "field2": "cost" }, "as": "margin" }
-```
-
-**TimeUnitTransform** - truncate temporal fields:
-```json
-{ "timeUnit": "yearmonth", "field": "date", "as": "month" }
-```
+Apply transforms (filter, bin, calculate, timeUnit) to data before encoding. Transforms run in array order. See [data transforms reference](references/data-transforms.md).
 
 ## Layer Composition (Charts Only)
 
@@ -264,7 +209,7 @@ Position is responsive by default (the engine picks based on container width). S
 ```typescript
 labels?: {
   density?: "all"|"auto"|"endpoints"|"none",  // default: "auto"
-  format?: string,           // d3-format for label values (supports literal suffix, see below)
+  format?: string,           // d3-format for label values (supports literal suffix)
 }
 ```
 
@@ -277,78 +222,21 @@ labels?: {
 
 ## Format Strings
 
-Both `axis.format` and `labels.format` accept [d3-format](https://d3js.org/d3-format) strings, plus a literal suffix extension.
+Both `axis.format` and `labels.format` accept [d3-format](https://d3js.org/d3-format) strings plus a literal suffix extension. See [format strings reference](references/format-strings.md) for the full table.
 
-**Literal suffix pattern:** Append non-format characters after a valid d3-format specifier. The engine tries d3-format first; if it fails, it splits off the trailing suffix and applies d3-format to the rest.
+| Format | Output example | Use case |
+| --- | --- | --- |
+| `".1f%"` | `12.5%` | Percentage (data already in %, not 0-1) |
+| `"$,.0f"` | `$1,234` | Currency with commas |
+| `"~s"` | `10k`, `1.5M` | SI suffix for large numbers |
+| `",.0f"` | `132,979` | Comma-separated, no decimals |
+| `".1%"` | `12.5%` (from 0.125) | d3 native percent (multiplies by 100) |
 
-| Format | Input | Output | Use case |
-| --- | --- | --- | --- |
-| `".1f"` | 12.5 | `12.5` | One decimal, no units |
-| `".1f%"` | 12.5 | `12.5%` | Percentage (data already in %, not 0-1) |
-| `".0f%"` | 12 | `12%` | Whole-number percentage |
-| `"$,.0f"` | 1234 | `$1,234` | Currency with commas |
-| `"$,.2f"` | 3.75 | `$3.75` | Currency with cents |
-| `".1%"` | 0.125 | `12.5%` | d3 native percent (multiplies by 100) |
-| `"~s"` | 10000 | `10k` | SI suffix (k, M, G) for large numbers |
-| `"~s"` | 1500000 | `1.5M` | SI suffix, auto-scales |
-| `"$~s"` | 78000 | `$78k` | Currency with SI suffix. **Caution:** non-round thousands show decimals (60420 → $60.42k). Round data values to clean thousands or use "$,.0f" for exact values |
-| `",.0f"` | 132979 | `132,979` | Comma-separated, no decimals |
-
-**When data is already in percentage form** (e.g., `12.5` meaning 12.5%), use `".1f%"` not `".1%"`. The d3 `%` type multiplies by 100, so `0.125` becomes `12.5%` but `12.5` becomes `1,250.0%`.
+**Critical:** When data is already in percentage form (12.5 meaning 12.5%), use `".1f%"` not `".1%"`. The d3 `%` type multiplies by 100, so `12.5` becomes `1,250.0%`.
 
 ## Per-Series Styling (Charts Only)
 
-Override visual properties for individual series by name. Useful for making reference series visually distinct from primary data.
-
-```typescript
-seriesStyles?: Record<string, {
-  lineStyle?: "solid"|"dashed"|"dotted",
-  showPoints?: boolean,
-  strokeWidth?: number,
-  opacity?: number,
-}>
-```
-
-**Example:** Show "Fed funds rate" as a dashed reference line alongside solid CPI data:
-```json
-{
-  "seriesStyles": {
-    "Fed funds rate": {
-      "lineStyle": "dashed",
-      "showPoints": false,
-      "strokeWidth": 1.5,
-      "opacity": 0.6
-    }
-  }
-}
-```
-
-Series names come from the `color` encoding field values. Only specified series get overrides; others render normally.
-
-## Breakpoint Overrides (Charts Only)
-
-Override chrome, labels, legend, or annotations per breakpoint. See [responsive reference](references/responsive.md) for full details.
-
-```typescript
-overrides?: {
-  compact?: { chrome?, labels?, legend?, annotations? },
-  medium?: { chrome?, labels?, legend?, annotations? },
-  full?: { chrome?, labels?, legend?, annotations? },
-}
-```
-
-**Example:** Shorter title and hidden legend at mobile:
-```json
-{
-  "chrome": { "title": "Inflation hit a 40-year high in June 2022" },
-  "overrides": {
-    "compact": {
-      "chrome": { "title": "Inflation hit a 40-year high" },
-      "legend": { "show": false }
-    }
-  }
-}
-```
+Override visual properties (lineStyle, showPoints, strokeWidth, opacity) for individual series by name via `seriesStyles`. See [series styles reference](references/series-styles.md).
 
 ## Data Resolution
 
@@ -378,11 +266,11 @@ Run these checks before outputting a spec. These catch the issues that most ofte
 | --- | --- |
 | **Data resolution is appropriate** | Check total rows in the data array. Over 150 per series? Aggregate to a coarser time grain or sample. A 25-year time series should use annual or quarterly data, not monthly. See Data Resolution table. |
 | **Color encodes the story** | If one variable drives the narrative, color should reinforce it. Use the decision table in [color-strategy.md](references/color-strategy.md) to pick the right strategy and `theme.colors` array. Don't leave a scatter plot monochrome when a gradient would make the pattern obvious. |
-| **Y-domain fits the data** | Domain ceiling should be ~5-10% above the highest data value. `[0, 55]` for data peaking at 48.8 wastes space. Use `[0, 52]`. **For bar/column charts with narrow data ranges** (e.g., values between 200 and 280), don't default the floor to 0 — it makes variations invisible. Set the domain floor near the minimum value. Exception: charts where zero is a meaningful baseline (percent change from 0, counts). |
+| **Y-domain fits the data** | Domain ceiling should be ~5-10% above the highest data value. `[0, 55]` for data peaking at 48.8 wastes space. Use `[0, 52]`. **For bar/column charts with narrow data ranges** (e.g., values between 200 and 280), don't default the floor to 0 - it makes variations invisible. Set the domain floor near the minimum value. Exception: charts where zero is a meaningful baseline (percent change from 0, counts). |
 | **Annotations clear of data AND each other** | The engine auto-resolves annotation-to-annotation collisions, but start with good separation for cleaner results. Prefer 0-2 text annotations; use reflines for additional callouts. On scatter/bubble, use 40-100px offsets into empty quadrants with connectors. When using 2+ text annotations, verify with `playwright-cli`. |
 | **Subtitle fits one line** | If the subtitle wraps, the orphaned fragment looks broken. Abbreviate or restructure. Use shorthand keys in the subtitle (e.g., `"LI = low-income"`) rather than spelling everything out. |
 | **Endpoint labels won't eat the chart** | `labels: { density: "endpoints" }` with series names > 15 chars reserves a huge right margin. Use `"none"` + `legend: { position: "top" }` instead, or abbreviate series names. |
-| **Axis ticks show units** | Percentages should show `10%` not `10`. Use `format: ".0f%"` when data is already in percent form (e.g., 10 meaning 10%). Use `format: ".0%"` only when data is in decimal form (0.10 meaning 10%). Large numbers should use SI suffixes: `format: "~s"` turns 10000 into `10k` and 1000000 into `1M`. For currency: `format: "$~s"` gives `$10k`, `$1M`. See the format table below. |
+| **Axis ticks show units** | Percentages should show `10%` not `10`. Use `format: ".0f%"` when data is already in percent form (e.g., 10 meaning 10%). Use `format: ".0%"` only when data is in decimal form (0.10 meaning 10%). Large numbers should use SI suffixes: `format: "~s"` turns 10000 into `10k` and 1000000 into `1M`. For currency: `format: "$~s"` gives `$10k`, `$1M`. See the Format Strings table above. |
 | **Consistent color palette across related charts** | If multiple charts in the same article cover the same dimension (e.g., poverty), use the same color mapping (blue = low, red = high) so the reader builds a mental model. |
 
 ## Spec Anti-Patterns
@@ -429,26 +317,3 @@ When a visualization goes beyond what declarative specs can handle (creative met
 | D3 color APIs, programmatic palette generation, contrast checking | [references/d3/color-palettes.md](references/d3/color-palettes.md) |
 | SVG text wrapping, collision detection, leader lines, ARIA | [references/d3/typography-labels.md](references/d3/typography-labels.md) |
 | viewBox, ResizeObserver, responsive SVG patterns | [references/d3/responsive-svg.md](references/d3/responsive-svg.md) |
-
-### Infographic Design System
-
-When building custom D3 infographics (not OpenChart specs), use these defaults:
-
-**Export dimensions:**
-
-| Platform | Dimensions | Aspect Ratio |
-|----------|------------|--------------|
-| Twitter/X | 1200 x 675 | 16:9 |
-| Instagram Feed | 1080 x 1080 | 1:1 |
-| LinkedIn | 1200 x 627 | 1.91:1 |
-| Instagram Story | 1080 x 1920 | 9:16 |
-
-**Typography:** Inter (weights 400, 500, 600, 800). Headline 48px/800, subtitle 20px/400, data labels 16px/600 (`tabular-nums`), axis labels 14px/500, source 12px/400.
-
-**Spacing:** Outer margin 48px, chart padding 24px, element spacing on 4px grid (8, 12, 16, 24, 32).
-
-**Headline formula:** `[What happened] + [How much/when/who]` - sentence case, no period, under 10 words, numerals not words.
-
-**Annotation hierarchy:** 1 callout max (14px+, leader line), 2-3 labels (12-14px, inline), 1 note max (11-12px, bottom).
-
-**Watermark:** Bottom-right, 48px from edges, 60px height, 85% opacity, contrast-aware.

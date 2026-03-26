@@ -51,7 +51,7 @@ Use `color` to differentiate 2-5 series. For 6+ series, filter to the top 5 or u
 
 Set the y-domain ceiling to roughly 5-10% above the highest data value. A chart with data peaking at 48.8 should use `domain: [0, 52]`, not `[0, 55]`. Too much headroom wastes chart space and compresses the visual differences between series. Leave just enough room for any annotation text that sits above the peak.
 
-**Per-series styling:** Use `seriesStyles` to differentiate reference series from primary data (e.g., dashed lines for benchmarks, reduced opacity for context series). See the main SKILL.md for the full `seriesStyles` spec.
+**Per-series styling:** Use `seriesStyles` to differentiate reference series from primary data (e.g., dashed lines for benchmarks, reduced opacity for context series). See [series-styles.md](series-styles.md) for the full spec.
 
 ## Builder
 

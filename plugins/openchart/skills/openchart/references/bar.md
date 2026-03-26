@@ -2,14 +2,26 @@
 
 Rankings, comparisons, and categorical data. Covers both horizontal bars and vertical columns.
 
-**Orientation:** The engine infers orientation from encoding types. x=quantitative + y=nominal/ordinal = horizontal bar. x=nominal/ordinal + y=quantitative = vertical column. You can override with `mark: { type: "bar", orient: "horizontal" | "vertical" }`.
+**Orientation:** The engine infers orientation from encoding types. x=quantitative + y=nominal/ordinal = horizontal bar. x=nominal/ordinal/temporal + y=quantitative = vertical column. You can override with `mark: { type: "bar", orient: "horizontal" | "vertical" }`.
 
-## Encoding Rules
+**Column vs Bar:** Column (vertical) works best for time periods (Q1, Jan, 2023) or comparing a small number of categories. Bar (horizontal) works best for ranked lists where category labels need room to breathe.
+
+## Horizontal Bar Encoding
 
 | Channel | Required | Allowed types |
 | --- | --- | --- |
 | x | Yes | quantitative |
 | y | Yes | nominal, ordinal |
+| color | No | nominal, ordinal, quantitative |
+| size | No | quantitative |
+| detail | No | nominal |
+
+## Vertical Bar (Column) Encoding
+
+| Channel | Required | Allowed types |
+| --- | --- | --- |
+| x | Yes | nominal, ordinal, temporal |
+| y | Yes | quantitative |
 | color | No | nominal, ordinal, quantitative |
 | size | No | quantitative |
 | detail | No | nominal |
@@ -21,8 +33,10 @@ Rankings, comparisons, and categorical data. Covers both horizontal bars and ver
   mark: "bar" | { type: "bar", orient?: "horizontal" | "vertical" },
   data: DataRow[],
   encoding: {
-    x: { field: string, type: "quantitative", axis?, scale? },
-    y: { field: string, type: "nominal"|"ordinal", axis?, scale? },
+    // Horizontal: x=quantitative, y=nominal/ordinal
+    // Vertical:   x=nominal/ordinal/temporal, y=quantitative
+    x: { field: string, type: FieldType, axis?, scale? },
+    y: { field: string, type: FieldType, axis?, scale? },
     color?: { field: string, type: "nominal"|"ordinal"|"quantitative" },
   },
   chrome?: Chrome,
@@ -35,22 +49,28 @@ Rankings, comparisons, and categorical data. Covers both horizontal bars and ver
 }
 ```
 
-Use `color` with a nominal/ordinal field to create stacked bars.
+Use `color` with a nominal/ordinal field to create stacked or grouped bars.
 
-**Format strings:** Both `axis.format` and `labels.format` support d3-format strings with an optional literal suffix (e.g., `".1f%"` outputs `12.5%`). Set both to keep axis ticks and bar value labels consistent. See SKILL.md for the full format string reference.
+**Format strings:** Both `axis.format` and `labels.format` support d3-format strings with an optional literal suffix (e.g., `".1f%"` outputs `12.5%`). Set both to keep axis ticks and bar value labels consistent. See [format-strings.md](format-strings.md) for the full reference.
 
-## Builder
+## Builders
 
 ```typescript
-import { barChart } from "@opendata-ai/openchart-core";
+import { barChart, columnChart } from "@opendata-ai/openchart-core";
 
-// Note: barChart(data, category, value) - category maps to y, value maps to x
-const spec = barChart(data, "country", "gdp", {
+// Horizontal bar: barChart(data, category, value)
+const bar = barChart(data, "country", "gdp", {
   chrome: { title: "GDP by country" },
+});
+
+// Vertical column: columnChart(data, category, value)
+const col = columnChart(data, "quarter", "revenue", {
+  color: "department",
+  chrome: { title: "Revenue by quarter" },
 });
 ```
 
-## Example
+## Example: Horizontal Bar
 
 ```json
 {
@@ -75,5 +95,33 @@ const spec = barChart(data, "country", "gdp", {
     "subtitle": "Top 5 countries by GDP per capita (PPP), 2024 estimates",
     "source": "Source: IMF World Economic Outlook"
   }
+}
+```
+
+## Example: Vertical Column
+
+```json
+{
+  "mark": "bar",
+  "data": [
+    { "quarter": "Q1", "sales": 420 },
+    { "quarter": "Q2", "sales": 510 },
+    { "quarter": "Q3", "sales": 390 },
+    { "quarter": "Q4", "sales": 680 }
+  ],
+  "encoding": {
+    "x": { "field": "quarter", "type": "ordinal" },
+    "y": {
+      "field": "sales",
+      "type": "quantitative",
+      "axis": { "format": "$,.0f", "title": "Sales (thousands)" }
+    }
+  },
+  "chrome": {
+    "title": "Q4 sales outpaced the rest of the year",
+    "subtitle": "Quarterly sales in thousands, 2024",
+    "source": "Source: Internal sales data"
+  },
+  "labels": { "density": "all", "format": "$,.0f" }
 }
 ```
