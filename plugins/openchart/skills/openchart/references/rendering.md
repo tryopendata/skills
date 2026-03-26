@@ -17,7 +17,7 @@ import '@opendata-ai/openchart-svelte/styles.css';
 import '@opendata-ai/openchart-vanilla/styles.css';
 ```
 
-Import once at your app's entry point (e.g. `main.tsx`, `app.css`, `layout.svelte`). The stylesheet is plain CSS with `viz-` prefixed class names and CSS custom properties for theming. It includes dark mode overrides via the `.viz-dark` class, which the components manage automatically.
+Import once at your app's entry point (e.g. `main.tsx`, `app.css`, `layout.svelte`). The stylesheet is plain CSS with `oc-` prefixed class names and CSS custom properties for theming. It includes dark mode overrides via the `.oc-dark` class, which the components manage automatically.
 
 ## React
 
@@ -113,7 +113,7 @@ createTable(document.getElementById('table'), tableSpec);
 </script>
 ```
 
-The CSS is required for: table styling (borders, alignment, heatmaps, bars), chart chrome (source, footer, byline text), brand watermark ("OpenData" in footer-right), tooltip appearance, legend layout, and screen-reader accessibility tables (hidden via `viz-sr-only` class).
+The CSS is required for: table styling (borders, alignment, heatmaps, bars), chart chrome (source, footer, byline text), brand watermark ("OpenData" in footer-right), tooltip appearance, legend layout, and screen-reader accessibility tables (hidden via `oc-sr-only` class).
 
 ## Vanilla JS
 
@@ -168,3 +168,14 @@ const fieldType = inferFieldType(data, "fieldName");
 ```
 
 Builder functions accept field names as strings (auto-infers type from data) or full `EncodingChannel` objects for explicit control.
+
+## Animation Support
+
+Entrance animations are CSS-driven and work automatically across all rendering targets. The vanilla renderer applies CSS classes and uses the Web Animations API for SVG path drawing. No framework-specific animation code is needed.
+
+- React, Vue, and Svelte wrappers inherit animation support for free since it runs at the DOM/CSS level
+- Animation is controlled via the `animation` spec property, not framework props
+- `prefers-reduced-motion` is respected automatically across all frameworks
+- Animation replays on each mount. For components that remount frequently (e.g., tab switches), consider disabling animation to avoid repeated entrance effects
+
+See [animation reference](animation.md) for the full spec, easing presets, stagger behavior, and per-mark defaults.

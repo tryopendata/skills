@@ -75,6 +75,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 | Writing titles, subtitles, annotation text | [editorial-writing.md](references/editorial-writing.md) |
 | Font sizing, type hierarchy | [typography.md](references/typography.md) |
 | Per-series visual overrides (dashed lines, opacity) | [series-styles.md](references/series-styles.md) |
+| Entrance animations, easing, stagger, reduced motion | [animation.md](references/animation.md) |
 | Final design quality check | [design-review.md](references/design-review.md) |
 | Checking rendered output for defects | [visual-qa.md](references/visual-qa.md) |
 
@@ -95,6 +96,7 @@ Charts use `mark` as their discriminant. Tables and graphs use `type`.
   theme?: ThemeConfig,
   darkMode?: "auto"|"force"|"off",
   responsive?: boolean,
+  animation?: AnimationSpec, // true | AnimationConfig. Off by default. See animation.md
 }
 
 // Tables and graphs
@@ -104,6 +106,7 @@ Charts use `mark` as their discriminant. Tables and graphs use `type`.
   theme?: ThemeConfig,
   darkMode?: "auto"|"force"|"off",
   responsive?: boolean,
+  animation?: AnimationSpec, // Tables only. Same API as charts. See animation.md
 }
 ```
 
@@ -145,6 +148,8 @@ mark: {
 { "mark": { "type": "arc", "innerRadius": 40 } }
 { "mark": { "type": "bar", "orient": "horizontal" } }
 ```
+
+**Mark type determines default entrance animation.** When `animation: true` is set, each mark type gets an appropriate animation: bars use clip-path reveal from the baseline, lines draw progressively, areas draw + fade, arcs scale from center, and points pop in with scale + fade. Text, rules, and ticks fade in. See [animation reference](references/animation.md) for per-mark defaults and overrides.
 
 ## Encoding Channels (Charts Only)
 
@@ -300,7 +305,7 @@ Rendering and component behaviors that aren't obvious from the spec alone.
 | --- | --- | --- |
 | Refline labels only support top/bottom | `labelAnchor` on refline annotations only accepts `"top"` or `"bottom"`. Left/right values are accepted in the type but have no visible effect on reflines (they do work on range annotations). | Set `label: ""` on the refline and add a separate `type: "text"` annotation positioned where you want a side label. |
 | Endpoint labels don't wrap | `\n` in series names does NOT create line breaks in endpoint labels. Long names consume chart width. | Shorten series names in the data instead. |
-| DataTable CSS overrides unreliable | Custom CSS targeting `.viz-table-wrapper td` may not apply due to CSS cascade layer ordering. | Use the DataTable `style` prop for inline overrides: `<DataTable style={{ paddingLeft: 10 }} spec={...} />`. |
+| DataTable CSS overrides unreliable | Custom CSS targeting `.oc-table-wrapper td` may not apply due to CSS specificity. | Use the DataTable `style` prop for inline overrides: `<DataTable style={{ paddingLeft: 10 }} spec={...} />`. |
 | Scatter plots auto-set `zero: false` | Unlike other chart types, scatter/point marks automatically set `scale.zero: false` on both axes if not explicitly configured. This means scatter domains fit tightly to data. | To include zero, explicitly set `scale: { zero: true }` on the relevant axis. Be aware that scatter and bar/line charts handle zero differently by default. |
 
 ## Custom D3.js Infographics

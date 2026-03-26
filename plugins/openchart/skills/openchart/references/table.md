@@ -18,6 +18,7 @@ Rich data tables with sorting, search, pagination, and inline visualizations.
   stickyFirstColumn?: boolean, // stick first column on horizontal scroll
   compact?: boolean,           // reduced padding and font sizes
   responsive?: boolean,        // default: true
+  animation?: AnimationSpec,   // entrance animation. Same API as charts.
 }
 ```
 

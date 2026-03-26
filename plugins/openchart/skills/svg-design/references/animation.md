@@ -71,3 +71,36 @@ The walls naturally hide layers until they rise above the top edge. Add a subtle
 ### Stagger spacing to prevent overlap
 
 When layers share the same spawn position, ensure `stagger_interval > linger_duration` so a new layer never fades in while the previous one is still sitting at the same position. If they overlap spatially, no DOM order can fix the z-fighting since the correct stacking changes over time.
+
+## SVG vs HTML Animation Differences
+
+These are critical differences that will silently break your animations if you assume SVG elements behave like HTML elements.
+
+### CSS `clip-path: inset()` does not work on SVG `<g>` elements
+
+`clip-path: inset()` needs a reference bounding box. HTML elements have one. SVG `<g>` groups do NOT have an intrinsic box, so `inset()` percentages resolve to nothing. The clip has no visual effect.
+
+**Apply clip-path to individual child elements** (rect, path, circle), not to groups. For grouped clipping, use SVG `<clipPath>` with a `<rect>` child, not CSS `clip-path`.
+
+Exception: `<g>` elements containing `<path>` children sometimes work because the path establishes a bounding box. Test case by case, don't assume.
+
+### CSS `transform` conflicts with SVG `transform` attribute
+
+An SVG element with `<g transform="translate(100,50)">` cannot have an independent CSS `transform: scale(0.5)` animation. CSS `transform` and SVG `transform` occupy the same property slot. The CSS value replaces the SVG attribute, displacing the element entirely.
+
+**Fix:** For elements positioned with SVG `transform` attributes (common with arc/pie slices, force-directed graph nodes), use `opacity`-only animations. Never add CSS transform animations to these elements.
+
+### SVG elements have no consistent DOM wrapper structure
+
+Different SVG mark types may render as:
+- `<g class="mark-type"><rect>` (wrapped in a group)
+- `<circle class="mark-type">` (bare element, no wrapper)
+- `<text class="mark-type">` (bare element)
+
+A CSS selector like `.mark-type circle` fails when the circle IS the `.mark-type` element. Always inspect the actual DOM structure before writing selectors. Use `circle.mark-type` (element selector) vs `.mark-type circle` (descendant selector) accordingly.
+
+### Sequential chained animations need linear easing
+
+When chaining animations so segment B starts when segment A ends, non-linear easing creates visible jitter at handoffs. Segment A decelerates, then segment B starts at full speed, producing a stutter.
+
+**Fix:** Use `animation-timing-function: linear` for all segments in a chain. Reserve non-linear easing (spring, ease-out, bezier) for standalone animations that don't hand off to another element.
