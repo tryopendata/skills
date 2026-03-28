@@ -38,6 +38,8 @@ Scan the screenshot in this order. For each zone, check the listed defect types 
 
 | Defect | What to look for | Common fix |
 | --- | --- | --- |
+| **Too few ticks** | Only 0 and max visible (e.g., `0` and `35`), making it impossible to read intermediate values | Add `axis: { tickCount: 5 }` or `tickCount: 6`. Readers need intermediate reference points to identify data values from the chart. |
+| **Missing units** | Ticks show bare numbers (`10`, `20`) when the data represents percentages or currency | Add format string: `format: ".0f%"` for percentages, `format: "$,.0f"` for currency. Also remove redundant units from axis title (e.g., change `"Rate (%)"` to `"Rate"`). |
 | **Label truncation** | Category names cut off at the left edge | Abbreviate labels or widen container |
 | **Overlap** | Y-axis labels overlapping each other vertically | Reduce label count, abbreviate, or increase chart height |
 | **Collision with plot** | Y-axis labels overlapping data marks or annotations | Add left padding via annotation offset adjustments |

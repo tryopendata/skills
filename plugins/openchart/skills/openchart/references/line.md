@@ -47,6 +47,25 @@ Use `color` to differentiate 2-5 series. For 6+ series, filter to the top 5 or u
 
 **Caution with `endpoints` and long series names:** Endpoint labels include the series name from the `color` field. Long names like `"Waukegan (68% low-income)"` reserve a large right margin, creating dead space. If series names are more than ~15 characters, either abbreviate them or use `labels: { density: "none" }` with `legend: { position: "top" }` instead.
 
+## Axis Formatting
+
+Always format Y-axis ticks with units and provide enough tick density for readers to identify values.
+
+**Tick density:** Add `tickCount: 5` or `tickCount: 6` so the axis shows intermediate values. Without it, many charts default to showing only 0 and the max, which makes it impossible to read specific data points from the chart.
+
+**Percentage format:** When data values represent percentages (e.g., `12.5` means 12.5%), use `format: ".0f%"` (or `".1f%"` for one decimal). This renders ticks as `10%`, `20%`, `30%` instead of bare numbers. Remove `(%)` from the axis title when the format already includes `%` to avoid redundancy.
+
+```json
+"y": {
+  "field": "rate",
+  "type": "quantitative",
+  "axis": { "title": "Chronic absence rate", "format": ".0f%", "tickCount": 5 },
+  "scale": { "domain": [0, 50] }
+}
+```
+
+**Match labels to axis format:** If you set `labels: { density: "all" }`, use the same format string: `labels: { density: "all", format: ".0f%" }`.
+
 ## Y-Domain Sizing
 
 Set the y-domain ceiling to roughly 5-10% above the highest data value. A chart with data peaking at 48.8 should use `domain: [0, 52]`, not `[0, 55]`. Too much headroom wastes chart space and compresses the visual differences between series. Leave just enough room for any annotation text that sits above the peak.
@@ -81,7 +100,7 @@ const spec = lineChart(data, "date", "revenue", {
     "y": {
       "field": "rate",
       "type": "quantitative",
-      "axis": { "format": ".1f", "label": "Adoption rate (%)" }
+      "axis": { "title": "Adoption rate", "format": ".0f%", "tickCount": 5 }
     }
   },
   "chrome": {

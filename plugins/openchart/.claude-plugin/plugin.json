@@ -1,7 +1,7 @@
 {
   "name": "openchart",
   "description": "OpenChart visualization skills for generating charts, tables, graphs, and SVG graphics",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "author": {
     "name": "OpenData",
     "url": "https://github.com/tryopendata"

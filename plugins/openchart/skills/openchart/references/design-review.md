@@ -33,7 +33,7 @@ If the reader looks at this chart for 5 seconds and walks away, what's the one t
 | 8 | Encoding types correct | quantitative for numbers, temporal for dates, nominal for categories |
 | 9 | Field names match data | Every encoding field exists in the data objects |
 | 10 | Category count reasonable | Pie/donut uses 2-6 categories max |
-| 11 | Axis formatted | Currency, percentages, and large numbers have d3-format strings |
+| 11 | Axis formatted + tick density | Currency, percentages, and large numbers have d3-format strings with units (`.0f%`, `$,.0f`, `~s`). Y-axis has `tickCount: 5` or `6` so intermediate values are readable. Axis titles don't repeat units already shown in tick labels. |
 | 12 | Source attribution | `chrome.source` is populated with organization name |
 | 13 | Responsiveness | Chart remains readable at 320px width |
 | 14 | Accessibility | Colors distinguishable in grayscale, text labels present |
@@ -61,7 +61,7 @@ If the reader looks at this chart for 5 seconds and walks away, what's the one t
 | Title is a chart description | Rewrite: state the finding, not the chart type |
 | Too many colors | Switch to highlight+gray or group categories |
 | Labels overlapping | Reduce label density to `"auto"` or `"endpoints"`, abbreviate text |
-| Axis not formatted | Add `axis: { format: "$,.0f" }` or `".1f%"` (literal suffix) or `".1%"` (d3 native, data in 0-1) |
+| Axis not formatted | Add `axis: { format: ".0f%", tickCount: 5 }` for percentages, `{ format: "$,.0f", tickCount: 5 }` for currency. Use `".1%"` only when data is in 0-1 decimal form. Remove `(%)` from title when format already shows `%`. |
 | Labels missing units | Add `labels: { format: ".1f%" }` to append `%`, or `"$,.0f"` for currency |
 | Missing source | Add `chrome: { source: "Source: Organization Name" }` |
 | Too many annotations | Keep the 1-2 most important, move rest to subtitle or remove |
