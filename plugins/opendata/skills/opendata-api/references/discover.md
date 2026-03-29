@@ -28,29 +28,43 @@ GET /v1/discover
 {
   "results": [
     {
-      "name": "Consumer Price Index - All Urban Consumers",
-      "provider": "bls",
-      "path": "/v1/datasets/bls/cpi-u",
-      "description": "CPI-U measures the average change over time in prices...",
-      "rows": 1847520,
-      "format": "csv",
-      "categories": ["economics", "inflation"],
-      "temporal_granularity": "monthly",
-      "geographic_scope": "national",
+      "name": "Life Expectancy",
+      "provider": "owid",
+      "path": "/v1/datasets/owid/life-expectancy",
+      "description": "Life expectancy data by country...",
+      "rows": 19504,
+      "format": "auto",
+      "categories": ["demographics", "health"],
+      "temporal_granularity": "annual",
+      "geographic_scope": "country",
       "canonical_questions": [
-        "What is the current inflation rate?",
-        "How have consumer prices changed over time?"
+        "How has life expectancy changed in my country over the past 50 years?"
       ],
-      "methodology_summary": "Based on prices of a market basket...",
-      "known_limitations": ["Does not cover rural consumers"],
+      "methodology_summary": "Compiled from UN Population Division...",
+      "known_limitations": ["Historical estimates before 1950 are reconstructed"],
       "columns": [
         {
-          "name": "year",
-          "type": "integer",
-          "description": "Reference year",
-          "sample_values": [2020, 2021, 2022, 2023, 2024],
-          "distinct_count": 78
+          "name": "life_expectancy",
+          "type": "float",
+          "sample_values": ["28.15", "37.93", "51.02"],
+          "distinct_count": 996,
+          "display_name": "Life Expectancy (years)",
+          "value_range": {"min": 18.2, "max": 86.37}
+        },
+        {
+          "name": "country",
+          "type": "string",
+          "sample_values": ["Afghanistan", "Japan", "Germany"],
+          "distinct_count": 264,
+          "display_name": "Country"
         }
+      ],
+      "available_views": [
+        {"name": "latest", "description": "Most recent life expectancy by country"},
+        {"name": "by-country", "description": "Life expectancy time series by country"}
+      ],
+      "sample_rows": [
+        {"country": "Japan", "year": 2023, "life_expectancy": 84.71, "country_code": "JPN"}
       ],
       "relevance": 0.94,
       "semantic_score": 0.82,
@@ -59,10 +73,13 @@ GET /v1/discover
     }
   ],
   "total": 3,
-  "query": "monthly inflation data",
-  "processing_time_ms": 142
+  "query": "life expectancy by country",
+  "processing_time_ms": 142,
+  "available_categories": ["agriculture", "demographics", "economics", "education", "energy", "environment", "finance", "government", "health", "housing", "labor", "other", "redistricting", "transportation"]
 }
 ```
+
+**Note:** Null fields are omitted from the response. Only fields with values are included, keeping the payload clean.
 
 ## Field Descriptions
 
@@ -84,6 +101,8 @@ GET /v1/discover
 | `known_limitations` | string[] | Caveats and coverage gaps |
 | `columns` | object[] | Column schemas (when `include_columns=true`) |
 | `total_columns` | int | Total column count (only present when columns are capped at 50) |
+| `available_views` | object[] | Named views that pre-aggregate or transform the raw data |
+| `sample_rows` | object[] | Up to 5 representative rows (when available from enrichment) |
 | `relevance` | float | Combined relevance score (0-1) |
 | `semantic_score` | float | Semantic similarity to query (0-1) |
 | `quality_score` | float | Dataset quality/completeness score (0-1) |
@@ -94,10 +113,14 @@ GET /v1/discover
 | Field | Type | Description |
 |-------|------|-------------|
 | `name` | string | Column name |
-| `type` | string | Data type (integer, varchar, double, etc.) |
+| `type` | string | Data type (integer, string, float, etc.) |
 | `description` | string | What the column represents |
 | `sample_values` | any[] | Representative values |
 | `distinct_count` | int | Number of unique values |
+| `display_name` | string | Human-readable column name (e.g. "GDP per Capita (2021 PPP $)") |
+| `unit` | string | Unit of measurement (e.g. "USD", "%", "index") |
+| `semantic_type` | string | Semantic classification (geographic, identifier, measure, temporal, category) |
+| `value_range` | object | `{"min": ..., "max": ...}` for numeric/date columns |
 
 ### Top-level response fields
 
@@ -107,6 +130,89 @@ GET /v1/discover
 | `total` | int | Total number of matches |
 | `query` | string | Echo of the input query |
 | `processing_time_ms` | int | Server-side processing time in milliseconds |
+| `available_categories` | string[] | All platform category slugs available for filtering with `category=` |
+
+## Batch Discover
+
+Discover multiple queries in a single call. Deduplicates datasets that appear in multiple results.
+
+### Endpoint
+
+```
+POST /v1/discover/batch
+```
+
+### Request
+
+```json
+{
+  "queries": [
+    "healthcare spending per capita",
+    "life expectancy by country",
+    "employment labor statistics"
+  ],
+  "limit_per_query": 3,
+  "deduplicate": true,
+  "provider": null,
+  "category": null,
+  "format": null,
+  "status": "ready"
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `queries` | string[] | **required** | 1-5 search queries |
+| `limit_per_query` | int (1-10) | 5 | Max results per query |
+| `deduplicate` | bool | true | Merge datasets appearing in multiple query results |
+| `provider` | string | null | Filter all queries by provider |
+| `category` | string | null | Filter all queries by category |
+| `format` | string | null | Filter all queries by data format |
+| `status` | string | "ready" | Filter all queries by status |
+
+### Response
+
+```json
+{
+  "query_results": [
+    {
+      "query": "healthcare spending per capita",
+      "dataset_refs": [
+        {"provider": "owid", "slug": "healthcare-spending", "relevance": 0.98},
+        {"provider": "who", "slug": "health-expenditure", "relevance": 0.95}
+      ]
+    },
+    {
+      "query": "life expectancy by country",
+      "dataset_refs": [
+        {"provider": "owid", "slug": "life-expectancy", "relevance": 0.97},
+        {"provider": "owid", "slug": "healthcare-spending", "relevance": 0.82}
+      ]
+    }
+  ],
+  "datasets": [
+    { "... full DiscoverResult for each unique dataset ..." }
+  ],
+  "processing_time_ms": 1234
+}
+```
+
+`query_results` maps each query to its matched datasets with per-query relevance scores. `datasets` contains deduplicated full metadata, sorted by highest relevance.
+
+### Batch Discover Use Cases
+
+**Multi-agent research dispatch:** Discover all datasets at once, then dispatch agents with pre-identified datasets (skip discover in subagents).
+
+```bash
+# 1. Main thread discovers everything
+curl -X POST -H "Authorization: Bearer $KEY" \
+  -H "Content-Type: application/json" \
+  "https://api.tryopendata.ai/v1/discover/batch" \
+  -d '{"queries": ["healthcare spending", "health outcomes", "drug prices"]}'
+
+# 2. Dispatch agents with specific datasets - no discover needed
+# Agent 1 gets owid/healthcare-spending, Agent 2 gets who/life-expectancy, etc.
+```
 
 ## Common Patterns
 
@@ -126,7 +232,7 @@ Take the `path` from a discover result and use it to fetch rows:
 curl -H "Authorization: Bearer od_live_..." \
   "https://api.tryopendata.ai/v1/discover?q=monthly+inflation+data"
 
-# 2. Use query_endpoint from the top result to fetch data
+# 2. Use path from the top result to fetch data
 curl "https://api.tryopendata.ai/v1/datasets/bls/cpi-u?filter[year][gte]=2020&sort=-year&limit=50"
 ```
 
@@ -135,6 +241,15 @@ curl "https://api.tryopendata.ai/v1/datasets/bls/cpi-u?filter[year][gte]=2020&so
 ```bash
 curl -H "Authorization: Bearer od_live_..." \
   "https://api.tryopendata.ai/v1/discover?q=employment&provider=bls"
+```
+
+### Filter by category
+
+Use `available_categories` from any discover response to see valid values:
+
+```bash
+curl -H "Authorization: Bearer od_live_..." \
+  "https://api.tryopendata.ai/v1/discover?q=spending&category=health"
 ```
 
 ### Without column schemas
@@ -156,4 +271,8 @@ curl -H "Authorization: Bearer od_live_..." \
 | **Scoring** | Text relevance | Semantic + quality scoring |
 | **Pagination** | offset/limit (up to 100) | limit only (max 20) |
 | **Facets** | Yes (provider, format, category) | No |
-| **Column schemas** | No | Yes (via `include_columns`) |
+| **Column schemas** | No | Yes (with units, value ranges, display names) |
+| **Views** | No | Yes (available_views per dataset) |
+| **Categories** | No | Yes (available_categories in response) |
+| **Sample rows** | No | Yes (when enriched) |
+| **Batch** | No | Yes (`POST /v1/discover/batch`) |

@@ -14,7 +14,8 @@ POST /v1/datasets/{provider}/{dataset}/query
 
 ```json
 {
-  "sql": "SELECT year, AVG(score) as avg_score FROM data GROUP BY year ORDER BY year DESC",
+  "sql": "SELECT year, AVG(score) as avg_score FROM data WHERE country = ? GROUP BY year ORDER BY year DESC",
+  "params": ["United States"],
   "timeout_ms": 5000,
   "row_limit": 1000
 }
@@ -23,8 +24,36 @@ POST /v1/datasets/{provider}/{dataset}/query
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `sql` | string | required | SQL query to execute |
+| `params` | any[] | null | Positional bind parameters for `?` placeholders |
 | `timeout_ms` | integer | 5000 | Query timeout in milliseconds (max 10000) |
 | `row_limit` | integer | 10000 | Max rows to return (max 10000) |
+
+## Parameterized Queries
+
+Use `?` placeholders with a `params` array to avoid string quoting issues. Each `?` in the SQL is replaced with the corresponding value from `params` (in order).
+
+```json
+{
+  "sql": "SELECT * FROM data WHERE country IN (?, ?, ?) AND year >= ?",
+  "params": ["United States", "Japan", "Germany", 2020]
+}
+```
+
+**Why use params:** Eliminates triple-nested escaping (SQL quotes inside JSON inside shell). The SQL contains no quotes at all. Values live in a plain JSON array.
+
+**Validation:** The number of `?` placeholders must exactly match the length of `params`. Mismatches return a 400 error with a clear message:
+
+```json
+{
+  "detail": {
+    "code": "PARAM_COUNT_MISMATCH",
+    "message": "Parameter count mismatch: SQL has 1 placeholder(s) but 2 parameter(s) provided",
+    "hint": "Each ? in the SQL requires exactly one parameter in the params array."
+  }
+}
+```
+
+**Backwards compatible:** The `params` field is optional. Queries without `?` placeholders work the same as before.
 
 ## Response
 
@@ -125,12 +154,12 @@ Use quoted slash notation for dataset names with hyphens (dot notation won't par
 
 ### Cross-Dataset Examples
 
-**Economic indicators:**
+**Economic indicators (with params):**
 ```bash
 curl -X POST 'https://api.tryopendata.ai/v1/query' \
   -H 'Authorization: Bearer $OPENDATA_API_KEY' \
   -H 'Content-Type: application/json' \
-  -d '{"sql": "SELECT g.date, g.value as gdp, u.value as unemployment FROM fred.gdp g JOIN \"fred/unemployment-rate\" u ON g.date = u.date WHERE EXTRACT(YEAR FROM g.date) >= 2020 ORDER BY g.date"}'
+  -d '{"sql": "SELECT g.date, g.value as gdp, u.value as unemployment FROM fred.gdp g JOIN \"fred/unemployment-rate\" u ON g.date = u.date WHERE EXTRACT(YEAR FROM g.date) >= ? ORDER BY g.date", "params": [2020]}'
 ```
 
 **With CTEs:**
@@ -177,6 +206,8 @@ curl -X POST 'https://api.tryopendata.ai/v1/query' \
 | Status | Code | When |
 |--------|------|------|
 | 400 | `SQL_VALIDATION_ERROR` | SQL fails allowlist validation (blocked function, DDL, etc.) |
+| 400 | `PARAM_COUNT_MISMATCH` | Number of `?` placeholders doesn't match `params` array length |
+| 400 | `MISSING_PARAMS` | SQL has `?` placeholders but no `params` provided |
 | 404 | - | Dataset not found or has no Parquet files |
 | 408 | - | Query exceeded timeout |
 
@@ -198,12 +229,12 @@ curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/query' \
   -d '{"sql": "SELECT jurisdiction, AVG(score) as avg_score FROM data WHERE year = 2024 GROUP BY jurisdiction ORDER BY avg_score DESC"}'
 ```
 
-**Window function:**
+**Window function (with params):**
 ```bash
 curl -X POST 'https://api.tryopendata.ai/v1/datasets/worldbank/gdp-per-capita/query' \
   -H 'Authorization: Bearer $OPENDATA_API_KEY' \
   -H 'Content-Type: application/json' \
-  -d '{"sql": "SELECT country_name, year, gdp_per_capita, LAG(gdp_per_capita) OVER (PARTITION BY country_name ORDER BY year) as prev_year FROM data WHERE country_name = '\''United States'\'' ORDER BY year DESC LIMIT 10"}'
+  -d '{"sql": "SELECT country_name, year, gdp_per_capita, LAG(gdp_per_capita) OVER (PARTITION BY country_name ORDER BY year) as prev_year FROM data WHERE country_name = ? ORDER BY year DESC LIMIT 10", "params": ["United States"]}'
 ```
 
 **CTE for top-N per group:**

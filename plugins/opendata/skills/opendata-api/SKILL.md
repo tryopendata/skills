@@ -52,6 +52,8 @@ All data endpoints live under `/v1/datasets/`.
 | GET    | `/v1/datasets/{provider}/{dataset}/views`          | List available views                                         |
 | POST   | `/v1/datasets/{provider}/{dataset}/query`          | Execute SQL query (authenticated)                            |
 | GET    | `/v1/discover`                                     | Search datasets with enriched metadata for LLM agents        |
+| POST   | `/v1/discover/batch`                               | Batch discover across multiple queries with deduplication    |
+| POST   | `/v1/query`                                        | Cross-dataset SQL query (join multiple datasets)             |
 
 ## Subdatasets
 
@@ -113,9 +115,22 @@ curl 'https://api.tryopendata.ai/v1/datasets/nces/naep?filter%5Byear%5D=2024'
 
 The `POST /v1/datasets/{provider}/{dataset}/query` endpoint accepts raw SQL and executes it against the dataset. Requires authentication (API key or session). The dataset table is available as `data` or `"provider/dataset"`. SQL is validated against an allowlist (SELECT only, no DDL/DML/IO) and runs with resource limits (5s timeout, 10k rows, 512MB memory).
 
+**Parameterized queries:** Use `?` placeholders with a `params` array to avoid string quoting issues:
+
+```json
+{
+  "sql": "SELECT * FROM data WHERE country IN (?, ?) AND year >= ?",
+  "params": ["United States", "Japan", 2020]
+}
+```
+
+This eliminates the triple-nested escaping problem (SQL quotes inside JSON inside shell). See [sql-query.md](references/sql-query.md) for details.
+
 ## Discovery
 
-The `GET /v1/discover` endpoint returns datasets matching a natural language query, enriched with metadata tailored for LLM agents and programmatic integrations. Results include column schemas, canonical questions, methodology summaries, and relevance scores. Unlike `/v1/search`, discover is authenticated and optimized for machine consumption rather than human browsing.
+The `GET /v1/discover` endpoint returns datasets matching a natural language query, enriched with metadata tailored for LLM agents and programmatic integrations. Results include column schemas (with units, value ranges, display names), available views, canonical questions, methodology summaries, sample rows, and relevance scores. Unlike `/v1/search`, discover is authenticated and optimized for machine consumption rather than human browsing.
+
+**Batch discover:** `POST /v1/discover/batch` accepts multiple queries in one call, deduplicates results, and returns per-query dataset references alongside the full metadata. See [discover.md](references/discover.md) for details.
 
 ## Reference Files
 
