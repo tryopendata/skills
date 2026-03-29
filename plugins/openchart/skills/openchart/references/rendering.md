@@ -77,6 +77,8 @@ function ThemedChart({ spec, darkMode = "auto", ...props }) {
 
 **Do NOT use React context** (e.g., `useContext(ThemeContext)`) for this in Astro or other island-based frameworks. Each `client:only` component is its own React tree with no shared context. Read theme state from the DOM instead.
 
+**Animation + theme toggle caveat:** The `Chart` component's mount effect has `darkMode` in its dependency array. Toggling the theme destroys and recreates the chart via `createChart()`, which resets `isFirstRender`. If `animation` is in the spec, the entrance animation replays on every theme toggle. See the [animation reference](animation.md) "Theme toggle replays entrance animation" section for the `useRef` fix.
+
 ## Vue
 
 ```vue

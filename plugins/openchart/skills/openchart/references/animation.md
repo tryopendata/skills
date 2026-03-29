@@ -184,6 +184,62 @@ Custom config works the same as charts:
 }
 ```
 
+## Integration Gotchas
+
+### `chart.update()` cancels in-progress animations
+
+Calling `chart.update(newSpec)` triggers an internal `render()` which runs `cancelAnimations()` before re-rendering. This removes the `oc-animate` class and kills any running CSS entrance animation. If your React wrapper changes the spec after mount (even to remove the `animation` field), the animation dies mid-flight.
+
+**Critical rule:** Do not change the spec object during the animation window (~2.5s after mount). If you need to strip `animation` later (e.g., to prevent replay on theme toggle), use a `useRef` flag, not `useState`. State changes trigger re-renders which trigger `chart.update()`.
+
+### Scroll-into-view (lazy loading)
+
+The most common pattern for blog/article animations: charts animate when scrolled into the viewport. Use `IntersectionObserver` (or a `useInView` hook) to control when the chart component mounts. The animation fires on first `createChart()` call automatically.
+
+**Key settings:**
+- `rootMargin: "50px"` - mounts the chart just before viewport entry, giving it a frame to render before the user sees it. Too large (e.g., 400px) and the animation plays off-screen.
+- `threshold: 0` - triggers immediately on intersection.
+- `triggerOnce: true` - chart stays mounted after first intersection.
+
+```tsx
+function AnimatedChart({ spec }) {
+  const { ref, isVisible } = useInView({ rootMargin: "50px", threshold: 0 });
+  const hasAnimatedRef = useRef(false);
+
+  // Include animation only on the first mount. The ref prevents replay when
+  // the component re-renders (e.g., theme toggle destroys/recreates the chart).
+  const chartSpec = useMemo(() => {
+    if (hasAnimatedRef.current) return spec;
+    hasAnimatedRef.current = true;
+    return { ...spec, animation: true };
+  }, [spec]);
+
+  if (!isVisible) return <div ref={ref} style={{ minHeight: 200 }} />;
+  return <Chart spec={chartSpec} />;
+}
+```
+
+### Theme toggle replays entrance animation
+
+In class-based dark mode apps (Astro, Next.js), the typical wrapper pattern maps the DOM theme class to `darkMode: "force"` or `"off"`. Since `darkMode` is in the React `Chart` component's mount effect dependency array, toggling the theme destroys and recreates the chart instance. A fresh `createChart()` resets `isFirstRender = true`, so if `animation` is still in the spec, the entrance replays.
+
+**Fix:** Use a `useRef` to track whether animation has already played. Include `darkMode` (or equivalent) in the `useMemo` deps so it recomputes on theme toggle, but the ref ensures animation is excluded on the second computation:
+
+```tsx
+const hasAnimatedRef = useRef(false);
+
+const chartSpec = useMemo(() => {
+  if (hasAnimatedRef.current) return spec;
+  hasAnimatedRef.current = true;
+  return { ...spec, animation: true };
+  // darkMode triggers recomputation on theme toggle, but the ref
+  // ensures animation is only included on the first evaluation.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [spec, darkMode]);
+```
+
+**Why `useRef` and not `useState`:** Setting state triggers a re-render, which changes the spec, which calls `chart.update()`, which calls `cancelAnimations()`. The animation gets killed on the very next frame. A ref flip is invisible to React's render cycle.
+
 ## Anti-Patterns
 
 | Mistake | Fix |
@@ -192,6 +248,8 @@ Custom config works the same as charts:
 | Animating charts that update frequently | Entrance animation replays on each mount. Disable for live-updating dashboards. |
 | Setting duration over 1500ms | Animations should feel snappy. Keep total time (including stagger) under 2.5s. |
 | Low stagger delay on scatter plots | Points need enough delay between them to appear individually. Use 40-80ms. |
+| Using `useState` to track animation completion | State changes trigger spec updates which cancel animations. Use `useRef` instead. |
+| Large `rootMargin` with lazy-loaded animated charts | Animation plays off-screen. Use 50px or less for scroll-triggered animations. |
 
 ## Browser Support
 
