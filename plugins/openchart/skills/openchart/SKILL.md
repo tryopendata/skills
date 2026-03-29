@@ -31,6 +31,7 @@ Two numeric columns?         -> point (optional size/color for 3rd/4th dims)
 Categorical + series + num?  -> stacked bar (use color for series)
 Distribution/spread?         -> circle (strip plot)
 Nodes + edges / network?     -> graph (force/radial/hierarchical layout)
+Flow between stages?         -> sankey (source/target/value)
 Tabular data overview?       -> table (with sparklines, heatmaps, bars)
 Default                      -> bar
 ```
@@ -53,6 +54,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 | `mark: "rect"` | Rectangles for heatmaps | x: ordinal/nominal, y: ordinal/nominal, color: quantitative | - |
 | `type: "table"` | Data tables with visual features | columns + data rows | [references/table.md](references/table.md) |
 | `type: "graph"` | Networks, relationships, hierarchies | nodes + edges | [references/graph.md](references/graph.md) |
+| `type: "sankey"` | Flows between stages/processes | source + target + value | [references/sankey.md](references/sankey.md) |
 
 **Bar orientation:** The engine infers orientation from encoding. `x: nominal/ordinal + y: quantitative` = vertical (column-style). `x: quantitative + y: nominal/ordinal` = horizontal bar. Override with `mark: { type: "bar", orient: "horizontal" | "vertical" }`.
 
@@ -76,6 +78,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 | Font sizing, type hierarchy | [typography.md](references/typography.md) |
 | Per-series visual overrides (dashed lines, opacity) | [series-styles.md](references/series-styles.md) |
 | Entrance animations, easing, stagger, reduced motion | [animation.md](references/animation.md) |
+| Sankey diagram (flows between stages) | [sankey.md](references/sankey.md) |
 | Final design quality check | [design-review.md](references/design-review.md) |
 | Checking rendered output for defects | [visual-qa.md](references/visual-qa.md) |
 
@@ -310,7 +313,7 @@ Rendering and component behaviors that aren't obvious from the spec alone.
 
 ## Custom D3.js Infographics
 
-When a visualization goes beyond what declarative specs can handle (creative metaphors, unusual layouts, treemaps, sankeys, generative art, scrollytelling), fall back to raw D3.js + SVG. These references cover D3 implementation patterns:
+When a visualization goes beyond what declarative specs can handle (creative metaphors, unusual layouts, treemaps, generative art, scrollytelling), fall back to raw D3.js + SVG. Note: sankey is now a first-class type with its own spec format. See [references/sankey.md](references/sankey.md). Use the D3 reference only for heavily customized sankey layouts. These references cover D3 implementation patterns:
 
 | Topic | Reference |
 | --- | --- |

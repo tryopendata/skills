@@ -198,6 +198,8 @@ function buildHierarchy(flatData: FlatRow[]): TreemapNode {
 
 ## Sankey diagrams
 
+**For standard sankey usage, see [references/sankey.md](../sankey.md).** Sankey is a first-class OpenChart type with its own declarative spec. The D3 implementation below is for advanced/custom layouts that go beyond what the declarative spec supports.
+
 Show flows between stages. Requires the `d3-sankey` library.
 
 ```typescript

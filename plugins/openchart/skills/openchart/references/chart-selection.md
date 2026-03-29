@@ -28,6 +28,7 @@ Position-based encodings (bars, lines, point/scatter) beat area and angle-based 
 | Distribution / spread | Circle (dot/strip plot) | Individual values visible, shows density |
 | Composition over time | Stacked area | Volume + trend together in one view |
 | Before / after comparison | Grouped bar (vertical) | Side-by-side position makes difference obvious |
+| Flow between stages/processes | Sankey | Width encodes volume, path shows where values move |
 
 ## Data-Ink Ratio
 

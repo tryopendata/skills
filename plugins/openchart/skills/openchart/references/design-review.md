@@ -77,6 +77,7 @@ If the reader looks at this chart for 5 seconds and walks away, what's the one t
 | Scatter | Label notable outliers directly with text annotations. Use `size` for a third variable. Use `color` to reinforce the key dimension (bucket continuous → ordinal tiers). |
 | Area | Stacked for composition shifts. Most important layer gets the strongest visual weight (most saturated color). |
 | Donut | 2-6 categories max. Highlight the one slice the reader should notice first. `mark: { type: "arc", innerRadius: 40 }`. |
+| Sankey | Node count under 30 for readability. Link crossings minimized (try different `nodeAlign` values). Labels don't overlap (left/right positioning correct for each column). Gradient legibility works in both light and dark mode. Link opacity balanced: visible but not overwhelming (0.35 default). |
 
 ## Rendered Output Verification
 
