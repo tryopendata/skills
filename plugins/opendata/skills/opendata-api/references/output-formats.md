@@ -16,6 +16,43 @@ Two ways to choose output format, in priority order:
 
 Default is JSON when neither is specified.
 
+## Columnar JSON Format
+
+For JSON responses, an optional `response_format` parameter controls the response shape:
+
+| Endpoint | Parameter | Default | Description |
+|----------|-----------|---------|-------------|
+| REST data (`GET /v1/datasets/...`) | `?response_format=columnar` | `objects` | Query param |
+| SQL query (`POST .../query`) | `"response_format": "columnar"` | `columnar` | Request body field |
+
+**Columnar format** returns data as arrays of arrays instead of arrays of objects, saving ~45% tokens by not repeating column names on every row:
+
+```json
+{
+  "columns": ["country", "year", "value"],
+  "types": ["string", "integer", "float"],
+  "rows": [
+    ["United States", 2023, 13473],
+    ["Japan", 2023, 5365]
+  ],
+  "total_rows": 4869,
+  "row_count": 2
+}
+```
+
+**Objects format** (traditional) repeats key names on every row:
+
+```json
+{
+  "data": [
+    {"country": "United States", "year": 2023, "value": 13473},
+    {"country": "Japan", "year": 2023, "value": 5365}
+  ]
+}
+```
+
+SQL query endpoints default to columnar since their primary consumers are agents. REST data endpoints default to objects for backward compatibility.
+
 ## Examples
 
 ```bash

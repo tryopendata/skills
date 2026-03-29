@@ -68,9 +68,14 @@ Returns 404 if the column doesn't exist, with `available_columns` in the error d
 | `null_count` | Approximate null count (sampled) | All columns |
 | `min` | Minimum value | Numeric, date, timestamp |
 | `max` | Maximum value | Numeric, date, timestamp |
-| `sample_values` | Sample of distinct values (up to 20 for all-columns, up to 1000 for single column) | Low-cardinality columns |
+| `sample_values` | Representative values spanning the data range | All columns |
 
 Stats are computed from a 10,000-row sample for efficiency on large datasets.
+
+**Sample values strategy:**
+- Low-cardinality columns (<=20 distinct for batch, <=1000 for single): all distinct values sorted
+- High-cardinality numeric columns: 5 percentile values (min, p25, median, p75, max)
+- High-cardinality string columns: 5 evenly spaced values from the sorted distinct set (first, 25th percentile, median, 75th percentile, last)
 
 ## Type Mapping
 

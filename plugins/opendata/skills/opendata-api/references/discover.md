@@ -49,6 +49,8 @@ GET /v1/discover
           "sample_values": ["28.15", "37.93", "51.02"],
           "distinct_count": 996,
           "display_name": "Life Expectancy (years)",
+          "unit": "years",
+          "semantic_type": "measure",
           "value_range": {"min": 18.2, "max": 86.37}
         },
         {
@@ -56,7 +58,9 @@ GET /v1/discover
           "type": "string",
           "sample_values": ["Afghanistan", "Japan", "Germany"],
           "distinct_count": 264,
-          "display_name": "Country"
+          "display_name": "Country",
+          "semantic_type": "geographic",
+          "semantic_subtype": "country"
         }
       ],
       "available_views": [
@@ -118,8 +122,9 @@ GET /v1/discover
 | `sample_values` | any[] | Representative values |
 | `distinct_count` | int | Number of unique values |
 | `display_name` | string | Human-readable column name (e.g. "GDP per Capita (2021 PPP $)") |
-| `unit` | string | Unit of measurement (e.g. "USD", "%", "index") |
-| `semantic_type` | string | Semantic classification (geographic, identifier, measure, temporal, category) |
+| `unit` | string | Unit of measurement (e.g. "USD", "percent", "per capita", "index") |
+| `semantic_type` | string | Semantic classification: geographic, identifier, measure, temporal, category |
+| `semantic_subtype` | string | Specific classification: country, state, county, fips_code, zip_code, year, month, date, code, name |
 | `value_range` | object | `{"min": ..., "max": ...}` for numeric/date columns |
 
 ### Top-level response fields
@@ -193,11 +198,35 @@ POST /v1/discover/batch
   "datasets": [
     { "... full DiscoverResult for each unique dataset ..." }
   ],
+  "join_hints": [
+    {
+      "datasets": ["owid/healthcare-spending", "owid/life-expectancy"],
+      "join_key": "country_code",
+      "compatibility": "exact_match",
+      "shared_values": 3
+    }
+  ],
   "processing_time_ms": 1234
 }
 ```
 
-`query_results` maps each query to its matched datasets with per-query relevance scores. `datasets` contains deduplicated full metadata, sorted by highest relevance.
+`query_results` maps each query to its matched datasets with per-query relevance scores. `datasets` contains deduplicated full metadata, sorted by highest relevance. `join_hints` suggests which datasets can be joined and on which columns.
+
+### Join Hints
+
+When batch discover returns multiple datasets, `join_hints` identifies column pairs that are likely joinable across datasets. Use these to write cross-dataset SQL queries without manual schema inspection.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `datasets` | string[] | Two dataset paths (provider/slug) that can be joined |
+| `join_key` | string | Column name to join on |
+| `compatibility` | string | Confidence level: `exact_match`, `semantic_match`, or `name_match` |
+| `shared_values` | int | Estimated shared values from sample overlap (null if unknown) |
+
+Compatibility levels:
+- **exact_match**: Same column name and both classified as geographic or temporal. Highest confidence.
+- **semantic_match**: Different column names but matching semantic subtype (e.g., both are "country"). Medium confidence.
+- **name_match**: Same column name but no semantic type info. Lowest confidence.
 
 ### Batch Discover Use Cases
 

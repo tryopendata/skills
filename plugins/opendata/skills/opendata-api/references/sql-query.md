@@ -27,6 +27,7 @@ POST /v1/datasets/{provider}/{dataset}/query
 | `params` | any[] | null | Positional bind parameters for `?` placeholders |
 | `timeout_ms` | integer | 5000 | Query timeout in milliseconds (max 10000) |
 | `row_limit` | integer | 10000 | Max rows to return (max 10000) |
+| `response_format` | string | "columnar" | Response shape: `columnar` (compact) or `objects` (key-value per row) |
 
 ## Parameterized Queries
 
@@ -57,6 +58,37 @@ Use `?` placeholders with a `params` array to avoid string quoting issues. Each 
 
 ## Response
 
+### Columnar format (default)
+
+The default response uses a compact columnar shape that saves ~45% tokens compared to the objects format.
+
+```json
+{
+  "columns": ["year", "avg_score"],
+  "types": ["integer", "float"],
+  "rows": [
+    [2024, 267.5],
+    [2023, 265.1]
+  ],
+  "row_count": 2,
+  "execution_time_ms": 42,
+  "truncated": false
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `columns` | string[] | Column names in result order |
+| `types` | string[] | Column types (string, integer, float, boolean, date, timestamp) |
+| `rows` | any[][] | Result rows as arrays (values in same order as `columns`) |
+| `row_count` | integer | Number of rows returned |
+| `execution_time_ms` | number | Server-side execution time |
+| `truncated` | boolean | `true` if results hit the row limit |
+
+### Objects format
+
+Pass `"response_format": "objects"` to get the traditional key-value format.
+
 ```json
 {
   "data": [
@@ -72,8 +104,8 @@ Use `?` placeholders with a `params` array to avoid string quoting issues. Each 
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `data` | array | Query result rows |
-| `columns` | array | Column names in result order |
+| `data` | object[] | Query result rows as key-value objects |
+| `columns` | string[] | Column names in result order |
 | `row_count` | integer | Number of rows returned |
 | `execution_time_ms` | number | Server-side execution time |
 | `truncated` | boolean | `true` if results hit the row limit |

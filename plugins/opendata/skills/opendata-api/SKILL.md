@@ -81,6 +81,7 @@ If you get a `SUBDATASET_NOT_FOUND` error, the dataset likely has subdatasets. C
 | `view`            | `view=timeseries`        | Apply a named view                         |                                                             |
 | `expand`          | `expand=area`            | Expand joined dimensions inline            |                                                             |
 | `include_sources` | `include_sources=true`   | Show `_source_url`, `_source_page` columns |                                                             |
+| `response_format` | `response_format=columnar` | Response shape: `objects` (default) or `columnar` (compact) | [output-formats.md](references/output-formats.md)           |
 | `debug`           | `debug=true`             | Include generated SQL and query echo       |                                                             |
 
 ## Common Pitfalls
