@@ -35,16 +35,6 @@ Format strings control _what_ ticks look like. `tickCount` controls _how many_ a
 
 Without `tickCount`, many charts default to showing only the domain endpoints (e.g., `0%` and `50%`). This makes it nearly impossible for readers to identify specific data point values. Use 5-6 ticks as a default for most charts. The engine treats `tickCount` as a suggestion and picks clean round values nearby.
 
-## Label Prefix
-
-Use `labels.prefix` to prepend a literal string before each formatted label value. Applied after d3-format, so it won't interfere with format parsing. Works on bar, column, and dot charts.
-
-```json
-"labels": { "format": ",.0f", "prefix": "$" }
-```
-
-This produces labels like `$1,234`. For cases where d3-format already handles the prefix (like `"$,.0f"`), you don't need `labels.prefix`.
-
 ## Axis Title Redundancy
 
 When the format string already includes units (`%`, `$`, `k`), drop the units from `axis.title`. Write `"Chronic absence rate"` with `format: ".0f%"`, not `"Chronic absence rate (%)"`. The ticks themselves show `10%`, `20%`, `30%`, which makes `(%)` in the title redundant.

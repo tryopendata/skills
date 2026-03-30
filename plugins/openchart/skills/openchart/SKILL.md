@@ -243,8 +243,6 @@ Both `axis.format` and `labels.format` accept [d3-format](https://d3js.org/d3-fo
 
 **Critical:** When data is already in percentage form (12.5 meaning 12.5%), use `".1f%"` not `".1%"`. The d3 `%` type multiplies by 100, so `12.5` becomes `1,250.0%`.
 
-**Label prefix:** Use `labels.prefix` to prepend a literal string before each formatted value. For example, `prefix: "-"` with `format: ",.0f"` turns `1234` into `-1,234`. Works on bar, column, and dot charts. This is applied after formatting, so it won't interfere with d3-format parsing.
-
 ## Per-Series Styling (Charts Only)
 
 Override visual properties (lineStyle, showPoints, strokeWidth, opacity) for individual series by name via `seriesStyles`. See [series styles reference](references/series-styles.md).
