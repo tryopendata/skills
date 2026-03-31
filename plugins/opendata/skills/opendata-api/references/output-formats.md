@@ -22,8 +22,8 @@ For JSON responses, an optional `response_format` parameter controls the respons
 
 | Endpoint | Parameter | Default | Description |
 |----------|-----------|---------|-------------|
-| REST data (`GET /v1/datasets/...`) | `?response_format=columnar` | `objects` | Query param |
-| SQL query (`POST .../query`) | `"response_format": "columnar"` | `columnar` | Request body field |
+| REST data (`GET /v1/datasets/...`) | `?response_format=objects` | `columnar` | Query param |
+| SQL query (`POST .../query`) | `"response_format": "objects"` | `columnar` | Request body field |
 
 **Columnar format** returns data as arrays of arrays instead of arrays of objects, saving ~45% tokens by not repeating column names on every row:
 
@@ -51,7 +51,7 @@ For JSON responses, an optional `response_format` parameter controls the respons
 }
 ```
 
-SQL query endpoints default to columnar since their primary consumers are agents. REST data endpoints default to objects for backward compatibility.
+Both REST and SQL endpoints default to columnar. Pass `?response_format=objects` (REST) or `"response_format": "objects"` (SQL body) to get the traditional object-per-row format.
 
 ## Examples
 
@@ -117,7 +117,8 @@ curl '.../nces/naep?filter%5Bjurisdiction_name%5D=Illinois&sort=-year&fields=yea
 Response includes a `debug` object:
 ```json
 {
-  "data": [...],
+  "columns": [...],
+  "rows": [...],
   "debug": {
     "query": {
       "filters": {"jurisdiction_name": {"eq": "Illinois"}},
