@@ -126,6 +126,8 @@ chrome?: {
 
 **ChromeTextStyle:** `{ fontSize?: number, fontWeight?: number, fontFamily?: string, color?: string }`
 
+All chrome text fields support `\n` for explicit line breaks. Text also auto-wraps at the container width.
+
 ## Mark (Charts Only)
 
 `mark` can be a string or an object with additional properties:
@@ -206,7 +208,10 @@ Layers share the same coordinate space. Use this for combo charts (bar + line), 
 ```typescript
 legend?: {
   position?: "top"|"right"|"bottom"|"bottom-right"|"inline",
-  show?: boolean,  // default: true. Set false to hide legend entirely.
+  show?: boolean,     // default: true. Set false to hide legend entirely.
+  columns?: number,   // columns for horizontal layout (controls row wrapping)
+  symbolLimit?: number, // max entries before "+N more" truncation
+  maxRows?: number,   // max rows for top-positioned legends (default: 2)
 }
 ```
 
@@ -277,7 +282,7 @@ Run these checks before outputting a spec. These catch the issues that most ofte
 | **Color encodes the story** | If one variable drives the narrative, color should reinforce it. Use the decision table in [color-strategy.md](references/color-strategy.md) to pick the right strategy and `theme.colors` array. Don't leave a scatter plot monochrome when a gradient would make the pattern obvious. |
 | **Y-domain fits the data** | Domain ceiling should be ~5-10% above the highest data value. `[0, 55]` for data peaking at 48.8 wastes space. Use `[0, 52]`. **For bar/column charts with narrow data ranges** (e.g., values between 200 and 280), don't default the floor to 0 - it makes variations invisible. Set the domain floor near the minimum value. Exception: charts where zero is a meaningful baseline (percent change from 0, counts). |
 | **Annotations clear of data AND each other** | The engine auto-resolves annotation-to-annotation collisions, but start with good separation for cleaner results. Prefer 0-2 text annotations; use reflines for additional callouts. On scatter/bubble, use 40-100px offsets into empty quadrants with connectors. When using 2+ text annotations, verify with `playwright-cli`. |
-| **Subtitle fits one line** | If the subtitle wraps, the orphaned fragment looks broken. Abbreviate or restructure. Use shorthand keys in the subtitle (e.g., `"LI = low-income"`) rather than spelling everything out. |
+| **Subtitle is intentional about wrapping** | Unintentional wrapping with orphaned fragments looks broken. Abbreviate, restructure, or use `\n` for explicit line breaks. Use shorthand keys in the subtitle (e.g., `"LI = low-income"`) rather than spelling everything out. |
 | **Endpoint labels won't eat the chart** | `labels: { density: "endpoints" }` with series names > 15 chars reserves a huge right margin. Use `"none"` + `legend: { position: "top" }` instead, or abbreviate series names. |
 | **Axis ticks show units** | Percentages should show `10%` not `10`. Use `format: ".0f%"` when data is already in percent form (e.g., 10 meaning 10%). Use `format: ".0%"` only when data is in decimal form (0.10 meaning 10%). Large numbers should use SI suffixes: `format: "~s"` turns 10000 into `10k` and 1000000 into `1M`. For currency: `format: "$~s"` gives `$10k`, `$1M`. See the Format Strings table above. |
 | **Consistent color palette across related charts** | If multiple charts in the same article cover the same dimension (e.g., poverty), use the same color mapping (blue = low, red = high) so the reader builds a mental model. |

@@ -31,7 +31,7 @@ Rich data tables with sorting, search, pagination, and inline visualizations.
   sortable?: boolean,          // default: true
   align?: "left"|"center"|"right",  // default: "left" text, "right" numbers
   width?: string,              // CSS value: "200px" or "20%"
-  format?: string,             // d3-format or d3-time-format
+  format?: string,             // d3-format string (supports literal suffix, see format-strings.md)
 
   // Visual features (pick ONE per column):
   heatmap?: {

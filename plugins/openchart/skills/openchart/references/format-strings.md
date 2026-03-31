@@ -1,6 +1,6 @@
 # Format Strings
 
-Both `axis.format` and `labels.format` accept [d3-format](https://d3js.org/d3-format) strings, plus a literal suffix extension.
+Chart `axis.format`, `labels.format`, and DataTable `column.format` all accept [d3-format](https://d3js.org/d3-format) strings, plus a literal suffix extension.
 
 ## Literal Suffix Pattern
 

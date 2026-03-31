@@ -136,7 +136,7 @@ Horizontal or vertical threshold/baseline line.
 - Set `x` for a vertical reference line
 - Set `y` for a horizontal reference line
 - Use `style: "dashed"` for targets/thresholds
-- **Label placement:** `labelAnchor: "top"` (default) places the label above the line; `"bottom"` places it below. Use `labelOffset: { dy: N }` for fine-tuning.
+- **Label placement:** For horizontal reflines: `labelAnchor: "top"` (default) and `"right"` place the label above at the right end; `"bottom"` places it below at the right end; `"left"` places it above at the left end (near the y-axis). For vertical reflines: `"left"` (default) and `"top"` place the label to the right near the top; `"right"` places it to the left near the top; `"bottom"` places it near the bottom. Use `labelOffset: { dx: N, dy: N }` for fine-tuning.
 
 ## Annotation Editing
 

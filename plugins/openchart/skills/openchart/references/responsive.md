@@ -63,7 +63,7 @@ Column charts with band scales auto-rotate x-axis labels to -45 degrees when lab
 ### Legend Overflow Protection
 
 When there are many series:
-- **Top-positioned legends** truncate after 2 rows, showing "+N more"
+- **Top-positioned legends** truncate after 2 rows (configurable via `legend.maxRows`), showing "+N more"
 - **Right-positioned legends** cap at 40% of chart area height, truncating with "+N more"
 - **Cramped height** hides the legend entirely
 
