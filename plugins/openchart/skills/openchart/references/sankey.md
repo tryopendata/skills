@@ -42,6 +42,7 @@ If your app uses class-based dark mode (not `prefers-color-scheme`), pass `darkM
   nodeAlign?: 'left' | 'right' | 'center' | 'justify',  // Default: 'justify'
   iterations?: number,       // layout relaxation passes. Default: 6
   linkStyle?: 'gradient' | 'source' | 'target' | 'neutral',  // Default: 'gradient'
+  linkOpacity?: number,        // link fill opacity 0-1. Default: 0.5 light, 0.75 dark
   chrome?: Chrome,
   legend?: LegendConfig,
   theme?: ThemeConfig,
