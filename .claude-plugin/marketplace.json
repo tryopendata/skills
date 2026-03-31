@@ -36,7 +36,7 @@
       "name": "openchart",
       "source": "./plugins/openchart/",
       "description": "OpenChart visualization skills for generating charts, tables, graphs, and SVG graphics",
-      "version": "0.2.13",
+      "version": "0.2.14",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"
