@@ -65,7 +65,7 @@ If your app uses class-based dark mode (not `prefers-color-scheme`), pass `darkM
 ## Design Guidance
 
 - **Gradient links are the default for a reason.** They visually connect source to target and look the most polished. Switch to `source` or `target` coloring only when you need to emphasize one side of the flow.
-- **Link opacity** defaults to 0.35 with hover highlight to 0.7. This keeps the diagram readable without overwhelming the nodes.
+- **Link opacity** defaults to 0.5 in light mode and 0.75 in dark mode, with hover highlight to 0.7. Override with the `linkOpacity` spec option (note: setting this disables the automatic light/dark mode adjustment). This keeps the diagram readable without overwhelming the nodes.
 - **Node labels** auto-position outside nodes based on column: left-column labels go left, right-column labels go right, middle columns go to whichever side has more room.
 - **Theme palettes work out of the box.** Node colors come from the theme's categorical palette. Set `encoding.color` to override with a specific field.
 - **Keep node count under 30.** Beyond that, the diagram becomes a tangle of crossing links. Aggregate small categories into "Other" to stay readable.
