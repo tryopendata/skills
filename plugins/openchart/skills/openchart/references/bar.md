@@ -49,7 +49,7 @@ Rankings, comparisons, and categorical data. Covers both horizontal bars and ver
 }
 ```
 
-Use `color` with a nominal/ordinal field to create stacked or grouped bars.
+Use `color` with a nominal/ordinal field to create multi-series bars. By default, multiple rows per category are **stacked** (cumulative segments). Set `stack: null` on the quantitative encoding channel to produce **grouped** (side-by-side) bars instead. See [encoding-channels.md](encoding-channels.md) for details.
 
 **Format strings:** Both `axis.format` and `labels.format` support d3-format strings with an optional literal suffix (e.g., `".1f%"` outputs `12.5%`). Set both to keep axis ticks and bar value labels consistent. See [format-strings.md](format-strings.md) for the full reference.
 
@@ -94,6 +94,33 @@ const col = columnChart(data, "quarter", "revenue", {
     "title": "Luxembourg leads the world in GDP per capita",
     "subtitle": "Top 5 countries by GDP per capita (PPP), 2024 estimates",
     "source": "Source: IMF World Economic Outlook"
+  }
+}
+```
+
+## Example: Grouped Horizontal Bar
+
+```json
+{
+  "mark": "bar",
+  "data": [
+    { "expense": "Healthcare", "weeks": 4, "era": "1984" },
+    { "expense": "Healthcare", "weeks": 28, "era": "2024" },
+    { "expense": "Housing", "weeks": 10, "era": "1984" },
+    { "expense": "Housing", "weeks": 22, "era": "2024" }
+  ],
+  "encoding": {
+    "x": {
+      "field": "weeks",
+      "type": "quantitative",
+      "stack": null
+    },
+    "y": { "field": "expense", "type": "nominal" },
+    "color": { "field": "era", "type": "nominal" }
+  },
+  "chrome": {
+    "title": "Everything costs more weeks of your life",
+    "subtitle": "Weeks of median income needed per year, 1984 vs 2024"
   }
 }
 ```

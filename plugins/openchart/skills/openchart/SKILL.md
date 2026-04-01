@@ -179,6 +179,8 @@ Charts map data to visuals via encoding channels: x, y, color, size, detail, opa
     nice?: boolean,          // clean tick values (default: true)
     zero?: boolean,          // include zero (default: true for quantitative)
   },
+  stack?: boolean | "zero" | null,  // stacking for quantitative channels (default: stacked)
+                                     // null or false = grouped/dodged side-by-side bars
   condition?: { test: FilterPredicate, value: any },  // conditional encoding
   value?: any,               // fallback when condition test is false
 }

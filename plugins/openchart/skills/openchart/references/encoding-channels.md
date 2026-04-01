@@ -23,6 +23,41 @@ encoding: {
 }
 ```
 
+## Stack Control
+
+The `stack` property on quantitative encoding channels controls how multi-series bar/column charts handle overlapping categories. Follows Vega-Lite conventions.
+
+| Value | Behavior |
+| --- | --- |
+| `undefined` / `true` / `"zero"` | Stacked (default). Segments stack cumulatively. |
+| `null` / `false` | Grouped/dodged. Bars render side-by-side within each category. |
+
+Set `stack` on the **quantitative** channel (x for horizontal bars, y for vertical columns).
+
+**Grouped horizontal bar:**
+```json
+{
+  "encoding": {
+    "x": { "field": "weeks", "type": "quantitative", "stack": null },
+    "y": { "field": "expense", "type": "nominal" },
+    "color": { "field": "era", "type": "nominal" }
+  }
+}
+```
+
+**Grouped vertical column:**
+```json
+{
+  "encoding": {
+    "x": { "field": "year", "type": "nominal" },
+    "y": { "field": "capacity", "type": "quantitative", "stack": null },
+    "color": { "field": "type", "type": "nominal" }
+  }
+}
+```
+
+**When to use grouped vs stacked:** Use stacked when values represent parts of a whole (e.g., budget breakdown by category). Use grouped when values are independent comparisons (e.g., 1984 vs 2024 costs) where stacking would misrepresent the data by making it look cumulative.
+
 ## Conditional Encoding
 
 Use `condition` + `value` to apply different visual properties based on data values:
