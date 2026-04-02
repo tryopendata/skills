@@ -77,6 +77,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 | Writing titles, subtitles, annotation text | [editorial-writing.md](references/editorial-writing.md) |
 | Font sizing, type hierarchy | [typography.md](references/typography.md) |
 | Per-series visual overrides (dashed lines, opacity) | [series-styles.md](references/series-styles.md) |
+| Gradient fills (linear, radial, per-mark) | [gradients.md](references/gradients.md) |
 | Entrance animations, easing, stagger, reduced motion | [animation.md](references/animation.md) |
 | Sankey diagram (flows between stages) | [sankey.md](references/sankey.md) |
 | Final design quality check | [design-review.md](references/design-review.md) |
@@ -143,6 +144,7 @@ mark: {
   interpolate?: "linear" | "monotone" | "step" | "step-before" | "step-after" | "basis" | "cardinal" | "natural",
   orient?: "horizontal" | "vertical",   // override inferred bar orientation
   innerRadius?: number,                  // >0 makes arc marks render as donuts
+  fill?: string | GradientDef,          // solid color or gradient fill for all marks
 }
 ```
 
@@ -152,7 +154,10 @@ mark: {
 { "mark": { "type": "line", "point": true, "interpolate": "monotone" } }
 { "mark": { "type": "arc", "innerRadius": 40 } }
 { "mark": { "type": "bar", "orient": "horizontal" } }
+{ "mark": { "type": "bar", "fill": { "gradient": "linear", "stops": [{"offset": 0, "color": "#1b7fa3"}, {"offset": 1, "color": "#1b7fa3", "opacity": 0.4}] } } }
 ```
+
+**Gradient fills:** `mark.fill` accepts a `GradientDef` for linear or radial gradients. Gradients can also be used as conditional color values in encoding for per-mark gradients. See [gradients reference](references/gradients.md) for details.
 
 **Mark type determines default entrance animation.** When `animation: true` is set, each mark type gets an appropriate animation: bars use clip-path reveal from the baseline, lines draw progressively, areas draw + fade, arcs scale from center, and points pop in with scale + fade. Text, rules, and ticks fade in. See [animation reference](references/animation.md) for per-mark defaults and overrides.
 
