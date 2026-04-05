@@ -23,11 +23,12 @@ Import once at your app's entry point (e.g. `main.tsx`, `app.css`, `layout.svelt
 
 ```tsx
 import '@opendata-ai/openchart-react/styles.css';
-import { Chart, DataTable, Graph, VizThemeProvider } from '@opendata-ai/openchart-react';
+import { Chart, DataTable, Graph, Sankey, VizThemeProvider } from '@opendata-ai/openchart-react';
 
 <Chart spec={chartSpec} darkMode="auto" />
 <DataTable spec={tableSpec} onRowClick={(row) => console.log(row)} />
 <Graph spec={graphSpec} onNodeClick={(node) => console.log(node)} />
+<Sankey spec={sankeySpec} />
 
 <VizThemeProvider theme={myTheme}>
   <Chart spec={spec1} />
@@ -82,21 +83,23 @@ function ThemedChart({ spec, darkMode = "auto", ...props }) {
 ## Vue
 
 ```vue
-import { Chart, DataTable, Graph, VizThemeProvider } from '@opendata-ai/openchart-vue';
+import { Chart, DataTable, Graph, Sankey, VizThemeProvider } from '@opendata-ai/openchart-vue';
 
 <Chart :spec="chartSpec" darkMode="auto" />
 <DataTable :spec="tableSpec" />
 <Graph :spec="graphSpec" />
+<Sankey :spec="sankeySpec" />
 ```
 
 ## Svelte
 
 ```svelte
-import { Chart, DataTable, Graph, ThemeProvider } from '@opendata-ai/openchart-svelte';
+import { Chart, DataTable, Graph, Sankey, ThemeProvider } from '@opendata-ai/openchart-svelte';
 
 <Chart {spec} darkMode="auto" />
 <DataTable {spec} />
 <Graph {spec} />
+<Sankey {spec} />
 ```
 
 ## CDN / Standalone HTML
@@ -108,10 +111,11 @@ When using OpenChart via CDN (esm.sh, unpkg, etc.) or in a standalone HTML file,
 <link rel="stylesheet" href="https://esm.sh/@opendata-ai/openchart-vanilla/styles.css">
 
 <script type="module">
-import { createChart, createTable } from 'https://esm.sh/@opendata-ai/openchart-vanilla';
+import { createChart, createTable, createSankey } from 'https://esm.sh/@opendata-ai/openchart-vanilla';
 
 createChart(document.getElementById('chart'), spec);
 createTable(document.getElementById('table'), tableSpec);
+createSankey(document.getElementById('sankey'), sankeySpec);
 </script>
 ```
 
@@ -120,7 +124,7 @@ The CSS is required for: table styling (borders, alignment, heatmaps, bars), cha
 ## Vanilla JS
 
 ```typescript
-import { createChart, createTable, createGraph } from "@opendata-ai/openchart-vanilla";
+import { createChart, createTable, createGraph, createSankey } from "@opendata-ai/openchart-vanilla";
 
 // Charts
 const chart = createChart(container, spec, { darkMode: "auto", responsive: true });
@@ -144,6 +148,11 @@ graph.zoomToFit();
 graph.zoomToNode("node-id");
 graph.selectNode("node-id");
 graph.destroy();
+
+// Sankey
+const sankey = createSankey(container, sankeySpec, { darkMode: "auto", responsive: true });
+sankey.update(newSpec);
+sankey.destroy();
 ```
 
 ## Event Handlers

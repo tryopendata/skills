@@ -78,12 +78,12 @@ const spec = scatterChart(data, "spending", "lifeExp", {
     "x": {
       "field": "spending",
       "type": "quantitative",
-      "axis": { "label": "Health spending per capita ($)" }
+      "axis": { "title": "Health spending per capita ($)" }
     },
     "y": {
       "field": "lifeExp",
       "type": "quantitative",
-      "axis": { "label": "Life expectancy (years)" }
+      "axis": { "title": "Life expectancy (years)" }
     },
     "size": { "field": "pop", "type": "quantitative" },
     "color": { "field": "country", "type": "nominal" }

@@ -53,7 +53,7 @@ Distribution and spread of values across categories. Uses `mark: "circle"`.
     "x": {
       "field": "salary",
       "type": "quantitative",
-      "axis": { "format": "$,.0f", "label": "Annual salary" }
+      "axis": { "format": "$,.0f", "title": "Annual salary" }
     },
     "y": { "field": "dept", "type": "nominal" }
   },

@@ -60,7 +60,7 @@ Same encoding as line charts. Use area when you want to emphasize the magnitude 
     "y": {
       "field": "revenue",
       "type": "quantitative",
-      "axis": { "format": "$,.0f", "label": "Revenue" }
+      "axis": { "format": "$,.0f", "title": "Revenue" }
     }
   },
   "chrome": {

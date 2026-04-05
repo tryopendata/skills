@@ -23,6 +23,36 @@ encoding: {
 }
 ```
 
+## Inline Encoding Sugar
+
+These properties on an encoding channel provide VL-style shorthand that auto-generates the corresponding transform.
+
+| Property | Type | Effect |
+| --- | --- | --- |
+| `bin` | `boolean \| BinParams` | Auto-generates a `BinTransform` for this field. `true` uses defaults; pass `{ maxbins }` for control. |
+| `timeUnit` | `TimeUnit` | Auto-generates a `TimeUnitTransform`. Same units as the explicit transform (`year`, `month`, `yearmonth`, etc.). |
+| `sort` | `'ascending' \| 'descending' \| null` | Categorical domain sort order. `'ascending'` is the default. `null` preserves data order. |
+| `format` | `string` | d3-format string for tooltip/display values (e.g., `"$,.0f"`, `".1%"`). |
+| `title` | `string` | Custom label for tooltip display (overrides the field name). |
+
+```json
+{
+  "encoding": {
+    "x": { "field": "temperature", "type": "quantitative", "bin": true },
+    "y": { "field": "count", "type": "quantitative", "aggregate": "count" }
+  }
+}
+```
+
+```json
+{
+  "encoding": {
+    "x": { "field": "date", "type": "temporal", "timeUnit": "yearmonth" },
+    "y": { "field": "value", "type": "quantitative", "title": "Monthly avg", "format": ",.0f" }
+  }
+}
+```
+
 ## Stack Control
 
 The `stack` property on quantitative encoding channels controls how multi-series bar/column charts handle overlapping categories. Follows Vega-Lite conventions.
@@ -31,6 +61,8 @@ The `stack` property on quantitative encoding channels controls how multi-series
 | --- | --- |
 | `undefined` / `true` / `"zero"` | Stacked (default). Segments stack cumulatively. |
 | `null` / `false` | Grouped/dodged. Bars render side-by-side within each category. |
+| `"normalize"` | Percentage stacking. Domain becomes [0, 1]; each category sums to 100%. |
+| `"center"` | Streamgraph. Stacked layers centered symmetrically around zero. |
 
 Set `stack` on the **quantitative** channel (x for horizontal bars, y for vertical columns).
 

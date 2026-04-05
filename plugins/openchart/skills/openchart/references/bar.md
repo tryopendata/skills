@@ -125,6 +125,36 @@ const col = columnChart(data, "quarter", "revenue", {
 }
 ```
 
+## Example: Percentage Stacked Bar (Normalize)
+
+```json
+{
+  "mark": "bar",
+  "data": [
+    { "region": "West", "source": "Solar", "gwh": 120 },
+    { "region": "West", "source": "Wind", "gwh": 80 },
+    { "region": "West", "source": "Gas", "gwh": 200 },
+    { "region": "East", "source": "Solar", "gwh": 60 },
+    { "region": "East", "source": "Wind", "gwh": 140 },
+    { "region": "East", "source": "Gas", "gwh": 300 }
+  ],
+  "encoding": {
+    "x": { "field": "region", "type": "nominal" },
+    "y": {
+      "field": "gwh",
+      "type": "quantitative",
+      "stack": "normalize",
+      "axis": { "format": ".0%" }
+    },
+    "color": { "field": "source", "type": "nominal" }
+  },
+  "chrome": {
+    "title": "The West leans greener on energy mix",
+    "subtitle": "Share of electricity generation by source"
+  }
+}
+```
+
 ## Example: Vertical Column
 
 ```json

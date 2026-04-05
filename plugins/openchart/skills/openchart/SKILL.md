@@ -1,17 +1,17 @@
 ---
 name: openchart
 description: >
-  Generates OpenChart (https://github.com/tryopendata/openchart) chart, table, and graph
-  specs from data, and guides editorial design decisions. Use when creating visualizations,
+  Generates OpenChart (https://github.com/tryopendata/openchart) chart, table, graph, and
+  sankey specs from data, and guides editorial design decisions. Use when creating visualizations,
   building charts, rendering data tables, generating VizSpec JSON, creating network graphs,
-  answering questions about OpenChart types and encoding rules, or making design decisions
-  about chart type selection, color strategy, typography, annotations, and editorial framing.
-  Also covers custom D3.js infographics for cases that go beyond declarative specs.
+  building sankey/flow diagrams, answering questions about OpenChart types and encoding rules,
+  or making design decisions about chart type selection, color strategy, typography, annotations,
+  and editorial framing. Also covers custom D3.js infographics for cases beyond declarative specs.
 ---
 
 # Data Visualization with OpenChart
 
-**Core concept:** Write a VizSpec JSON object, render with `<Chart spec={spec} />` / `<DataTable spec={spec} />` / `<Graph spec={spec} />` (React) or `createChart(container, spec)` / `createTable(container, spec)` / `createGraph(container, spec)` (vanilla JS). The engine validates, compiles, and renders. Specs are plain JSON, no imperative drawing. See https://github.com/tryopendata/openchart for the rendering engine.
+**Core concept:** Write a VizSpec JSON object, render with `<Chart>` / `<DataTable>` / `<Graph>` / `<Sankey>` (React/Vue/Svelte) or `createChart()` / `createTable()` / `createGraph()` / `createSankey()` (vanilla JS). The engine validates, compiles, and renders. Specs are plain JSON, no imperative drawing. See https://github.com/tryopendata/openchart for the rendering engine.
 
 **CSS is required.** OpenChart's stylesheet must be loaded for proper rendering (chrome, tables, tooltips, brand watermark). Framework imports handle this automatically, but CDN/standalone HTML needs an explicit `<link>`:
 
@@ -60,7 +60,15 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 
 **Arc variants:** `mark: "arc"` renders a pie chart by default. Add `innerRadius > 0` to get a donut: `mark: { type: "arc", innerRadius: 40 }`.
 
-**Collapsed types:** The old `column`, `pie`, `donut`, `scatter`, and `dot` types have been replaced. Use `bar` (orientation inferred), `arc` (with/without innerRadius), `point`, and `circle` respectively.
+**Collapsed mark types:** These mark aliases no longer exist as separate values. Use the canonical marks instead:
+
+| Old mark | Use instead |
+| --- | --- |
+| `"column"` | `"bar"` (engine infers vertical from encoding) |
+| `"pie"` | `"arc"` |
+| `"donut"` | `{ type: "arc", innerRadius: 40 }` |
+| `"scatter"` | `"point"` |
+| `"dot"` | `"circle"` |
 
 ## Reference Routing
 
@@ -103,14 +111,14 @@ Charts use `mark` as their discriminant. Tables and graphs use `type`.
   animation?: AnimationSpec, // true | AnimationConfig. Off by default. See animation.md
 }
 
-// Tables and graphs
+// Tables, graphs, and sankey
 {
-  type: "table" | "graph",   // REQUIRED: discriminant for non-chart specs
+  type: "table" | "graph" | "sankey",  // REQUIRED: discriminant for non-chart specs
   chrome?: { ... },
   theme?: ThemeConfig,
   darkMode?: "auto"|"force"|"off",
   responsive?: boolean,
-  animation?: AnimationSpec, // Tables only. Same API as charts. See animation.md
+  animation?: AnimationSpec, // Tables and sankey. Same API as charts. See animation.md
 }
 ```
 
@@ -170,7 +178,7 @@ Charts map data to visuals via encoding channels: x, y, color, size, detail, opa
 {
   field: string,             // REQUIRED: column name in data
   type: FieldType,           // REQUIRED: "quantitative"|"temporal"|"nominal"|"ordinal"
-  aggregate?: AggregateOp,   // "count"|"sum"|"mean"|"median"|"min"|"max"
+  aggregate?: AggregateOp,   // "count"|"sum"|"mean"|"median"|"min"|"max"|"variance"|"stdev"|"distinct"|"q1"|"q3"
   axis?: {
     title?: string,          // axis title (default: field name). Deprecated alias: `label`
     format?: string,         // d3-format string, e.g. ",.0f" "$,.2f" ".1%"
@@ -184,8 +192,13 @@ Charts map data to visuals via encoding channels: x, y, color, size, detail, opa
     nice?: boolean,          // clean tick values (default: true)
     zero?: boolean,          // include zero (default: true for quantitative)
   },
-  stack?: boolean | "zero" | null,  // stacking for quantitative channels (default: stacked)
-                                     // null or false = grouped/dodged side-by-side bars
+  bin?: boolean | BinParams,        // inline bin (auto-generates BinTransform)
+  timeUnit?: TimeUnit,              // inline timeUnit (auto-generates TimeUnitTransform)
+  sort?: 'ascending'|'descending'|null, // categorical domain sort (default: ascending)
+  format?: string,                  // d3-format for tooltip/display values
+  title?: string,                   // custom tooltip label (overrides field name)
+  stack?: boolean|"zero"|"normalize"|"center"|null,  // stacking mode (default: stacked)
+                                     // null/false = grouped, "normalize" = percentage, "center" = streamgraph
   condition?: { test: FilterPredicate, value: any },  // conditional encoding
   value?: any,               // fallback when condition test is false
 }
@@ -193,7 +206,7 @@ Charts map data to visuals via encoding channels: x, y, color, size, detail, opa
 
 ## Data Transforms (Charts Only)
 
-Apply transforms (filter, bin, calculate, timeUnit) to data before encoding. Transforms run in array order. See [data transforms reference](references/data-transforms.md).
+Apply transforms (filter, bin, calculate, timeUnit, aggregate, fold) to data before encoding. Transforms run in array order. See [data transforms reference](references/data-transforms.md).
 
 ## Layer Composition (Charts Only)
 
