@@ -1,7 +1,7 @@
 {
   "name": "openchart",
   "description": "OpenChart visualization skills for generating charts, tables, graphs, and sankey diagrams",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "OpenData",
     "url": "https://github.com/tryopendata"
@@ -9,6 +9,11 @@
   "homepage": "https://github.com/tryopendata/openchart",
   "repository": "https://github.com/tryopendata/skills",
   "license": "MIT",
-  "keywords": ["openchart", "visualization", "charts", "d3"],
+  "keywords": [
+    "openchart",
+    "visualization",
+    "charts",
+    "d3"
+  ],
   "skills": "./skills/"
 }

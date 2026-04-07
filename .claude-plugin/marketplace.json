@@ -21,15 +21,22 @@
       "homepage": "https://github.com/tryopendata/skills",
       "repository": "https://github.com/tryopendata/skills",
       "license": "MIT",
-      "keywords": ["opendata", "api", "datasets", "data-analysis"],
+      "keywords": [
+        "opendata",
+        "api",
+        "datasets",
+        "data-analysis"
+      ],
       "category": "workflows",
-      "skills": ["./skills/opendata-api"]
+      "skills": [
+        "./skills/opendata-api"
+      ]
     },
     {
       "name": "openchart",
       "source": "./plugins/openchart/",
       "description": "OpenChart visualization skills for generating charts, tables, graphs, and sankey diagrams",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"
@@ -37,9 +44,16 @@
       "homepage": "https://github.com/tryopendata/openchart",
       "repository": "https://github.com/tryopendata/skills",
       "license": "MIT",
-      "keywords": ["openchart", "visualization", "charts", "d3"],
+      "keywords": [
+        "openchart",
+        "visualization",
+        "charts",
+        "d3"
+      ],
       "category": "workflows",
-      "skills": ["./skills/openchart"]
+      "skills": [
+        "./skills/openchart"
+      ]
     },
     {
       "name": "opendesign",
@@ -53,9 +67,18 @@
       "homepage": "https://github.com/tryopendata/skills",
       "repository": "https://github.com/tryopendata/skills",
       "license": "MIT",
-      "keywords": ["opendesign", "svg", "design", "graphics", "icons", "logo"],
+      "keywords": [
+        "opendesign",
+        "svg",
+        "design",
+        "graphics",
+        "icons",
+        "logo"
+      ],
       "category": "workflows",
-      "skills": ["./skills/svg-design"]
+      "skills": [
+        "./skills/svg-design"
+      ]
     }
   ]
 }
