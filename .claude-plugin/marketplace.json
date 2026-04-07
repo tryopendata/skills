@@ -5,15 +5,15 @@
     "url": "https://github.com/tryopendata"
   },
   "metadata": {
-    "description": "OpenData and OpenChart skills for Claude Code",
-    "version": "0.2.7"
+    "description": "OpenData, OpenChart, and OpenDesign skills for Claude Code",
+    "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "opendata",
       "source": "./plugins/opendata/",
       "description": "OpenData API skills for querying, filtering, and analyzing public datasets",
-      "version": "0.1.8",
+      "version": "1.0.0",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"
@@ -35,8 +35,8 @@
     {
       "name": "openchart",
       "source": "./plugins/openchart/",
-      "description": "OpenChart visualization skills for generating charts, tables, graphs, and SVG graphics",
-      "version": "0.3.3",
+      "description": "OpenChart visualization skills for generating charts, tables, graphs, and sankey diagrams",
+      "version": "1.0.0",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"
@@ -48,12 +48,35 @@
         "openchart",
         "visualization",
         "charts",
-        "svg",
         "d3"
       ],
       "category": "workflows",
       "skills": [
-        "./skills/openchart",
+        "./skills/openchart"
+      ]
+    },
+    {
+      "name": "opendesign",
+      "source": "./plugins/opendesign/",
+      "description": "Design skills for creating SVG logos, icons, and graphics",
+      "version": "1.0.0",
+      "author": {
+        "name": "OpenData",
+        "url": "https://github.com/tryopendata"
+      },
+      "homepage": "https://github.com/tryopendata/skills",
+      "repository": "https://github.com/tryopendata/skills",
+      "license": "MIT",
+      "keywords": [
+        "opendesign",
+        "svg",
+        "design",
+        "graphics",
+        "icons",
+        "logo"
+      ],
+      "category": "workflows",
+      "skills": [
         "./skills/svg-design"
       ]
     }

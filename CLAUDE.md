@@ -12,27 +12,31 @@ This repo contains multiple independently installable plugins:
 | Plugin | Namespace | Source | Skills |
 |--------|-----------|--------|--------|
 | opendata | `opendata` | `plugins/opendata/` | `opendata-api` |
-| openchart | `openchart` | `plugins/openchart/` | `openchart`, `svg-design` |
+| openchart | `openchart` | `plugins/openchart/` | `openchart` |
+| opendesign | `opendesign` | `plugins/opendesign/` | `svg-design` |
 
 Each plugin has its own `plugins/<name>/.claude-plugin/plugin.json` for metadata. The root `.claude-plugin/marketplace.json` registers all plugins.
 
 ## Directory Structure
 
 ```
+.claude-plugin/
+  marketplace.json         # root marketplace registry (all plugins)
 plugins/
   opendata/
     .claude-plugin/plugin.json
     skills/
       opendata-api/
-    commands/          # when needed
-    agents/            # when needed
+    commands/              # when needed
+    agents/                # when needed
   openchart/
     .claude-plugin/plugin.json
     skills/
       openchart/
+  opendesign/
+    .claude-plugin/plugin.json
+    skills/
       svg-design/
-.claude-plugin/
-  marketplace.json     # root marketplace registry (all plugins)
 ```
 
 ## Adding a Skill

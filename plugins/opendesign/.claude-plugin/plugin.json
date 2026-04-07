@@ -1,6 +1,6 @@
 {
-  "name": "opendata",
-  "description": "OpenData API skills for querying, filtering, and analyzing public datasets",
+  "name": "opendesign",
+  "description": "Design skills for creating SVG logos, icons, and graphics",
   "version": "1.0.0",
   "author": {
     "name": "OpenData",
@@ -10,10 +10,12 @@
   "repository": "https://github.com/tryopendata/skills",
   "license": "MIT",
   "keywords": [
-    "opendata",
-    "api",
-    "datasets",
-    "data-analysis"
+    "opendesign",
+    "svg",
+    "design",
+    "graphics",
+    "icons",
+    "logo"
   ],
   "skills": "./skills/"
 }
