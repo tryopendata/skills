@@ -339,6 +339,8 @@ Rendering and component behaviors that aren't obvious from the spec alone.
 | Endpoint labels don't wrap | `\n` in series names does NOT create line breaks in endpoint labels. Long names consume chart width. | Shorten series names in the data instead. |
 | DataTable CSS overrides unreliable | Custom CSS targeting `.oc-table-wrapper td` may not apply due to CSS specificity. | Use the DataTable `style` prop for inline overrides: `<DataTable style={{ paddingLeft: 10 }} spec={...} />`. |
 | Scatter plots auto-set `zero: false` | Unlike other chart types, scatter/point marks automatically set `scale.zero: false` on both axes if not explicitly configured. This means scatter domains fit tightly to data. | To include zero, explicitly set `scale: { zero: true }` on the relevant axis. Be aware that scatter and bar/line charts handle zero differently by default. |
+| Constant colors require `mark.fill`, not encoding | `encoding.color: { value: "#hex" }` will error. The color encoding channel requires a `field` that maps to data. | Use `mark: { type: "bar", fill: "#1b7fa3" }` for constant colors across all marks. |
+| Default gradient direction is top-to-bottom | A gradient with no explicit `x1/y1/x2/y2` defaults to vertical (top-to-bottom). On horizontal bars, the engine auto-orients this to left-to-right. On other marks, set coordinates explicitly. | For left-to-right: `x1:0, y1:0, x2:1, y2:0`. For top-to-bottom (default): omit coordinates or use `x1:0, y1:0, x2:0, y2:1`. |
 
 ## Custom D3.js Infographics
 

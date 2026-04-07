@@ -9,11 +9,6 @@
   "homepage": "https://github.com/tryopendata/openchart",
   "repository": "https://github.com/tryopendata/skills",
   "license": "MIT",
-  "keywords": [
-    "openchart",
-    "visualization",
-    "charts",
-    "d3"
-  ],
+  "keywords": ["openchart", "visualization", "charts", "d3"],
   "skills": "./skills/"
 }

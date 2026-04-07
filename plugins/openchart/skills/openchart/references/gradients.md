@@ -172,9 +172,21 @@ Each bar gets a different gradient based on data values:
 | Right to left | `x1:1, y1:0, x2:0, y2:0` |
 | Diagonal | `x1:0, y1:0, x2:1, y2:1` |
 
-## When to use horizontal bars
+## Horizontal bar auto-orientation
 
-Use left-to-right gradients (`x1:0, y1:0, x2:1, y2:0`) for horizontal bars where `x: quantitative, y: nominal`. The gradient direction should match the data direction (the bar grows left to right, so the gradient should too).
+The engine auto-orients default-direction gradients (top-to-bottom) to left-to-right for horizontal bars. If you specify a gradient with no coordinates or with the default `x1:0, y1:0, x2:0, y2:1`, horizontal bars will flip it to `x1:0, y1:0, x2:1, y2:0` automatically. Gradients with explicit non-default coordinates are left unchanged.
+
+For horizontal bars where `x: quantitative, y: nominal`, set left-to-right explicitly (`x1:0, y1:0, x2:1, y2:0`) or rely on auto-orientation by omitting coordinates.
+
+## Constant colors: use mark.fill, not encoding.color
+
+`encoding.color: { value: "#hex" }` does not work. The color encoding channel requires a `field` that maps to data columns. For a constant fill color across all marks:
+
+```json
+{ "mark": { "type": "bar", "fill": "#1b7fa3" } }
+```
+
+This works for both solid colors and gradient fills.
 
 ## SVG rendering details
 

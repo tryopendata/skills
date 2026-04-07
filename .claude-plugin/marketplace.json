@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "OpenData, OpenChart, and OpenDesign skills for Claude Code",
-    "version": "1.0.0"
+    "version": "1.0.1"
   },
   "plugins": [
     {
       "name": "opendata",
       "source": "./plugins/opendata/",
       "description": "OpenData API skills for querying, filtering, and analyzing public datasets",
-      "version": "1.0.0",
+      "version": "1.0.",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"
@@ -21,16 +21,9 @@
       "homepage": "https://github.com/tryopendata/skills",
       "repository": "https://github.com/tryopendata/skills",
       "license": "MIT",
-      "keywords": [
-        "opendata",
-        "api",
-        "datasets",
-        "data-analysis"
-      ],
+      "keywords": ["opendata", "api", "datasets", "data-analysis"],
       "category": "workflows",
-      "skills": [
-        "./skills/opendata-api"
-      ]
+      "skills": ["./skills/opendata-api"]
     },
     {
       "name": "openchart",
@@ -44,16 +37,9 @@
       "homepage": "https://github.com/tryopendata/openchart",
       "repository": "https://github.com/tryopendata/skills",
       "license": "MIT",
-      "keywords": [
-        "openchart",
-        "visualization",
-        "charts",
-        "d3"
-      ],
+      "keywords": ["openchart", "visualization", "charts", "d3"],
       "category": "workflows",
-      "skills": [
-        "./skills/openchart"
-      ]
+      "skills": ["./skills/openchart"]
     },
     {
       "name": "opendesign",
@@ -67,18 +53,9 @@
       "homepage": "https://github.com/tryopendata/skills",
       "repository": "https://github.com/tryopendata/skills",
       "license": "MIT",
-      "keywords": [
-        "opendesign",
-        "svg",
-        "design",
-        "graphics",
-        "icons",
-        "logo"
-      ],
+      "keywords": ["opendesign", "svg", "design", "graphics", "icons", "logo"],
       "category": "workflows",
-      "skills": [
-        "./skills/svg-design"
-      ]
+      "skills": ["./skills/svg-design"]
     }
   ]
 }

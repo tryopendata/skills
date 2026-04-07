@@ -109,3 +109,9 @@ Use `condition` + `value` to apply different visual properties based on data val
 ```
 
 When `condition.test` is true, the `condition.value` is used. Otherwise, the top-level `value` is the fallback. The `test` object uses the same filter predicate syntax as `FilterTransform` (see [data-transforms.md](data-transforms.md)).
+
+**Important:** Encoding channels require a `field` or `condition`. A bare `{ "value": "#hex" }` without a field or condition will fail validation. For constant colors across all marks, use `mark.fill` instead:
+
+```json
+{ "mark": { "type": "bar", "fill": "#1b7fa3" } }
+```
