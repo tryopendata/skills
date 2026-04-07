@@ -36,7 +36,7 @@
       "name": "openchart",
       "source": "./plugins/openchart/",
       "description": "OpenChart visualization skills for generating charts, tables, graphs, and sankey diagrams",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"
@@ -59,7 +59,7 @@
       "name": "opendesign",
       "source": "./plugins/opendesign/",
       "description": "Design skills for creating SVG logos, icons, and graphics",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"
