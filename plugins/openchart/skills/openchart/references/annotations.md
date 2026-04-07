@@ -39,7 +39,8 @@ Callout at a specific data point.
 
 **Tips:**
 - Use `\n` in `text` for multi-line annotations
-- Set `background` to improve readability over chart lines
+- Text annotations get a paint-order stroke halo by default (using the theme's background color) that knocks out chart lines behind the text without needing an explicit background rect
+- Set `background` to a color string for an explicit background rect instead of the default halo
 - `connector` defaults to `true` (straight line from label to point)
 - `"curve"` connector draws a curved arrow with arrowhead
 - `anchor: "auto"` lets the engine pick a position (see details below)

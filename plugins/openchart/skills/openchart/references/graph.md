@@ -113,6 +113,20 @@ layout?: {
 | `radial` | Hub-and-spoke | Arranges nodes in concentric circles. |
 | `hierarchical` | Trees, DAGs | Top-down or left-right arrangement. |
 
+## Viewport Behavior
+
+The graph canvas fills the full container height. Chrome (title, subtitle, source) overlays on top as an absolutely positioned element with `pointer-events: none`, so the canvas is interactive beneath it.
+
+**Initial fit:** On the first simulation tick, the viewport fits all nodes using `ZoomTransform.fitBounds()`. After that, user interaction takes over and the simulation continues settling without affecting zoom/pan.
+
+**Scale cap:** `fitBounds` caps scale at 1x (`Math.min(1, ...)`), so graphs never zoom in past their natural size. Small graphs center in the viewport at 1:1 scale; large graphs zoom out to fit.
+
+**Spread heuristic:** For graphs with 50+ nodes, fitBounds applies a speculative bounding box expansion of `1 + sqrt(nodes) / 120` on the first tick. This prevents initial over-zoom while the force simulation is still settling. A 100-node graph gets ~8% expansion; a 2500-node graph gets ~21%. The heuristic only applies at the initial fit, not on subsequent `zoomToFit()` calls.
+
+**Centering:** Both X and Y axes are centered, placing the graph in the middle of the viewport.
+
+**Gesture mode:** During pan/zoom gestures, the renderer skips drawing node labels and glow effects for performance. Labels reappear 150ms after the gesture stops.
+
 ## Rendering
 
 **React:**

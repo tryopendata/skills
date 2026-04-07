@@ -79,9 +79,17 @@ const spec = dataTable(data, {
 
 ## Event Handlers
 
+**Vanilla / all frameworks:**
+
 | Handler | Signature | Fires when |
 | --- | --- | --- |
 | `onRowClick` | `(row: DataRow) => void` | User clicks a row |
+| `onStateChange` | `(state: { sort?, search?, page? }) => void` | Any table state changes |
+
+**React-only convenience props** (decompose `onStateChange` into individual callbacks):
+
+| Handler | Signature | Fires when |
+| --- | --- | --- |
 | `onSortChange` | `(sort: SortState \| null) => void` | Sort changes |
 | `onSearchChange` | `(query: string) => void` | Search input changes |
 | `onPageChange` | `(page: number) => void` | Pagination changes |

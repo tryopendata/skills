@@ -20,6 +20,9 @@ encoding: {
   y2?: EncodingChannel,          // secondary y (ranges)
   theta?: EncodingChannel,       // angular position (arc marks)
   radius?: EncodingChannel,      // radial position (arc marks)
+  angle?: EncodingChannel,       // rotation angle for point/text marks
+  href?: EncodingChannel,        // hyperlink URL from data field
+  order?: EncodingChannel,       // stacking/layering order
 }
 ```
 
