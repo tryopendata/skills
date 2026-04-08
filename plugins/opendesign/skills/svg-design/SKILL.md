@@ -120,8 +120,40 @@ With `nonzero` (default), the inner circle must wind in the opposite direction t
 
 When creating logos (not icons), follow this process:
 
-1. **Explore multiple metaphors, not multiple layouts of one metaphor.** If asked for 10 logo options, don't make 10 network graphs. Make 3 network graphs, 2 isometric shapes, 2 abstract symbols, etc. Conceptual diversity matters more than layout variations.
-2. **Start with what the product *does*, not what it *looks like*.** A data platform could be: a network graph, stacked layers, a prism, a compass, an open book, overlapping circles, a rising chart, a cube, a broken ring. List 8-10 metaphors before drawing anything.
+0. **Clarify direction when the brief is vague.** If the user's request lacks specifics about style, mood, or visual direction (e.g., "make me a logo for X"), use AskUserQuestion to present design direction options before starting. Don't ask open-ended questions that put the burden on the user. Instead, offer curated choices like a designer presenting mood boards. Tailor the options to the user's domain. Example:
+
+    ```
+    AskUserQuestion({
+      questions: [
+        {
+          question: "What visual personality fits your brand?",
+          header: "Mood",
+          multiSelect: false,
+          options: [
+            { label: "Bold & geometric", description: "Clean shapes, strong lines, confident. Think Stripe, Figma." },
+            { label: "Organic & crafted", description: "Hand-drawn feel, natural curves, warmth. Think Mailchimp, Basecamp." },
+            { label: "Minimal & typographic", description: "Wordmark-driven, restrained, sophisticated. Think Glossier, Everlane." },
+            { label: "Playful & dynamic", description: "Energetic, colorful, movement. Think Slack, Discord." }
+          ]
+        },
+        {
+          question: "What should the logo emphasize?",
+          header: "Focus",
+          multiSelect: false,
+          options: [
+            { label: "What we do", description: "Visual metaphor tied to your product's core function" },
+            { label: "How it feels", description: "Abstract mark that conveys emotion or energy" },
+            { label: "Who we are", description: "Letterform or wordmark built from the brand name" }
+          ]
+        }
+      ]
+    })
+    ```
+
+    Adapt the mood options to the user's domain. A law firm gets different moods than a gaming startup. Skip this step if the user already provided clear direction (e.g., "minimalist geometric logo in blue").
+
+1. **Explore multiple metaphors, not multiple layouts of one metaphor.** Conceptual diversity matters more than layout variations. Follow the full ideation process in [references/logo-techniques.md](references/logo-techniques.md), which covers domain-specific brainstorming, category diversity requirements, and cliche avoidance.
+2. **Guarantee structural variety.** Every logo set must span multiple *categories* of approach, not just multiple metaphors within the same style. Include at least one from each column when presenting 5+ options: a typographic/wordmark approach, a symbolic icon, an abstract geometric mark, and a letterform-meets-metaphor hybrid. See the category diversity table in [references/logo-techniques.md](references/logo-techniques.md).
 3. **Set up the preview page.** Copy this skill's `assets/preview.html` to the project directory using `cp` with the absolute path from where this skill was loaded (do not read or modify the file). Write `variants.js` with variant data per the format in [references/editing-workflow.md](references/editing-workflow.md). Open with `open preview.html` (macOS) or `xdg-open preview.html` (Linux). On subsequent iterations, only edit `variants.js` and SVG files. The preview auto-reloads both every 3 seconds.
 4. **For colored logos, always create a `-dark.svg` variant.** Dark navy edges (#1E3A5F) that look great on white disappear on dark backgrounds. Dark variants need lighter edges (#4B8BBE), lighter rings (#3B6B8A), and off-white centers (#E2E8F0).
 5. **Plan your vertical budget before drawing.** On a 32x32 canvas with 3 stacked elements, you have ~30 usable units. Sketch the vertical distribution first (e.g., box=12, gap=2, layer=5, gap=2, layer=5) to avoid clipping at viewBox edges.

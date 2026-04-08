@@ -140,31 +140,86 @@ Design half the shape, then mirror it. For horizontal symmetry, design the right
 
 Don't fixate on one concept. Before writing any SVG code, brainstorm 8-10 visual metaphors that represent the product. Then pick the 3-4 strongest and create variants of each.
 
-### Metaphor brainstorming template
+### Step 1: Mine the domain
 
-For a product, ask: "What does this product *do*, and what real-world objects share that quality?"
+The biggest source of generic logos is skipping this step. Before thinking about shapes, list 10-15 physical objects, tools, environments, textures, and actions that are *specific to this product's world*:
 
-| Product quality | Possible metaphors |
-|---|---|
-| Connects things | Network graph, bridge, chain links, constellation |
-| Organizes data | Stacked layers, filing cabinet, grid, table rows |
-| Makes things accessible | Open book, unlocked padlock, broken circle, doorway |
-| Aggregates sources | Funnel, magnet, venn overlap, tributary rivers |
-| Discovers/searches | Compass, telescope, magnifying glass, radar |
-| Stores/preserves | Cube, vault, crystal, container |
-| Transforms/processes | Prism, gear, filter, pipeline |
-| Grows/scales | Tree, rising bars, expanding circles, staircase |
+- A marine logistics company: knots, anchors, currents, hull cross-sections, container stacks, signal flags, wake patterns, bollards, cargo nets
+- A code editor: cursors, brackets, indentation, diff markers, tree structures, merge arrows, syntax highlighting bands, terminal prompts
+- A bakery: wheat stalks, dough scoring patterns, rolling pins, oven arches, braided loaves, flour dusting, banneton spiral imprints
 
-### Common logo archetypes that work at small sizes
+These domain objects become the raw material. If you can't list 10, you don't know the domain well enough yet.
 
-| Archetype | Why it works at 16px | Example |
+### Step 2: Semantic branching (literal -> abstract -> unexpected)
+
+For each promising domain object, push through three levels of abstraction:
+
+| Level | Example (coffee roaster) | What it produces |
 |---|---|---|
-| **Single geometric shape** (circle, hexagon, diamond) | One bold silhouette, no detail to lose | Stripe, Spotify |
-| **Letterform** (stylized first letter) | Instantly recognizable, scales perfectly | Medium, Facebook |
-| **Overlapping shapes** (venn, stacked) | 2-3 elements max, reads as a unit | Mastercard, Olympics |
-| **Isometric object** (cube, box, stack) | 3 flat faces = 3 colors, very readable | Figma files icon |
-| **Broken/open shape** (arc with gap, open bracket) | "Open" implied by the gap | OpenAI, open-source logos |
-| **Abstract mark** (swoosh, asterisk, spark) | Pure shape, no literal meaning needed | Nike, Slack |
+| **Literal** | A coffee bean shape | Recognizable but generic, likely overused |
+| **Abstract** | The bean's center crease as a single curved line | Distinctive, still evocative |
+| **Unexpected** | The crease becomes a sound wave (roasting = transformation) | Unique, carries a second meaning |
+
+The best logos live at level 2-3. Level 1 is where cliches come from. Always push at least to level 2.
+
+### Step 3: Check against industry cliches
+
+Before finalizing concepts, reject any that match common overused motifs:
+
+| Industry | Overused motifs to avoid |
+|---|---|
+| Tech/SaaS | Hexagons, circuit boards, generic nodes-and-edges, globe with lines |
+| Finance | Bar charts going up, shield shapes, dollar signs, generic buildings |
+| Health/wellness | Hearts, crosses, leaves, human silhouettes with arms up |
+| Education | Open books, graduation caps, lightbulbs, apples |
+| Food/restaurant | Fork-and-knife, chef hats, plates, steam swirls |
+| Creative/design | Pencils, color wheels, paintbrushes, eye symbols |
+| Environment/green | Leaves, globes, trees, recycling arrows |
+
+If a concept matches this list, push it to level 2-3 abstraction or replace it entirely.
+
+### Step 4: Guarantee category diversity
+
+Every logo set of 5+ options must include concepts from different *structural categories*, not just different metaphors rendered the same way:
+
+| Category | What it means | Forces you to... |
+|---|---|---|
+| **Typographic/wordmark** | The brand name IS the logo, styled distinctively | Explore letterform design, ligatures, custom strokes |
+| **Symbolic icon** | A recognizable object or scene, simplified | Think about what single image represents the brand |
+| **Abstract geometric** | Non-representational shapes, patterns, or compositions | Work with pure form, color, and spatial relationships |
+| **Letterform + metaphor** | A letter that doubles as a visual concept | Find where typography and meaning intersect |
+| **Negative space / dual-read** | Two meanings coexist in one mark (FedEx arrow style) | Think about figure-ground relationships |
+
+Include at least 3 of these 5 categories. If all your concepts are symbolic icons, the set lacks structural variety regardless of how different the symbols are.
+
+### Step 5: SCAMPER one concept to push it further
+
+Pick your most promising concept and run it through these lenses to generate unexpected variants:
+
+- **Substitute**: Swap the expected symbol for something from a different domain
+- **Combine**: Merge two unrelated visual ideas into one mark
+- **Adapt**: Borrow visual language from another industry entirely
+- **Modify**: Push scale, weight, or proportion to an extreme
+- **Put to other use**: Use typography as illustration, or vice versa
+- **Eliminate**: Strip to the absolute minimum recognizable form
+- **Reverse**: Flip figure/ground, invert the concept, use negative space
+
+You don't need all 7. Even running 2-3 lenses on one concept often produces the most distinctive option in the set.
+
+### Rendering techniques that work at small sizes
+
+These are techniques for *how* to render a concept, not concepts themselves. Pair with domain-specific metaphors:
+
+| Technique | Why it works at 16px | Example |
+|---|---|---|
+| **Single bold silhouette** | One shape, no detail to lose | Stripe, Spotify |
+| **Stylized letterform** | Instantly recognizable, scales perfectly | Medium, Facebook |
+| **Overlapping shapes** (2-3 max) | Reads as a unit | Mastercard, Olympics |
+| **Isometric projection** | 3 flat faces = 3 colors, very readable | Figma files icon |
+| **Broken/open shape** (gap implies meaning) | The absence carries the concept | OpenAI |
+| **Abstract mark** | Pure shape, no literal meaning needed | Nike, Slack |
+| **Negative space cutout** | Two meanings coexist | FedEx arrow, NBC peacock |
+| **Contained symbol** (shape inside a frame) | Frame provides structure at small sizes | Instagram, App Store |
 
 ### What to avoid at small sizes
 
