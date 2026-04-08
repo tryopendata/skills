@@ -173,7 +173,14 @@ When creating logos (not icons), follow this process:
 
 1. **Explore multiple metaphors, not multiple layouts of one metaphor.** Conceptual diversity matters more than layout variations. Follow the full ideation process in [references/logo-techniques.md](references/logo-techniques.md), which covers domain-specific brainstorming, category diversity requirements, and cliche avoidance.
 2. **Guarantee structural variety.** Every logo set must span multiple *categories* of approach, not just multiple metaphors within the same style. Include at least one from each column when presenting 5+ options: a typographic/wordmark approach, a symbolic icon, an abstract geometric mark, and a letterform-meets-metaphor hybrid. See the category diversity table in [references/logo-techniques.md](references/logo-techniques.md).
-3. **Set up the preview page.** Copy this skill's `assets/preview.html` to the project directory using `cp` with the absolute path from where this skill was loaded (do not read or modify the file). Write `variants.js` with variant data per the format in [references/editing-workflow.md](references/editing-workflow.md). Open with `open preview.html` (macOS) or `xdg-open preview.html` (Linux). On subsequent iterations, only edit `variants.js` and SVG files. The preview auto-reloads both every 3 seconds.
+3. **Set up the preview immediately, then populate it progressively.** Don't design all logos first and then show them. The user should see results as they're created:
+    1. Copy this skill's `assets/preview.html` to the project directory using `cp` with the absolute path from where this skill was loaded (do not read or modify the file).
+    2. Design the first logo and write its SVG file.
+    3. Write `variants.js` with just that first variant (format in [references/editing-workflow.md](references/editing-workflow.md)).
+    4. Open the preview with `open preview.html` (macOS) or `xdg-open preview.html` (Linux). The user now sees the first logo while you keep working.
+    5. For each subsequent logo: write the SVG file, then update `variants.js` to add it. The preview auto-reloads both every 3 seconds, so new logos appear in the browser as they're completed.
+
+    This gives the user visual feedback within seconds of the first logo being ready, rather than waiting for all logos to be designed before seeing anything.
 4. **For colored logos, always create a `-dark.svg` variant.** Dark navy edges (#1E3A5F) that look great on white disappear on dark backgrounds. Dark variants need lighter edges (#4B8BBE), lighter rings (#3B6B8A), and off-white centers (#E2E8F0).
 5. **Plan your vertical budget before drawing.** On a 32x32 canvas with 3 stacked elements, you have ~30 usable units. Sketch the vertical distribution first (e.g., box=12, gap=2, layer=5, gap=2, layer=5) to avoid clipping at viewBox edges.
 
