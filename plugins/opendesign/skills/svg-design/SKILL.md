@@ -120,7 +120,9 @@ With `nonzero` (default), the inner circle must wind in the opposite direction t
 
 When creating logos (not icons), follow this process:
 
-0. **Clarify direction when the brief is vague.** If the user's request lacks specifics about style, mood, or visual direction (e.g., "make me a logo for X"), use AskUserQuestion to present design direction options before starting. Don't ask open-ended questions that put the burden on the user. Instead, offer curated choices like a designer presenting mood boards. Tailor the options to the user's domain. Example:
+0. **Always clarify design direction before creating logos.** Use AskUserQuestion to present curated design direction choices before writing any SVG code. This step is mandatory for all logo projects. Even when the user provides some direction (like "modern" or "YC style"), those are vibes, not design briefs. A designer would still present options to narrow the direction before investing in 5-15 concepts.
+
+    Present choices like a designer showing mood boards. Don't ask open-ended questions. Tailor options to the user's domain:
 
     ```
     AskUserQuestion({
@@ -150,7 +152,7 @@ When creating logos (not icons), follow this process:
     })
     ```
 
-    Adapt the mood options to the user's domain. A law firm gets different moods than a gaming startup. Skip this step if the user already provided clear direction (e.g., "minimalist geometric logo in blue").
+    Adapt the mood options to the user's domain. A law firm gets different moods than a gaming startup. The only exception: skip if the user has specified both a concrete visual style AND specific imagery (e.g., "minimalist geometric logo using a mountain silhouette in navy blue").
 
 1. **Explore multiple metaphors, not multiple layouts of one metaphor.** Conceptual diversity matters more than layout variations. Follow the full ideation process in [references/logo-techniques.md](references/logo-techniques.md), which covers domain-specific brainstorming, category diversity requirements, and cliche avoidance.
 2. **Guarantee structural variety.** Every logo set must span multiple *categories* of approach, not just multiple metaphors within the same style. Include at least one from each column when presenting 5+ options: a typographic/wordmark approach, a symbolic icon, an abstract geometric mark, and a letterform-meets-metaphor hybrid. See the category diversity table in [references/logo-techniques.md](references/logo-techniques.md).
