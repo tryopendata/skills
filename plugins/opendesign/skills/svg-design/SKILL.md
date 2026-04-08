@@ -147,12 +147,29 @@ When creating logos (not icons), follow this process:
             { label: "How it feels", description: "Abstract mark that conveys emotion or energy" },
             { label: "Who we are", description: "Letterform or wordmark built from the brand name" }
           ]
+        },
+        {
+          question: "Which of these logos in your space resonates most?",
+          header: "Inspiration",
+          multiSelect: false,
+          options: [
+            // IMPORTANT: populate these with 3-4 real, well-known brands
+            // in or adjacent to the user's specific industry/domain.
+            // Examples below are for an AI startup - replace entirely
+            // for other domains.
+            { label: "Linear", description: "Precise geometric icon, purple gradient, premium feel" },
+            { label: "Stripe", description: "Simple bold wordmark, single accent color, confident restraint" },
+            { label: "Notion", description: "Friendly icon with personality, approachable, slightly playful" },
+            { label: "Vercel", description: "Abstract minimal triangle, stark black/white, developer-focused" }
+          ]
         }
       ]
     })
     ```
 
-    Adapt the mood options to the user's domain. A law firm gets different moods than a gaming startup. The only exception: skip if the user has specified both a concrete visual style AND specific imagery (e.g., "minimalist geometric logo using a mountain silhouette in navy blue").
+    **Tailoring the questions to the domain is critical.** The mood options, focus options, and especially the inspiration logos must be specific to the user's industry. A coffee brand gets Blue Bottle, Stumptown, Intelligentsia, Counter Culture as inspiration options. A fintech startup gets Stripe, Plaid, Mercury, Ramp. A fitness app gets Peloton, Strava, Nike Run Club, Whoop. Pick brands the user will immediately recognize and have an opinion about. The inspiration question does the most work here because it anchors the entire aesthetic direction to something concrete.
+
+    The only exception: skip if the user has specified both a concrete visual style AND specific imagery (e.g., "minimalist geometric logo using a mountain silhouette in navy blue").
 
 1. **Explore multiple metaphors, not multiple layouts of one metaphor.** Conceptual diversity matters more than layout variations. Follow the full ideation process in [references/logo-techniques.md](references/logo-techniques.md), which covers domain-specific brainstorming, category diversity requirements, and cliche avoidance.
 2. **Guarantee structural variety.** Every logo set must span multiple *categories* of approach, not just multiple metaphors within the same style. Include at least one from each column when presenting 5+ options: a typographic/wordmark approach, a symbolic icon, an abstract geometric mark, and a letterform-meets-metaphor hybrid. See the category diversity table in [references/logo-techniques.md](references/logo-techniques.md).
