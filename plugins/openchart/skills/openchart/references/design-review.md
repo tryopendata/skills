@@ -33,10 +33,11 @@ If the reader looks at this chart for 5 seconds and walks away, what's the one t
 | 8 | Encoding types correct | quantitative for numbers, temporal for dates, nominal for categories |
 | 9 | Field names match data | Every encoding field exists in the data objects |
 | 10 | Category count reasonable | Pie/donut uses 2-6 categories max |
-| 11 | Axis formatted + tick density | Currency, percentages, and large numbers have d3-format strings with units (`.0f%`, `$,.0f`, `~s`). Y-axis has `tickCount: 5` or `6` so intermediate values are readable. Axis titles don't repeat units already shown in tick labels. |
+| 11 | Axis formatted + tick density | Currency, percentages, and large numbers have d3-format strings with units (`.0f%`, `$,.0f`, `~s`). Percentage data MUST show % on axis ticks: bare numbers like "45" are never acceptable when representing 45%. Y-axis has `tickCount: 5` or `6` so intermediate values are readable. Axis titles don't repeat units already shown in tick labels. |
 | 12 | Source attribution | `chrome.source` is populated with organization name |
 | 13 | Responsiveness | Chart remains readable at 320px width |
 | 14 | Accessibility | Colors distinguishable in grayscale, text labels present |
+| 15 | Axis title length | Under 25 characters. Long titles like "Students eligible for free/reduced lunch" wrap and consume chart space. Use abbreviations the subtitle can define: "FRPL-eligible share", "Per-pupil spending", "Avg. salary (2022 $)". |
 
 ## Design Anti-Patterns
 
@@ -53,6 +54,20 @@ If the reader looks at this chart for 5 seconds and walks away, what's the one t
 | Pie for comparison across groups | Angle is a low-accuracy encoding for comparison | Use bar chart instead |
 | Missing source attribution | No credibility, no provenance | Always include `chrome.source` |
 | Decorative gridlines | Visual noise that doesn't aid reading | y-axis gridlines only, light gray, remove x-axis grid |
+
+## Legend vs. Labels vs. Annotations
+
+Pick ONE identification method per chart. Using multiple methods (e.g., legend AND endpoint labels) is redundant and wastes space.
+
+| Chart type | Method | Config |
+| --- | --- | --- |
+| 1-series | Hide legend | `legend: { show: false }` |
+| 2-series line/area | Endpoint labels, hide legend | `labels: { density: "endpoints" }`, `legend: { show: false }` |
+| 3+ series line | Legend, hide endpoint labels | `labels: { density: "none" }`, `legend: { position: "top" }` |
+| Bar/column with color encoding | Legend only | Bar labels show values, not series names |
+| Any chart with mid-series annotations | Annotations replace endpoint labels | `labels: { density: "none" }`, use text annotations for callouts |
+
+**The rule:** Never show both legend AND endpoint labels on the same chart. They communicate the same information (which line is which) and compete for space. Choose one based on series count and let it do the job alone.
 
 ## Common Fixes
 

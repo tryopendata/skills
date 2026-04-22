@@ -1,6 +1,6 @@
 ---
 name: opendata-api
-description: Query the OpenData API for data research and analysis. Use when fetching dataset rows, filtering, sorting, aggregating, inspecting columns, or building data pipelines against OpenData endpoints.
+description: Query the OpenData API for data research and analysis. Use when fetching dataset rows, filtering, sorting, aggregating, inspecting columns, composing cross-dataset joins, exploring graph intelligence, or building data pipelines against OpenData endpoints.
 ---
 
 # OpenData Query API
@@ -48,12 +48,19 @@ All data endpoints live under `/v1/datasets/`.
 | GET    | `/v1/datasets/{provider}/{dataset}/{subdataset}`   | Query subdataset rows                                        |
 | GET    | `/v1/datasets/{provider}/{dataset}/columns`        | Column metadata and statistics                               |
 | GET    | `/v1/datasets/{provider}/{dataset}/columns/{name}` | Single column detail with full value list                    |
-| GET    | `/v1/datasets/{provider}/{dataset}/meta`           | Dataset metadata (schema, views, capabilities)               |
+| GET    | `/v1/datasets/{provider}/{dataset}/meta`           | Dataset metadata (schema, views, graph scores)               |
 | GET    | `/v1/datasets/{provider}/{dataset}/views`          | List available views                                         |
+| GET    | `/v1/datasets/{provider}/{dataset}/related`        | Related datasets (semantic + join + graph signals)           |
+| GET    | `/v1/datasets/{provider}/{dataset}/joinable`       | List joinable datasets for composition                       |
+| POST   | `/v1/datasets/{provider}/{dataset}/compose/preview`| Preview a cross-dataset join (LEFT JOIN)                     |
+| GET    | `/v1/datasets/{provider}/{dataset}/compose/download.csv` | Download a composed join as CSV (auth required)        |
 | POST   | `/v1/datasets/{provider}/{dataset}/query`          | Execute SQL query (authenticated)                            |
 | GET    | `/v1/discover`                                     | Search datasets with enriched metadata for LLM agents        |
 | POST   | `/v1/discover/batch`                               | Batch discover across multiple queries with deduplication    |
 | POST   | `/v1/query`                                        | Cross-dataset SQL query (join multiple datasets)             |
+| GET    | `/v1/search`                                       | Search datasets (includes graph intelligence scores)         |
+| GET    | `/v1/categories/{slug}`                            | Browse datasets by category (supports graph sorting)         |
+| GET    | `/v1/graph/communities/{community_id}/datasets`    | List datasets in a graph community by importance             |
 
 ## Subdatasets
 
@@ -82,6 +89,7 @@ If you get a `SUBDATASET_NOT_FOUND` error, the dataset likely has subdatasets. C
 | `expand`          | `expand=area`            | Expand joined dimensions inline            |                                                             |
 | `include_sources` | `include_sources=true`   | Show `_source_url`, `_source_page` columns |                                                             |
 | `response_format` | `response_format=columnar` | Response shape: `objects` (default) or `columnar` (compact) | [output-formats.md](references/output-formats.md)           |
+| `include_graph`   | `include_graph=true`     | Attach graph scores to `/meta` response    | [graph.md](references/graph.md)                             |
 | `debug`           | `debug=true`             | Include generated SQL and query echo       |                                                             |
 
 ## Common Pitfalls
@@ -112,6 +120,8 @@ curl 'https://api.tryopendata.ai/v1/datasets/nces/naep?filter%5Byear%5D=2024'
 
 **Sorting on computed aggregation columns works.** When using `aggregate` + `group_by`, you can sort on the computed column names (e.g., `sort=-count_event_id` for `aggregate=count(event_id)`). Invalid sort fields return a 400 with `valid_values` showing available options.
 
+**Always use `api.tryopendata.ai` for POST endpoints.** The frontend at `tryopendata.ai/api/` proxies GET requests only. POST requests to `tryopendata.ai/api/v1/query` return 405. Use `api.tryopendata.ai/v1/query` directly for SQL and cross-dataset queries.
+
 ## SQL Query
 
 The `POST /v1/datasets/{provider}/{dataset}/query` endpoint accepts raw SQL and executes it against the dataset. Requires authentication (API key or session). The dataset table is available as `data` or `"provider/dataset"`. SQL is validated against an allowlist (SELECT only, no DDL/DML/IO) and runs with resource limits (5s timeout, 10k rows, 512MB memory).
@@ -126,6 +136,37 @@ The `POST /v1/datasets/{provider}/{dataset}/query` endpoint accepts raw SQL and 
 ```
 
 This eliminates the triple-nested escaping problem (SQL quotes inside JSON inside shell). See [sql-query.md](references/sql-query.md) for details.
+
+## Composition (Cross-Dataset Joins)
+
+The compose endpoints let you join two datasets and preview or download the result without writing SQL. Useful for enriching a dataset with columns from a related one (e.g., joining county-level education data with census demographics).
+
+**Workflow:** Call `/joinable` to discover what can be joined, `/compose/preview` to check the result, then `/compose/download.csv` to export. See [composition.md](references/composition.md) for full details.
+
+```bash
+# 1. What can this dataset join with?
+curl 'https://api.tryopendata.ai/v1/datasets/nces/naep/joinable'
+
+# 2. Preview the join (anonymous: 100 rows, authenticated: 5000 rows)
+curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/compose/preview' \
+  -H 'Content-Type: application/json' \
+  -d '{"joins": [{"target": "census/saipe", "source_column": "jurisdiction_name", "join_column": "name"}]}'
+
+# 3. Download the full join as CSV (auth required)
+curl -H "Authorization: Bearer od_live_..." \
+  'https://api.tryopendata.ai/v1/datasets/nces/naep/compose/download.csv?target=census/saipe&source_column=jurisdiction_name&join_column=name' \
+  -o composed.csv
+```
+
+## Graph Intelligence
+
+Datasets are connected in a knowledge graph (Neo4j). Graph scores like PageRank importance and bridge centrality are available on search results, dataset metadata, and related datasets. These help surface the most connected and structurally important datasets.
+
+**On dataset metadata:** Pass `?include_graph=true` to `/meta` to get a `graph` block with importance, bridge_score, and community info.
+
+**On search results:** All search results now include `importance`, `bridge_score`, `community_id`, `community_label`, and `graph_available` fields. Graph scores contribute to search ranking via a multiplicative boost.
+
+**Community browsing:** Use `/v1/graph/communities/{id}/datasets` to list datasets in a Leiden community, sorted by importance. See [graph.md](references/graph.md) for details.
 
 ## Discovery
 
@@ -145,3 +186,5 @@ The `GET /v1/discover` endpoint returns datasets matching a natural language que
 | [references/common-patterns.md](references/common-patterns.md)           | Recipes for exploratory analysis and data research         |
 | [references/sql-query.md](references/sql-query.md)                       | Raw SQL query endpoint, allowed functions, security model  |
 | [references/discover.md](references/discover.md)                         | Using the discover endpoint, LLM agent integration, dataset discovery |
+| [references/composition.md](references/composition.md)                   | Cross-dataset joins: joinable, preview, CSV download       |
+| [references/graph.md](references/graph.md)                               | Graph intelligence: communities, importance, bridge scores |

@@ -98,18 +98,76 @@ while true; do
 done
 ```
 
-## Find Correlating Data Across Datasets
+## Enrich a Dataset with Composition
 
-When doing cross-dataset analysis, query each dataset separately and join client-side by shared dimensions (state, year, etc.).
+Use the compose endpoints when you want to add columns from one dataset to another without writing SQL. Simpler than the SQL join approach, with built-in cardinality protection.
 
 ```bash
-# NAEP scores by state for 2024
-curl '.../nces/naep?filter%5Byear%5D=2024&group_by=jurisdiction_name&aggregate=avg(score)&sort=jurisdiction_name' -o naep_2024.json
+# 1. What can NAEP scores join with?
+curl 'https://api.tryopendata.ai/v1/datasets/nces/naep/joinable'
 
-# Poverty rates by state for 2024
-curl '.../census/saipe?filter%5Byear%5D=2024&fields=state_postal,poverty_rate&sort=state_postal' -o poverty_2024.json
+# 2. Preview: add poverty rates alongside scores
+curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/compose/preview' \
+  -H 'Content-Type: application/json' \
+  -d '{"joins": [{"target": "census/saipe", "source_column": "jurisdiction_name", "join_column": "name"}]}'
 
-# Join the two locally by state
+# 3. Download the full joined result
+curl -H "Authorization: Bearer $OPENDATA_API_KEY" \
+  'https://api.tryopendata.ai/v1/datasets/nces/naep/compose/download.csv?target=census/saipe&source_column=jurisdiction_name&join_column=name' \
+  -o enriched.csv
+```
+
+Check `populated_rows` in the preview response to gauge join quality. If it's low relative to total rows, the join columns may not align well. See [composition.md](references/composition.md) for the full API reference.
+
+## Find Related and Connected Datasets
+
+Use graph intelligence to discover datasets related to one you're already working with:
+
+```bash
+# Related datasets (semantic + join + graph signals)
+curl 'https://api.tryopendata.ai/v1/datasets/nces/naep/related'
+
+# Dataset metadata with graph scores
+curl 'https://api.tryopendata.ai/v1/datasets/nces/naep/meta?include_graph=true'
+
+# Browse all datasets in the same community
+curl 'https://api.tryopendata.ai/v1/graph/communities/7/datasets?sort=importance'
+
+# Search with graph-boosted ranking (automatic, always on)
+curl 'https://api.tryopendata.ai/v1/search?q=education+scores'
+```
+
+See [graph.md](references/graph.md) for details on graph scores and community browsing.
+
+## Join Data Across Datasets (SQL)
+
+Use `POST /v1/query` to join multiple datasets in a single SQL query. Reference datasets as `"provider/dataset"` (quoted slash notation) or `provider.dataset` (dot notation). For simpler joins, consider the [composition endpoints](references/composition.md) instead.
+
+```bash
+# Join NAEP scores with poverty rates by state
+curl -X POST 'https://api.tryopendata.ai/v1/query' \
+  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{"sql": "SELECT n.jurisdiction_name, AVG(n.score) as avg_score, s.poverty_rate FROM \"nces/naep\" n JOIN \"census/saipe\" s ON n.jurisdiction_name = s.name AND n.year = s.year WHERE n.year = ? GROUP BY n.jurisdiction_name, s.poverty_rate ORDER BY avg_score DESC", "params": [2024]}'
+```
+
+Limits: max 5 datasets per query, 150 MB combined parquet, 10s timeout. See [sql-query.md](references/sql-query.md) for details.
+
+**When identifiers don't match across datasets**, use string functions to normalize them in the query. For example, NDC drug codes differ between FDA (hyphenated text like `0003-0893-21`) and CMS (11-digit integers like `300893021`). Use LPAD and SPLIT_PART to create a common format:
+
+```sql
+-- Normalize NDC codes across FDA and CMS datasets
+ON LPAD(SPLIT_PART(fda.product_ndc, '-', 1), 5, '0')
+   || LPAD(SPLIT_PART(fda.product_ndc, '-', 2), 4, '0')
+ = SUBSTR(LPAD(CAST(cms.ndc AS VARCHAR), 11, '0'), 1, 9)
+```
+
+**Fallback: client-side join.** If the SQL endpoint returns errors, query each dataset separately and join by shared dimensions (state, year, FIPS code) in your application:
+
+```bash
+curl '.../nces/naep?filter%5Byear%5D=2024&group_by=jurisdiction_name&aggregate=avg(score)' -o naep.json
+curl '.../census/saipe?filter%5Byear%5D=2024&fields=state_postal,poverty_rate' -o poverty.json
+# Join locally by state name
 ```
 
 ## Verify Filters Are Working
@@ -163,3 +221,13 @@ print(f'median: {statistics.median(vals):.0f}')
 ```
 
 Python's `json`, `statistics`, and `csv` modules are available without installing anything.
+
+## Healthcare Dataset Join Patterns
+
+Healthcare datasets often use different identifier formats across agencies. Common join strategies:
+
+**Drug data (CMS + FDA):** CMS datasets (Part D, NADAC, Medicaid) identify drugs by brand name or NDC integer. FDA NDC Directory uses hyphenated NDC text. Join through the FDA NDC Directory as a bridge table, matching by brand name to Part D and by normalized NDC code to NADAC.
+
+**Geographic data (CDC + Census + CMS):** Most datasets share state FIPS codes or state names. County-level data uses 5-digit FIPS codes. Always verify the identifier column type: some store FIPS as integers (dropping leading zeros), others as zero-padded strings.
+
+**Temporal alignment:** CMS data is typically annual (calendar year). CDC provisional data uses 12-month trailing periods. OECD data may lag 1-2 years. When joining across agencies, check that year values actually represent the same time period.

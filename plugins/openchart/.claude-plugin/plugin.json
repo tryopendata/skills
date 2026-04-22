@@ -1,7 +1,7 @@
 {
   "name": "openchart",
   "description": "OpenChart visualization skills for generating charts, tables, graphs, and sankey diagrams",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": {
     "name": "OpenData",
     "url": "https://github.com/tryopendata"
