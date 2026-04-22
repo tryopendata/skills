@@ -8,6 +8,7 @@ Trends with volume emphasis. Filled region below the line.
 | --- | --- | --- |
 | x | Yes | temporal, ordinal |
 | y | Yes | quantitative |
+| y2 | No | quantitative -- second boundary for confidence bands/ranges |
 | color | No | nominal, ordinal |
 | size | No | quantitative |
 | detail | No | nominal |
@@ -15,17 +16,26 @@ Trends with volume emphasis. Filled region below the line.
 | strokeDash | No | nominal, ordinal |
 | tooltip | No | any |
 
-Same encoding as line charts. Use area when you want to emphasize the magnitude (volume under the curve), not just the trend direction.
+Same encoding as line charts. Use area when you want to emphasize the magnitude (volume under the curve), not just the trend direction. Add `y2` for confidence intervals or range bands (fill between two data series).
 
 ## Spec
 
 ```typescript
 {
-  mark: "area" | { type: "area", interpolate?: "linear"|"monotone"|"step"|"step-before"|"step-after"|"basis"|"cardinal"|"natural" },
+  mark: "area" | {
+    type: "area",
+    interpolate?: "linear"|"monotone"|"step"|"step-before"|"step-after"|"basis"|"cardinal"|"natural",
+    fill?: string | GradientDef,   // solid color or gradient fill (see gradients.md)
+    stroke?: string,               // top-line stroke color
+    strokeWidth?: number,
+    point?: boolean | "transparent",  // show point markers on each data point
+    opacity?: number,
+  },
   data: DataRow[],
   encoding: {
     x: { field: string, type: "temporal"|"ordinal", axis?, scale? },
     y: { field: string, type: "quantitative", axis?, scale? },
+    y2?: { field: string, type: "quantitative" },  // upper/lower band boundary
     color?: { field: string, type: "nominal"|"ordinal" },
     size?: { field: string, type: "quantitative" },
     detail?: { field: string, type: "nominal" },
@@ -40,6 +50,48 @@ Same encoding as line charts. Use area when you want to emphasize the magnitude 
   responsive?: boolean,
   theme?: ThemeConfig,
   darkMode?: DarkMode,
+}
+```
+
+## Confidence Band / Range Area
+
+Use `y2` encoding to fill between two data fields. The area fill spans from `y` to `y2`:
+
+```json
+{
+  "mark": { "type": "area", "opacity": 0.25 },
+  "data": [
+    { "month": "Jan", "low": 52, "high": 68 },
+    { "month": "Feb", "low": 54, "high": 71 },
+    { "month": "Mar", "low": 58, "high": 76 }
+  ],
+  "encoding": {
+    "x": { "field": "month", "type": "ordinal" },
+    "y": { "field": "low", "type": "quantitative" },
+    "y2": { "field": "high", "type": "quantitative" }
+  }
+}
+```
+
+## Gradient Fill
+
+Use `mark.fill` with a `GradientDef` for a top-to-bottom fade. When a gradient is provided, the area's `fillOpacity` defaults to 1 and the gradient's own `stop.opacity` values control the fade:
+
+```json
+{
+  "mark": {
+    "type": "area",
+    "stroke": "#E07B39",
+    "strokeWidth": 2,
+    "fill": {
+      "gradient": "linear",
+      "x1": 0, "y1": 0, "x2": 0, "y2": 1,
+      "stops": [
+        { "offset": 0, "color": "#E07B39", "opacity": 1.0 },
+        { "offset": 1, "color": "#E07B39", "opacity": 0.2 }
+      ]
+    }
+  }
 }
 ```
 

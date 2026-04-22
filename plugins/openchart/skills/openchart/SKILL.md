@@ -79,6 +79,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 
 | When the task involves... | Load |
 | --- | --- |
+| Dual-axis charts, independent y-scales | See Layer Composition section above -- no extra reference needed |
 | Adding annotations, callouts, reference lines | [annotations.md](references/annotations.md) |
 | onEdit callback, selection, inline editing | [editing.md](references/editing.md) |
 | Responsive layout, mobile, breakpoint overrides | [responsive.md](references/responsive.md) |
@@ -188,6 +189,7 @@ Charts map data to visuals via encoding channels: x, y, color, size, detail, opa
     tickCount?: number,      // override tick count
     grid?: boolean,          // show gridlines
     labelAngle?: number,     // tick label rotation in degrees. Deprecated alias: `tickAngle`
+    labelColor?: string,     // color override for tick labels and axis title. Use in dual-axis charts to match axis to its series.
   },
   scale?: {
     domain?: [number, number] | string[],  // explicit domain
@@ -225,6 +227,58 @@ Overlay multiple marks in a single chart using `layer`. Each layer is a standalo
 ```
 
 Layers share the same coordinate space. Use this for combo charts (bar + line), adding reference lines, or overlaying annotations.
+
+### Dual-Axis Charts (Independent Y-Scales)
+
+When two series have incompatible value ranges (e.g., revenue in millions vs. headcount in thousands), use `resolve: { scale: { y: "independent" } }` on the layer spec. Layer 0 gets the left y-axis; layer 1 gets the right y-axis. Both share the x-axis.
+
+```json
+{
+  "resolve": { "scale": { "y": "independent" } },
+  "layer": [
+    {
+      "mark": { "type": "bar", "opacity": 0.85 },
+      "data": [
+        { "year": "2022", "revenue": 8000000 },
+        { "year": "2023", "revenue": -5000000 }
+      ],
+      "encoding": {
+        "x": { "field": "year", "type": "ordinal" },
+        "y": {
+          "field": "revenue",
+          "type": "quantitative",
+          "axis": { "title": "Net Revenue ($)", "format": "~s", "labelColor": "#3E7CB1" }
+        }
+      },
+      "labels": { "density": "none" }
+    },
+    {
+      "mark": { "type": "line", "stroke": "#E07B39", "strokeWidth": 2.5, "point": true, "interpolate": "monotone" },
+      "data": [
+        { "year": "2022", "enrollment": 52800 },
+        { "year": "2023", "enrollment": 51600 }
+      ],
+      "encoding": {
+        "x": { "field": "year", "type": "ordinal" },
+        "y": {
+          "field": "enrollment",
+          "type": "quantitative",
+          "axis": { "title": "Enrollment", "format": "~s", "labelColor": "#E07B39" }
+        }
+      },
+      "labels": { "density": "none" }
+    }
+  ]
+}
+```
+
+**Dual-axis rules:**
+- Max 2 layers -- there are only left and right y-axes.
+- Both layers must have compatible x-field types (both `ordinal`, both `temporal`, etc.).
+- Use `axis.labelColor` on each layer's y-encoding to color the axis labels to match the series -- this is the standard dual-axis pattern (Datawrapper, Highcharts style).
+- Use `labels: { density: "none" }` on both layers to avoid label collisions between the two series.
+- The engine zero-aligns both y-scales so zero sits at the same pixel height on both axes. Annotations target the primary (left) y-scale.
+- Works with any combination: bar + line, bar + area, area + line.
 
 ## Legend Configuration (Charts Only)
 
@@ -341,6 +395,7 @@ Rendering and component behaviors that aren't obvious from the spec alone.
 | Scatter plots auto-set `zero: false` | Unlike other chart types, scatter/point marks automatically set `scale.zero: false` on both axes if not explicitly configured. This means scatter domains fit tightly to data. | To include zero, explicitly set `scale: { zero: true }` on the relevant axis. Be aware that scatter and bar/line charts handle zero differently by default. |
 | Constant colors require `mark.fill`, not encoding | `encoding.color: { value: "#hex" }` will error. The color encoding channel requires a `field` that maps to data. | Use `mark: { type: "bar", fill: "#1b7fa3" }` for constant colors across all marks. |
 | Default gradient direction is top-to-bottom | A gradient with no explicit `x1/y1/x2/y2` defaults to vertical (top-to-bottom). On horizontal bars, the engine auto-orients this to left-to-right. On other marks, set coordinates explicitly. | For left-to-right: `x1:0, y1:0, x2:1, y2:0`. For top-to-bottom (default): omit coordinates or use `x1:0, y1:0, x2:0, y2:1`. |
+| Layer scale mismatch | Second layer renders at wrong positions when layers have different value ranges. | For independent y-scales (e.g., revenue + enrollment), use `resolve: { scale: { y: "independent" } }` on the layer spec -- this renders both series correctly with left and right y-axes. For simple overlays where both series share the same scale, set an explicit `scale.domain` on both layers. Prefer `annotations` with `refline` over a full layer when you just need to add a threshold line. |
 
 ## Custom D3.js Infographics
 

@@ -34,16 +34,20 @@ Callout at a specific data point.
     to?: { dx?: number, dy?: number },    // offset at the data point end of the connector
   },
   background?: string,           // background color behind text for readability
+  halo?: boolean,                // paint-order stroke halo behind text. Default true. Set false for white text on colored backgrounds.
+  responsive?: boolean,          // hide at compact breakpoints. Default true. Set false to always show.
 }
 ```
 
 **Tips:**
 - Use `\n` in `text` for multi-line annotations
 - Text annotations get a paint-order stroke halo by default (using the theme's background color) that knocks out chart lines behind the text without needing an explicit background rect
+- Set `halo: false` when the annotation text is white or light-colored and sits on a colored element -- the halo would make the text invisible. Use `background` instead for an explicit rect.
 - Set `background` to a color string for an explicit background rect instead of the default halo
 - `connector` defaults to `true` (straight line from label to point)
 - `"curve"` connector draws a curved arrow with arrowhead
 - `anchor: "auto"` lets the engine pick a position (see details below)
+- `responsive: false` keeps the annotation visible at compact breakpoints (< 400px). Default behavior hides all annotations at compact sizes.
 
 ## Placement on Dense or Bubble Charts
 
@@ -73,7 +77,7 @@ Understanding what the engine does (and doesn't do) helps you write annotations 
 - Nudges text annotations away from obstacle rects (legend bounds, band-scale mark bounds) so annotations don't land on the legend
 - Resolves annotation-to-annotation collisions using a greedy algorithm: if two text annotations overlap, the second one is repositioned to the nearest non-colliding spot (below, above, left, or right)
 - Recomputes connector origins after any nudging so connectors still point correctly
-- Hides all annotations at compact breakpoints (< 400px width)
+- Hides annotations at compact breakpoints (< 400px width) unless the annotation has `responsive: false`
 
 **What `anchor: "auto"` actually does:** Checks if the data point is in the upper or lower half of the chart area. Upper half places the label below-right with an 8px offset; lower half places it above-right with an 8px offset. This is simple heuristic placement, not intelligent whitespace detection. For predictable results, always specify explicit `anchor` and `offset` values.
 
@@ -124,11 +128,13 @@ Horizontal or vertical threshold/baseline line.
 
 ```typescript
 {
-  type: "refline",
+  type: "refline" | "rule",    // "rule" is an alias for "refline"
   x?: string | number,         // vertical line at this x value
   y?: string | number,         // horizontal line at this y value
   style?: "solid"|"dashed"|"dotted",
+  strokeDash?: number[],        // raw SVG dash pattern, e.g. [4, 4]. Overrides style.
   strokeWidth?: number,
+  responsive?: boolean,         // hide at compact breakpoints. Default true.
   labelOffset?: { dx?: number, dy?: number },
   labelAnchor?: "top"|"bottom"|"left"|"right"|"auto",
 }
