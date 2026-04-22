@@ -13,7 +13,7 @@
       "name": "opendata",
       "source": "./plugins/opendata/",
       "description": "OpenData API skills for querying, filtering, and analyzing public datasets",
-      "version": "1.0.",
+      "version": "1.0.1",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"
@@ -36,7 +36,7 @@
       "name": "openchart",
       "source": "./plugins/openchart/",
       "description": "OpenChart visualization skills for generating charts, tables, graphs, and sankey diagrams",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"
