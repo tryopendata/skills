@@ -18,6 +18,16 @@ Trends with volume emphasis. Filled region below the line.
 
 Same encoding as line charts. Use area when you want to emphasize the magnitude (volume under the curve), not just the trend direction. Add `y2` for confidence intervals or range bands (fill between two data series).
 
+## Crosshair
+
+Show a vertical line that snaps to the nearest data point on hover:
+
+```json
+{ "crosshair": true }
+```
+
+Renders a dashed vertical line at the hovered data point's x-coordinate. Only applies to line and area charts. Off by default.
+
 ## Spec
 
 ```typescript

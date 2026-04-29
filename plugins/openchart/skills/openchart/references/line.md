@@ -47,6 +47,16 @@ Use `color` to differentiate 2-5 series. For 6+ series, filter to the top 5 or u
 
 **Caution with `endpoints` and long series names:** Endpoint labels include the series name from the `color` field. Long names like `"Waukegan (68% low-income)"` reserve a large right margin, creating dead space. If series names are more than ~15 characters, either abbreviate them or use `labels: { density: "none" }` with `legend: { position: "top" }` instead.
 
+## Crosshair
+
+Show a vertical line that snaps to the nearest data point on hover:
+
+```json
+{ "crosshair": true }
+```
+
+Renders a dashed vertical line at the hovered data point's x-coordinate. Only applies to line and area charts. Off by default.
+
 ## Axis Formatting
 
 Always format Y-axis ticks with units and provide enough tick density for readers to identify values.

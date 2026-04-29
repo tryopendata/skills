@@ -53,6 +53,21 @@ Use `color` with a nominal/ordinal field to create multi-series bars. By default
 
 **Format strings:** Both `axis.format` and `labels.format` support d3-format strings with an optional literal suffix (e.g., `".1f%"` outputs `12.5%`). Set both to keep axis ticks and bar value labels consistent. See [format-strings.md](format-strings.md) for the full reference.
 
+## Compound Axis Labels
+
+Show a secondary data field alongside each axis tick label:
+
+```json
+"y": {
+  "field": "album",
+  "type": "nominal",
+  "sort": "descending",
+  "axis": { "labelField": "year" }
+}
+```
+
+This renders y-axis labels like **RENAISSANCE** 2022 (primary bold, secondary lighter weight). Useful for horizontal bar charts where ticks need both a name and a detail (year, category, etc.).
+
 ## Builders
 
 ```typescript

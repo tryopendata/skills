@@ -1,12 +1,13 @@
 ---
 name: openchart
 description: >
-  Generates OpenChart (https://github.com/tryopendata/openchart) chart, table, graph, and
-  sankey specs from data, and guides editorial design decisions. Use when creating visualizations,
+  Generates OpenChart (https://github.com/tryopendata/openchart) chart, table, graph, sankey,
+  and tilemap specs from data, and guides editorial design decisions. Use when creating visualizations,
   building charts, rendering data tables, generating VizSpec JSON, creating network graphs,
-  building sankey/flow diagrams, answering questions about OpenChart types and encoding rules,
-  or making design decisions about chart type selection, color strategy, typography, annotations,
-  and editorial framing. Also covers custom D3.js infographics for cases beyond declarative specs.
+  building sankey/flow diagrams, building US state tile grid maps, answering questions about OpenChart
+  types and encoding rules, or making design decisions about chart type selection, color strategy,
+  typography, annotations, and editorial framing. Also covers custom D3.js infographics for cases
+  beyond declarative specs.
 ---
 
 # Data Visualization with OpenChart
@@ -14,7 +15,7 @@ description: >
 <!-- Remove migration note after 2026-07 -->
 > **Note:** SVG design capabilities (logos, icons, graphics) have moved to the `opendesign` plugin. Install with `/plugin install opendesign@opendata-skills`.
 
-**Core concept:** Write a VizSpec JSON object, render with `<Chart>` / `<DataTable>` / `<Graph>` / `<Sankey>` (React/Vue/Svelte) or `createChart()` / `createTable()` / `createGraph()` / `createSankey()` (vanilla JS). The engine validates, compiles, and renders. Specs are plain JSON, no imperative drawing. See https://github.com/tryopendata/openchart for the rendering engine.
+**Core concept:** Write a VizSpec JSON object, render with `<Chart>` / `<DataTable>` / `<Graph>` / `<Sankey>` / `<TileMap>` (React/Vue/Svelte) or `createChart()` / `createTable()` / `createGraph()` / `createSankey()` / `createTileMap()` (vanilla JS). The engine validates, compiles, and renders. Specs are plain JSON, no imperative drawing. See https://github.com/tryopendata/openchart for the rendering engine.
 
 **CSS is required.** OpenChart's stylesheet must be loaded for proper rendering (chrome, tables, tooltips, brand watermark). Framework imports handle this automatically, but CDN/standalone HTML needs an explicit `<link>`:
 
@@ -35,6 +36,7 @@ Categorical + series + num?  -> stacked bar (use color for series)
 Distribution/spread?         -> circle (strip plot)
 Nodes + edges / network?     -> graph (force/radial/hierarchical layout)
 Flow between stages?         -> sankey (source/target/value)
+US state-level data?         -> tilemap (state codes + values, equal-weight grid)
 Tabular data overview?       -> table (with sparklines, heatmaps, bars)
 Default                      -> bar
 ```
@@ -58,6 +60,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 | `type: "table"` | Data tables with visual features | columns + data rows | [references/table.md](references/table.md) |
 | `type: "graph"` | Networks, relationships, hierarchies | nodes + edges | [references/graph.md](references/graph.md) |
 | `type: "sankey"` | Flows between stages/processes | source + target + value | [references/sankey.md](references/sankey.md) |
+| `type: "tilemap"` | US state-level data (equal-weight grid) | state codes + values | [references/tilemap.md](references/tilemap.md) |
 
 **Bar orientation:** The engine infers orientation from encoding. `x: nominal/ordinal + y: quantitative` = vertical (column-style). `x: quantitative + y: nominal/ordinal` = horizontal bar. Override with `mark: { type: "bar", orient: "horizontal" | "vertical" }`.
 
@@ -84,6 +87,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 | onEdit callback, selection, inline editing | [editing.md](references/editing.md) |
 | Responsive layout, mobile, breakpoint overrides | [responsive.md](references/responsive.md) |
 | Theme customization (colors, fonts, spacing) | [theme.md](references/theme.md) |
+| Data transforms (window, filter, aggregate, etc.) | [data-transforms.md](references/data-transforms.md) |
 | Rendering setup (React, Vue, Svelte, vanilla) | [rendering.md](references/rendering.md) |
 | Choosing chart type for a story | [chart-selection.md](references/chart-selection.md) |
 | Writing titles, subtitles, annotation text | [editorial-writing.md](references/editorial-writing.md) |
@@ -92,6 +96,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 | Gradient fills (linear, radial, per-mark) | [gradients.md](references/gradients.md) |
 | Entrance animations, easing, stagger, reduced motion | [animation.md](references/animation.md) |
 | Sankey diagram (flows between stages) | [sankey.md](references/sankey.md) |
+| US state tile grid map | [tilemap.md](references/tilemap.md) |
 | Final design quality check | [design-review.md](references/design-review.md) |
 | Checking rendered output for defects | [visual-qa.md](references/visual-qa.md) |
 
@@ -113,11 +118,12 @@ Charts use `mark` as their discriminant. Tables and graphs use `type`.
   darkMode?: "auto"|"force"|"off",
   responsive?: boolean,
   animation?: AnimationSpec, // true | AnimationConfig. Off by default. See animation.md
+  crosshair?: boolean,       // vertical snap line on hover for line/area. Off by default.
 }
 
-// Tables, graphs, and sankey
+// Tables, graphs, sankey, and tilemap
 {
-  type: "table" | "graph" | "sankey",  // REQUIRED: discriminant for non-chart specs
+  type: "table" | "graph" | "sankey" | "tilemap",  // REQUIRED: discriminant for non-chart specs
   chrome?: { ... },
   theme?: ThemeConfig,
   darkMode?: "auto"|"force"|"off",
@@ -211,7 +217,7 @@ Charts map data to visuals via encoding channels: x, y, color, size, detail, opa
 
 ## Data Transforms (Charts Only)
 
-Apply transforms (filter, bin, calculate, timeUnit, aggregate, fold) to data before encoding. Transforms run in array order. See [data transforms reference](references/data-transforms.md).
+Apply transforms (filter, bin, calculate, timeUnit, aggregate, fold, window) to data before encoding. Transforms run in array order. Filters support data-relative time references for temporal fields. See [data transforms reference](references/data-transforms.md).
 
 ## Layer Composition (Charts Only)
 
@@ -374,12 +380,13 @@ Run these checks before outputting a spec. These catch the issues that most ofte
 | Forgetting encoding.color for multi-series | Line/bar with groups needs `color` channel |
 | Bar chart for time series | Use line for temporal data; bar with vertical orientation for periodic categories |
 | Using chart mark for network data | Use `type: "graph"` with nodes + edges |
+| Using chart mark for US state data | Use `type: "tilemap"` with state code keys |
 | Not specifying axis format for currency/pct | Add `axis: { format: "$,.0f" }` or `".1f%"` |
 | Using `".1%"` when data is already in percent form | `".1%"` multiplies by 100 (d3 convention). If data is `12.5` meaning 12.5%, use `".1f%"` (literal suffix) |
 | Axis format and label format inconsistent | Set both `axis.format` and `labels.format` to the same pattern so ticks and data labels match |
 | Using `darkMode: "auto"` in class-based dark mode apps | `"auto"` checks `prefers-color-scheme` only. For class-based toggles (Astro, Next.js), observe DOM and map to `"force"`/`"off"`. See [rendering](references/rendering.md) |
 | Temporal scale with `nice: true` (default) creating dead space | `nice` rounds the domain outward (e.g., `2010-01` becomes `2008`). Set `scale: { domain: ["2010-01", "2026-01"], nice: false }` for precise control |
-| Using `type` instead of `mark` for charts | Charts use `mark: "line"` (not `type: "line"`). Only tables and graphs use `type`. |
+| Using `type` instead of `mark` for charts | Charts use `mark: "line"` (not `type: "line"`). Only tables, graphs, sankey, and tilemap use `type`. |
 
 For design anti-patterns (titles, color, annotations), see [design review](references/design-review.md).
 
@@ -399,7 +406,7 @@ Rendering and component behaviors that aren't obvious from the spec alone.
 
 ## Custom D3.js Infographics
 
-When a visualization goes beyond what declarative specs can handle (creative metaphors, unusual layouts, treemaps, generative art, scrollytelling), fall back to raw D3.js + SVG. Note: sankey is now a first-class type with its own spec format. See [references/sankey.md](references/sankey.md). Use the D3 reference only for heavily customized sankey layouts. These references cover D3 implementation patterns:
+When a visualization goes beyond what declarative specs can handle (creative metaphors, unusual layouts, treemaps, generative art, scrollytelling), fall back to raw D3.js + SVG. Note: sankey and tilemap are first-class types with their own spec formats. See [references/sankey.md](references/sankey.md) and [references/tilemap.md](references/tilemap.md). Use the D3 reference only for heavily customized layouts. These references cover D3 implementation patterns:
 
 | Topic | Reference |
 | --- | --- |
