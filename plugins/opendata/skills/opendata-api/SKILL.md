@@ -42,25 +42,63 @@ All data endpoints live under `/v1/datasets/`.
 
 ## Endpoints
 
+### Data & Schema
+
 | Method | Path                                               | Description                                                  |
 | ------ | -------------------------------------------------- | ------------------------------------------------------------ |
 | GET    | `/v1/datasets/{provider}/{dataset}`                | Query dataset rows (flat) or list subdatasets (hierarchical) |
 | GET    | `/v1/datasets/{provider}/{dataset}/{subdataset}`   | Query subdataset rows                                        |
 | GET    | `/v1/datasets/{provider}/{dataset}/columns`        | Column metadata and statistics                               |
 | GET    | `/v1/datasets/{provider}/{dataset}/columns/{name}` | Single column detail with full value list                    |
-| GET    | `/v1/datasets/{provider}/{dataset}/meta`           | Dataset metadata (schema, views, graph scores)               |
+| GET    | `/v1/datasets/{provider}/{dataset}/meta`           | Dataset metadata (schema, views, graph scores, merged enrichment) |
 | GET    | `/v1/datasets/{provider}/{dataset}/views`          | List available views                                         |
+| POST   | `/v1/datasets/{provider}/{dataset}/query`          | Execute SQL query (authenticated)                            |
+| POST   | `/v1/query`                                        | Cross-dataset SQL query (join multiple datasets)             |
+
+### Enrichment & Intelligence
+
+| Method | Path                                               | Description                                                  |
+| ------ | -------------------------------------------------- | ------------------------------------------------------------ |
+| GET    | `/v1/datasets/{provider}/{dataset}/meta/enriched`  | AI-enriched metadata (descriptions, tags, methodology, coverage) |
+| GET    | `/v1/datasets/{provider}/{dataset}/meta/view-suggestions` | AI-suggested views (timeseries, lookup, wide_to_long, pivot) |
+| POST   | `/v1/datasets/{provider}/{dataset}/meta/view-suggestions/{id}/apply` | Apply a view suggestion (admin) |
+| GET    | `/v1/datasets/{provider}/{dataset}/chart`           | Dataset chart data with auto-downsampling                    |
+| GET    | `/v1/datasets/{provider}/{dataset}/activity`       | Recent activity events (ingestion, enrichment, schema changes) |
 | GET    | `/v1/datasets/{provider}/{dataset}/related`        | Related datasets (semantic + join + graph signals)           |
+
+### Composition (Cross-Dataset Joins)
+
+| Method | Path                                               | Description                                                  |
+| ------ | -------------------------------------------------- | ------------------------------------------------------------ |
 | GET    | `/v1/datasets/{provider}/{dataset}/joinable`       | List joinable datasets for composition                       |
 | POST   | `/v1/datasets/{provider}/{dataset}/compose/preview`| Preview a cross-dataset join (LEFT JOIN)                     |
 | GET    | `/v1/datasets/{provider}/{dataset}/compose/download.csv` | Download a composed join as CSV (auth required)        |
-| POST   | `/v1/datasets/{provider}/{dataset}/query`          | Execute SQL query (authenticated)                            |
+
+### Search & Discovery
+
+| Method | Path                                               | Description                                                  |
+| ------ | -------------------------------------------------- | ------------------------------------------------------------ |
+| GET    | `/v1/search`                                       | Search datasets (keyword/semantic/hybrid, graph-boosted)     |
+| GET    | `/v1/search/suggest`                               | Autocomplete suggestions for search typeahead                |
 | GET    | `/v1/discover`                                     | Search datasets with enriched metadata for LLM agents        |
 | POST   | `/v1/discover/batch`                               | Batch discover across multiple queries with deduplication    |
-| POST   | `/v1/query`                                        | Cross-dataset SQL query (join multiple datasets)             |
-| GET    | `/v1/search`                                       | Search datasets (includes graph intelligence scores)         |
 | GET    | `/v1/categories/{slug}`                            | Browse datasets by category (supports graph sorting)         |
-| GET    | `/v1/graph/communities/{community_id}/datasets`    | List datasets in a graph community by importance             |
+
+### Graph Intelligence
+
+| Method | Path                                               | Description                                                  |
+| ------ | -------------------------------------------------- | ------------------------------------------------------------ |
+| GET    | `/v1/graph/datasets/{provider}/{dataset}/stats`    | Graph statistics for a dataset (importance, bridge, community) |
+| GET    | `/v1/graph/datasets/{provider}/{dataset}/join-paths` | Multi-hop join paths from a dataset                        |
+| GET    | `/v1/graph/datasets/{provider}/{dataset}/related`  | Graph-powered related datasets (structural + semantic)       |
+| GET    | `/v1/graph/datasets/{provider}/{dataset}/neighbors`| Direct 1-hop connections (filterable by edge type)           |
+| GET    | `/v1/graph/datasets/{provider}/{dataset}/schema-graph` | Schema-level subgraph for D3 visualization               |
+| GET    | `/v1/graph/communities`                            | List communities with top datasets and dominant topics       |
+| GET    | `/v1/graph/communities/{community_id}/datasets`    | List datasets in a community by importance                   |
+| GET    | `/v1/graph/bridges`                                | Top bridge datasets by betweenness centrality                |
+| GET    | `/v1/graph/subgraph`                               | Seeded subgraph for graph explorer                           |
+| GET    | `/v1/graph/entities/{type}/{id}/datasets`          | Datasets referencing a specific entity                       |
+| GET    | `/v1/graph/health`                                 | Graph health and sync status                                 |
 
 ## Subdatasets
 
@@ -143,6 +181,8 @@ The compose endpoints let you join two datasets and preview or download the resu
 
 **Workflow:** Call `/joinable` to discover what can be joined, `/compose/preview` to check the result, then `/compose/download.csv` to export. See [composition.md](references/composition.md) for full details.
 
+**Composite keys:** `source_column` and `join_column` accept arrays for multi-column joins. Both arrays must have the same length.
+
 ```bash
 # 1. What can this dataset join with?
 curl 'https://api.tryopendata.ai/v1/datasets/nces/naep/joinable'
@@ -152,21 +192,87 @@ curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/compose/preview' 
   -H 'Content-Type: application/json' \
   -d '{"joins": [{"target": "census/saipe", "source_column": "jurisdiction_name", "join_column": "name"}]}'
 
+# 2b. Composite key join (match on multiple columns)
+curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/compose/preview' \
+  -H 'Content-Type: application/json' \
+  -d '{"joins": [{"target": "census/saipe", "source_column": ["state", "year"], "join_column": ["name", "year"]}]}'
+
 # 3. Download the full join as CSV (auth required)
 curl -H "Authorization: Bearer od_live_..." \
   'https://api.tryopendata.ai/v1/datasets/nces/naep/compose/download.csv?target=census/saipe&source_column=jurisdiction_name&join_column=name' \
   -o composed.csv
 ```
 
+## Search
+
+The `GET /v1/search` endpoint supports three modes:
+
+- **`keyword`**: Traditional full-text search with tsvector matching. Supports Google-style query syntax: quotes for phrases, `-` to exclude, `OR` for alternatives.
+- **`semantic`**: Embedding-based similarity search for conceptual matching (e.g., "inflation data" finds CPI datasets).
+- **`hybrid`** (default): Combines both using Reciprocal Rank Fusion (RRF). Best for most queries.
+
+**Sort options:** `relevance` (default), `recency`, `name`, `popularity` (stars), `trending` (time-decayed activity), `queries`, `downloads`.
+
+**Filters:** `provider`, `format`, `category`, `status` (defaults to "ready").
+
+**Time ranges (for trending/queries/downloads sort):** `today`, `week`, `month`, `year`, `all_time`.
+
+**Autocomplete:** `GET /v1/search/suggest?q=con` returns dataset names matching the prefix for typeahead.
+
+All search results include graph intelligence fields (`importance`, `bridge_score`, `community_id`, `community_label`, `graph_available`). Graph scores contribute to search ranking via a multiplicative boost.
+
+## Enriched Metadata
+
+The `GET /v1/datasets/{provider}/{dataset}/meta/enriched` endpoint returns AI-enriched metadata including:
+- Provider and dataset-level descriptions (short, long, layman, technical)
+- Subject tags, geographic/temporal granularity
+- Column metadata (display names, descriptions, aliases, semantic types)
+- Methodology (structured bullets or summary text)
+- Known limitations
+- Canonical questions
+- Shape classification and KPI snapshot
+- Metadata coverage score (8 quality checks across 3 tiers)
+- YAML-declared joins with measured coverage percentages
+
+## Chart Data
+
+The `GET /v1/datasets/{provider}/{dataset}/chart` endpoint returns pre-aggregated chart data optimized for each dataset shape:
+
+| Shape | Response key | Payload |
+|-------|-------------|---------|
+| `timeseries` | `series` | `{date, value}[]` with auto-downsampling when >500 points |
+| `panel` | `panel` | Top-5 entities, each with `{date, value}[]` series |
+| `categorical` | `buckets` | Top-20 `{label, count}[]` |
+| `geo` | `regions` | `{region: value}` map using latest time period |
+
+**Downsampling (timeseries only):** When raw data exceeds 500 points, the endpoint auto-buckets via `date_trunc` at the finest granularity that fits (week/month/quarter/year). Response includes `downsampled: true`, `granularity`, `aggregation` ("avg" or "count"), and `raw_count`. Returns 404 for tabular/text shapes.
+
+## Activity Feed
+
+The `GET /v1/datasets/{provider}/{dataset}/activity` endpoint returns recent system events (enrichment, ingestion, schema changes) in reverse chronological order. Accepts `?limit=` (1-50, default 20).
+
 ## Graph Intelligence
 
-Datasets are connected in a knowledge graph (Neo4j). Graph scores like PageRank importance and bridge centrality are available on search results, dataset metadata, and related datasets. These help surface the most connected and structurally important datasets.
+Datasets are connected in a knowledge graph (Neo4j). Graph algorithms (PageRank, betweenness centrality, Leiden community detection) produce scores that surface in search rankings, dataset metadata, and related datasets.
 
 **On dataset metadata:** Pass `?include_graph=true` to `/meta` to get a `graph` block with importance, bridge_score, and community info.
 
-**On search results:** All search results now include `importance`, `bridge_score`, `community_id`, `community_label`, and `graph_available` fields. Graph scores contribute to search ranking via a multiplicative boost.
+**Dataset-specific graph endpoints** live under `/v1/graph/datasets/{provider}/{dataset}/`:
+- `stats` - Graph-computed statistics (importance, bridge score, community, connection count)
+- `join-paths` - Multi-hop join paths with configurable `max_hops` (1-3), `min_confidence`, and `limit`
+- `related` - Blended structural + semantic related datasets
+- `neighbors` - Direct 1-hop connections, filterable by `edge_types` (comma-separated, e.g., `SIMILAR_TO,BELONGS_TO`)
+- `schema-graph` - Schema-level subgraph for D3 visualization with configurable `depth` (1-3)
 
-**Community browsing:** Use `/v1/graph/communities/{id}/datasets` to list datasets in a Leiden community, sorted by importance. See [graph.md](references/graph.md) for details.
+**Global graph endpoints** live under `/v1/graph/`:
+- `communities` - List communities with top datasets and dominant topics
+- `communities/{id}/datasets` - Datasets in a community, sorted by importance
+- `bridges` - Top bridge datasets by betweenness centrality
+- `subgraph` - Seeded subgraph for graph explorer (accepts `seed_type`, `seed_id`, `depth`, `limit`). Dataset seeds use `provider/slug` format.
+- `entities/{type}/{id}/datasets` - Datasets referencing a specific entity
+- `health` - Graph connection status and sync info
+
+All graph endpoints return 503 when Neo4j is unavailable. See [graph.md](references/graph.md) for details.
 
 ## Discovery
 

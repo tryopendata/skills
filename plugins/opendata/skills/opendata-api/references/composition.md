@@ -95,12 +95,26 @@ Executes a LEFT JOIN between the base dataset and one target. Exactly one join s
 }
 ```
 
+**Composite keys:** `source_column` and `join_column` accept either a string or an array of strings. For multi-column joins, pass arrays of equal length:
+
+```json
+{
+  "joins": [
+    {
+      "target": "census/saipe",
+      "source_column": ["state", "year"],
+      "join_column": ["name", "year"]
+    }
+  ]
+}
+```
+
 | Field | Type | Description |
 |-------|------|-------------|
 | `joins` | array (exactly 1) | Single join spec |
 | `joins[].target` | string | Target dataset path (`provider/slug`) |
-| `joins[].source_column` | string | Column in the base dataset to join on |
-| `joins[].join_column` | string | Column in the target dataset to join on |
+| `joins[].source_column` | string or string[] | Column(s) in the base dataset to join on |
+| `joins[].join_column` | string or string[] | Column(s) in the target dataset to join on |
 | `columns` | string[] or null | Columns to project. Null = auto-select |
 
 ### Response
