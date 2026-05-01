@@ -46,6 +46,20 @@ When the x-axis already encodes a meaningful variable (e.g., poverty rate), **us
 
 Example: a scatter of poverty vs. chronic absence should color-code dots by poverty tier (e.g., `<15%` = blue, `15-40%` = pink, `40-60%` = green, `60%+` = orange/red). The color gradient reinforces the x-axis position and makes the correlation visible as a color gradient, not just a spatial pattern.
 
+## Bubble Chart Domain Padding
+
+When using `size` encoding, the largest bubbles extend beyond their center point and clip at domain boundaries. Add 10-15% padding to explicit domains beyond the max data values. If max y-value is 18.3, set domain to `[0, 21]` or `[0, 22]`, not `[0, 18.3]`. Check both x and y domains -- a large bubble near the right edge clips just as badly as one at the top.
+
+```json
+"y": {
+  "field": "lifeExp",
+  "type": "quantitative",
+  "scale": { "domain": [60, 90] }
+}
+```
+
+If max `lifeExp` in the data is 84.8, set the ceiling to ~90 to give the largest bubble room.
+
 ## Annotation Placement
 
 Bubble charts need especially large annotation offsets because circles are big and often clustered. See the [annotations reference](annotations.md) for specific guidance on offset sizing and connector usage on dense charts.

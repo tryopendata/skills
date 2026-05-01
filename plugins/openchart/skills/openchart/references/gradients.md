@@ -192,6 +192,34 @@ This works for both solid colors and gradient fills.
 
 Gradients create `<linearGradient>` or `<radialGradient>` elements in the SVG `<defs>`. The renderer uses `gradientUnits="objectBoundingBox"`, which means coordinates are relative to each mark's bounding box. Identical gradients are deduplicated (one SVG element shared by all marks with the same gradient definition).
 
+## Dark Mode Gradient Visibility
+
+When using `mark.fill` with gradient stops on area charts, the dark mode theme adapter (`adaptTheme()`) converts colors to darker values. This can make gradient fills completely invisible against the dark background.
+
+To preserve gradient visibility in dark mode:
+- Use lighter/brighter base colors in gradient stops. For a blue line (`#2563eb`), use `#5b93f5` or `#7aacff` in the gradient stops. For a red line (`#c44e52`), use `#e88a8d` or `#f0a0a3`.
+- Use higher opacity values in stops: 0.3-0.5 for the visible end, 0.05 for the fade end. The dark mode adapter will reduce these further.
+- Test in dark mode before shipping. A gradient that looks correct in light mode may be completely invisible in dark mode.
+
+```json
+{
+  "mark": {
+    "type": "area",
+    "stroke": "#2563eb",
+    "fill": {
+      "gradient": "linear",
+      "x1": 0, "y1": 1, "x2": 0, "y2": 0,
+      "stops": [
+        { "offset": 0, "color": "#5b93f5", "opacity": 0.05 },
+        { "offset": 1, "color": "#5b93f5", "opacity": 0.5 }
+      ]
+    }
+  }
+}
+```
+
+Note: use a lighter shade (`#5b93f5`) for gradient stops even though the line stroke is `#2563eb`.
+
 ## Marks that don't support gradients
 
 - **line** marks use `stroke`, not `fill`. Line gradients along the path are not supported.

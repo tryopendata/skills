@@ -34,7 +34,7 @@ These properties on an encoding channel provide VL-style shorthand that auto-gen
 | --- | --- | --- |
 | `bin` | `boolean \| BinParams` | Auto-generates a `BinTransform` for this field. `true` uses defaults; pass `{ maxbins }` for control. |
 | `timeUnit` | `TimeUnit` | Auto-generates a `TimeUnitTransform`. Same units as the explicit transform (`year`, `month`, `yearmonth`, etc.). |
-| `sort` | `'ascending' \| 'descending' \| null` | Categorical domain sort order. `'ascending'` is the default. `null` preserves data order. |
+| `sort` | `'ascending' \| 'descending' \| null` | Categorical domain sort order. `'ascending'` is the default. `null` preserves data order. **Warning:** `sort: 'ascending'/'descending'` on nominal/ordinal axes sorts domain strings alphabetically, not by quantitative value. To sort bars by their value, set `sort: null` and order rows in the data array (first row = bottom for horizontal bars, last row = top). |
 | `format` | `string` | d3-format string for tooltip/display values (e.g., `"$,.0f"`, `".1%"`). |
 | `title` | `string` | Custom label for tooltip display (overrides the field name). |
 
@@ -55,6 +55,26 @@ These properties on an encoding channel provide VL-style shorthand that auto-gen
   }
 }
 ```
+
+## Log Scale Axes
+
+D3 log scales treat `tickCount` as a subdivision density hint, not a literal count. At `tickCount: 5`, a log axis from $5 to $25k generates 20+ overlapping sub-power ticks. Use `tickCount: 3` or lower to get clean power-of-10 labels ($10, $100, $1k, $10k).
+
+Always pair log scales with SI-suffix formats (`"~s"` or `"$~s"`) for readable tick labels:
+
+```json
+{
+  "field": "revenue",
+  "type": "quantitative",
+  "scale": { "type": "log", "nice": false, "domain": [5, 30000] },
+  "axis": { "format": "$~s", "tickCount": 3 }
+}
+```
+
+| Scenario | tickCount |
+| --- | --- |
+| Log axis, any range | 3 or lower |
+| Linear axis | 5-6 (default) |
 
 ## Stack Control
 

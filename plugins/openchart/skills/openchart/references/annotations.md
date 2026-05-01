@@ -122,6 +122,8 @@ Highlighted region of the chart.
 - Use low `opacity` (0.1-0.2) so the data shows through
 - **Centering labels:** Use `labelAnchor: "top"`, `"bottom"`, or `"auto"` to center the label horizontally over the range. `"left"` (default) and `"right"` position the label at the corresponding edge.
 
+**Ordinal axis limitation:** Range annotations on ordinal (categorical) x-axes may merge into a single continuous band when multiple ranges are specified. Ordinal scales position values at discrete band positions rather than on a continuous number line, so two separate ranges (e.g., 2008-2010 and 2020-2022) can render as one solid band spanning the full interval. If you need visually distinct shaded bands, switch the x-axis to `type: "temporal"` with `axis: { format: "%Y" }`. Range annotations work most reliably on temporal and quantitative axes.
+
 ## Reference Line
 
 Horizontal or vertical threshold/baseline line.
@@ -150,6 +152,8 @@ Horizontal or vertical threshold/baseline line.
 Chart elements are draggable when `onEdit` is passed to `<Chart>`. This covers text annotations, connector endpoints, range/refline labels, chrome, series labels, and the legend.
 
 See [editing reference](editing.md) for the full `onEdit` API, `ElementEdit` type, and how to persist each edit back to the spec.
+
+**Gotcha: onEdit output contains an invalid field.** The `onEdit` callback may serialize text annotations with an `offset: { dx, dy }` object. This is an internal tracking field and is NOT part of the TextAnnotation schema. When copying annotation positions from console output back into a spec, remove any `offset` field and use top-level `dx`/`dy` inside `offset` at the schema level as documented above. Pasting an extra `offset` wrapper back into the spec will cause a renderer crash.
 
 ## Example: Annotated Line Chart
 
