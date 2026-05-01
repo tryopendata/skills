@@ -13,7 +13,7 @@
       "name": "opendata",
       "source": "./plugins/opendata/",
       "description": "OpenData API skills for querying, filtering, and analyzing public datasets",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "author": {
         "name": "OpenData",
         "url": "https://github.com/tryopendata"
