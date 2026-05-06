@@ -1,10 +1,8 @@
 # Data Transforms
 
-Apply transforms to data before encoding. Transforms run in array order.
+Apply transforms to data before encoding via `transform: Transform[]` on the chart spec. Transforms run in array order.
 
-```typescript
-transform?: Transform[]
-```
+For the full `Transform` discriminated union and the per-variant operator enums (filter ops, aggregate ops, time units, window ops, etc.), load `Transform`, `FilterTransform`, `BinTransform`, `CalculateTransform`, `TimeUnitTransform`, `AggregateTransform`, `FoldTransform`, `WindowTransform`, and `RelativeTimeRef` from `index.d.ts`. The notes below cover behavioral details and worked recipes that aren't visible in the type signatures (default offsets, null handling, recipe compositions).
 
 ## FilterTransform
 
@@ -13,8 +11,6 @@ Subset rows by predicate:
 ```json
 { "filter": { "field": "value", "gte": 100 } }
 ```
-
-Supported operators: `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `nin`, `contains`, `startsWith`, `endsWith`.
 
 ## BinTransform
 
@@ -32,8 +28,6 @@ Derive new fields from existing data:
 { "calculate": { "op": "/", "field": "revenue", "field2": "cost" }, "as": "margin" }
 ```
 
-Supported ops: `+`, `-`, `*`, `/`.
-
 ## TimeUnitTransform
 
 Truncate temporal fields to a unit:
@@ -41,8 +35,6 @@ Truncate temporal fields to a unit:
 ```json
 { "timeUnit": "yearmonth", "field": "date", "as": "month" }
 ```
-
-Supported units: `year`, `quarter`, `month`, `yearmonth`, `yearquarter`, `date`, `day`, `hours`, `minutes`.
 
 ## AggregateTransform
 
@@ -58,8 +50,6 @@ Group rows and compute summary statistics:
 }
 ```
 
-Supported ops: `count`, `sum`, `mean`, `median`, `min`, `max`, `variance`, `stdev`, `distinct`, `q1`, `q3`.
-
 ## FoldTransform
 
 Pivot wide-format columns into long-format key/value rows:
@@ -72,7 +62,7 @@ Each input row produces one output row per folded field. `as` defaults to `["key
 
 ## WindowTransform
 
-Compute values relative to other rows in sort order within a partition. Supports lag, lead, diff, pct_change, cumsum, rank, and first_value.
+Compute values relative to other rows in sort order within a partition. Window ops behave as follows (the type lists them; the semantics live here):
 
 ```json
 {

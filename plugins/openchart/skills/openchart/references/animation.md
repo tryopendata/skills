@@ -6,31 +6,19 @@ The implementation follows Vega's enter/update/exit conceptual model. Currently 
 
 All animations are pure CSS (keyframes, clip-path, opacity). The system automatically respects `prefers-reduced-motion`, disabling all animations when the user has requested reduced motion.
 
-## Type Reference
+## Defaults that the type doesn't show
 
-```typescript
-type AnimationSpec = boolean | AnimationConfig;
+For the field shape (`AnimationSpec`, `AnimationConfig`, `AnimationPhaseConfig`, `AnimationStagger`, `AnimationEase`), load `index.d.ts`. The values worth knowing because they live in the normalizer, not the type:
 
-interface AnimationConfig {
-  enter?: AnimationPhaseConfig | boolean;
-  update?: AnimationPhaseConfig | boolean;  // Reserved for v2
-  exit?: AnimationPhaseConfig | boolean;    // Reserved for v2
-  annotationDelay?: number;                 // Default: 200ms
-}
+| Field | Default |
+| --- | --- |
+| `enter.duration` | 500ms |
+| `enter.ease` | `smooth` |
+| `enter.stagger` | enabled, 80ms delay |
+| `enter.stagger.order` | `index` (DOM order) |
+| `annotationDelay` | 200ms after marks finish |
 
-interface AnimationPhaseConfig {
-  duration?: number;                        // Default: 500ms
-  ease?: AnimationEase;                     // Default: 'smooth'
-  stagger?: AnimationStagger | boolean;     // Default: true
-}
-
-type AnimationEase = 'smooth' | 'snappy';
-
-interface AnimationStagger {
-  delay?: number;                           // Default: 80ms
-  order?: 'index' | 'value' | 'reverse';   // Default: 'index'
-}
-```
+`update` and `exit` phases are accepted by the type but are reserved for v2 — the runtime ignores them today.
 
 ## Easing Presets
 

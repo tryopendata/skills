@@ -4,61 +4,22 @@ Rich data tables with sorting, search, pagination, and inline visualizations.
 
 ## TableSpec
 
-```typescript
-{
-  type: "table",
-  data: DataRow[],             // REQUIRED: array of objects, min 1 row
-  columns: ColumnConfig[],     // REQUIRED: column definitions
-  rowKey?: string,             // unique row identifier field
-  chrome?: Chrome,             // title, subtitle, source, etc.
-  theme?: ThemeConfig,
-  darkMode?: DarkMode,
-  search?: boolean,            // enable search/filter
-  pagination?: boolean | { pageSize: number },
-  stickyFirstColumn?: boolean, // stick first column on horizontal scroll
-  compact?: boolean,           // reduced padding and font sizes
-  responsive?: boolean,        // default: true
-  animation?: AnimationSpec,   // entrance animation. Same API as charts.
-}
-```
+For the full shape (`TableSpec`, `ColumnConfig`, the per-feature configs `HeatmapConfig`/`BarConfig`/`SparklineConfig`/`ImageConfig`), load `TableSpec` from `index.d.ts`. Animation reuses the chart `AnimationSpec`.
 
-## ColumnConfig
+Behavioral defaults the type doesn't show:
 
-```typescript
-{
-  key: string,                 // REQUIRED: data field name
-  label?: string,              // header label (default: key)
-  sortable?: boolean,          // default: true
-  align?: "left"|"center"|"right",  // default: "left" text, "right" numbers
-  width?: string,              // CSS value: "200px" or "20%"
-  format?: string,             // d3-format string (supports literal suffix, see format-strings.md)
+| Field | Default |
+| --- | --- |
+| `responsive` | `true` |
+| `search` | off (omit to hide the search box) |
+| `pagination` | off; pass `{ pageSize: N }` to enable |
+| `compact` | off (full padding + font sizes) |
+| `column.sortable` | `true` |
+| `column.align` | `"right"` for numeric data, `"left"` otherwise |
+| `column.image` size | 24x24 px |
+| `column.sparkline.type` | `"line"` |
 
-  // Visual features (pick ONE per column):
-  heatmap?: {
-    palette?: string | string[],    // palette name or color stops
-    domain?: [number, number],      // explicit min/max
-    colorByField?: string,          // color by a different field
-  },
-  bar?: {
-    maxValue?: number,         // bar scale max (auto-derived if omitted)
-    color?: string,            // bar fill color
-  },
-  sparkline?: {
-    type?: "line"|"bar"|"column",  // default: "line"
-    valuesField?: string,      // field with array of values
-    color?: string,
-  },
-  image?: {
-    width?: number,            // default: 24
-    height?: number,           // default: 24
-    rounded?: boolean,
-  },
-  flag?: boolean,              // country flag from cell value
-  categoryColors?: Record<string, string>,  // value -> CSS color map
-}
-```
-
-**Visual feature precedence** (if multiple set): sparkline > bar > heatmap > image > flag > categoryColors.
+**Visual feature precedence** (if a column sets multiple): `sparkline > bar > heatmap > image > flag > categoryColors`.
 
 ## Builder
 

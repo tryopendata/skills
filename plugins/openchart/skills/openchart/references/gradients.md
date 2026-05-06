@@ -2,33 +2,13 @@
 
 Gradient fills can be applied to any chart mark that uses a `fill` property (bar, area, arc, point). Gradients follow Vega's gradient value type model: they can appear anywhere a color string can.
 
-## GradientDef Types
+## GradientDef
 
-```typescript
-interface GradientStop {
-  offset: number;   // 0-1, position along gradient
-  color: string;    // CSS color
-  opacity?: number; // 0-1, maps to SVG stop-opacity
-}
+For the field shape (`GradientStop`, `LinearGradient`, `RadialGradient`, `GradientDef`), load `index.d.ts`. The behavior worth knowing:
 
-interface LinearGradient {
-  gradient: 'linear';
-  stops: GradientStop[];
-  x1?: number; // start x (0-1), default 0
-  y1?: number; // start y (0-1), default 0
-  x2?: number; // end x (0-1), default 0
-  y2?: number; // end y (0-1), default 1 (top-to-bottom)
-}
-
-interface RadialGradient {
-  gradient: 'radial';
-  stops: GradientStop[];
-  x1?: number; y1?: number; r1?: number; // inner circle (focal point)
-  x2?: number; y2?: number; r2?: number; // outer circle
-}
-```
-
-Coordinates are in **[0,1] normalized space** relative to the mark's bounding box. The default linear gradient runs top-to-bottom. Set `x1:0, y1:0, x2:1, y2:0` for left-to-right.
+- Coordinates are **[0,1] normalized space** relative to the mark's bounding box (not pixels).
+- Default linear gradient runs top-to-bottom (`x1:0, y1:0, x2:0, y2:1`). Set `x1:0, y1:0, x2:1, y2:0` for left-to-right.
+- Linear coords are `x1/y1/x2/y2`. Radial adds `r1/r2` for the inner/outer circle radii and a focal point at `x1/y1`.
 
 ## Usage Patterns
 

@@ -4,54 +4,13 @@ Network and relationship visualizations using nodes and edges. Rendered on canva
 
 ## Data Model
 
-Unlike charts which use flat `data` arrays with encoding channels, graphs use a **nodes + edges** model:
+Unlike charts which use flat `data` arrays with encoding channels, graphs use a **nodes + edges** model. For the full shapes (`GraphSpec`, `GraphNode`, `GraphEdge`, `GraphEncoding`, `GraphEncodingChannel`, `GraphLayoutConfig`, `NodeOverride`), load `index.d.ts`.
 
-```typescript
-// Each node must have an `id`, plus any data fields
-interface GraphNode {
-  id: string;
-  [key: string]: unknown;  // arbitrary data: label, group, weight, etc.
-}
-
-// Each edge connects two nodes by id
-interface GraphEdge {
-  source: string;           // source node id
-  target: string;           // target node id
-  [key: string]: unknown;   // arbitrary data: weight, type, etc.
-}
-```
-
-## GraphSpec
-
-```typescript
-{
-  type: "graph",
-  nodes: GraphNode[],                          // REQUIRED: array of {id, ...data}
-  edges: GraphEdge[],                          // REQUIRED: array of {source, target, ...data}
-  encoding?: GraphEncoding,                    // visual mappings for nodes/edges
-  layout?: GraphLayoutConfig,                  // force, radial, or hierarchical
-  nodeOverrides?: Record<string, NodeOverride>, // per-node visual overrides by id
-  chrome?: Chrome,                             // title, subtitle, source, etc.
-  annotations?: Annotation[],
-  theme?: ThemeConfig,
-  darkMode?: DarkMode,
-}
-```
+The model in one breath: nodes are `{ id: string, ...data }`, edges are `{ source: string, target: string, ...data }` referencing node ids. All other fields on either object are arbitrary data available to encodings, tooltips, and clustering.
 
 ## Graph Encoding
 
-Graph encoding channels use `GraphEncodingChannel` which supports `field`, optional `type`, and optional `scale` (same `ScaleConfig` as chart encodings). All channels are optional since a graph renders fine with uniform appearance.
-
-```typescript
-encoding?: {
-  nodeColor?: { field: string, type?: FieldType, scale?: ScaleConfig },
-  nodeSize?: { field: string, type?: "quantitative", scale?: ScaleConfig },
-  edgeColor?: { field: string, type?: FieldType, scale?: ScaleConfig },
-  edgeWidth?: { field: string, type?: "quantitative", scale?: ScaleConfig },
-  edgeStyle?: { field: string, type?: "nominal"|"ordinal" },
-  nodeLabel?: { field: string },
-}
-```
+Graph encoding uses `GraphEncodingChannel` (load from `index.d.ts`). All channels are optional since a graph renders fine with uniform appearance. Supported channels: `nodeColor`, `nodeSize`, `edgeColor`, `edgeWidth`, `edgeStyle`, `nodeLabel`.
 
 When `scale.domain` and `scale.range` are provided, the engine uses them directly instead of auto-deriving from data. This controls deterministic color assignment:
 
@@ -81,31 +40,16 @@ When `nodeColor` encoding is set, it takes precedence over community-based color
 
 ## Node Overrides
 
-Per-node visual overrides keyed by node id. Useful for highlighting seed nodes or applying custom styling.
-
-```typescript
-nodeOverrides?: Record<string, {
-  fill?: string,          // override fill color
-  radius?: number,        // override node radius
-  strokeWidth?: number,   // override stroke width
-  stroke?: string,        // override stroke color
-  alwaysShowLabel?: boolean, // force label visibility
-}>
-```
+`nodeOverrides` is `Record<string, NodeOverride>` keyed by node id — useful for highlighting seed nodes. Override fields: `fill`, `radius`, `strokeWidth`, `stroke`, `alwaysShowLabel`. Load `NodeOverride` from `index.d.ts` for the exact shape.
 
 ## Layout Configuration
 
-```typescript
-layout?: {
-  type: "force" | "radial" | "hierarchical",
-  clustering?: { field: string },  // group nodes by field for cluster forces
-  chargeStrength?: number,         // repulsion (negative values, default varies)
-  linkDistance?: number,            // target distance between linked nodes
-  collisionPadding?: number,       // extra px for collision detection (default 2)
-  linkStrength?: number,           // link force strength override
-  centerForce?: boolean,           // apply center force (default true)
-}
-```
+`layout: GraphLayoutConfig` (load from `index.d.ts`) chooses the simulation type and tunes the force parameters. Defaults worth knowing:
+
+- `centerForce` defaults to `true`
+- `collisionPadding` defaults to 2px
+- `chargeStrength`, `linkDistance`, `linkStrength` use d3-force defaults if omitted
+- `clustering.field` enables cluster forces — nodes with the same field value are pulled together
 
 | Layout | Best for | Notes |
 | --- | --- | --- |

@@ -62,25 +62,13 @@ Only used with tabular `DataRow[]` input. Auto-generated for record maps.
 
 ## TileMapSpec
 
-```typescript
-{
-  type: 'tilemap',
-  data: Record<string, number | null> | DataRow[],
-  encoding?: {                          // required for DataRow[], auto-generated for Record
-    state: { field: string, type: 'nominal' },
-    value: { field: string, type: 'quantitative' },
-    tooltip?: EncodingChannel | EncodingChannel[],
-  },
-  palette?: 'blue' | 'green' | 'orange' | 'purple',  // default: 'blue'
-  chrome?: Chrome,
-  legend?: LegendConfig,
-  theme?: ThemeConfig,
-  darkMode?: DarkMode,
-  watermark?: boolean,       // default: true
-  animation?: AnimationSpec,
-  valueFormat?: string,      // d3-format for tile values, legend, and tooltips
-}
-```
+For the full shape, load `TileMapSpec` from `index.d.ts`. Behavior worth knowing:
+
+- `data` accepts either `Record<string, number | null>` (state code → value, encoding auto-generated) or `DataRow[]` (requires explicit `encoding.state` + `encoding.value`).
+- `palette` defaults to `'blue'`. Allowed values: `'blue' | 'green' | 'orange' | 'purple'`.
+- `watermark` defaults to `true`.
+- `darkMode` defaults to `'off'` here, unlike charts which default to `'auto'`.
+- `valueFormat` accepts d3-format with literal suffix extension (e.g. `".1f%"`, `"$,.0f"`, `"~s"`).
 
 ## Palette Options
 

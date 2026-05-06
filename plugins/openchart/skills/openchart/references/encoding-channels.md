@@ -2,29 +2,7 @@
 
 Charts (line, area, bar, arc, point, circle, text, rule, tick, rect) use encoding channels to map data fields to visual properties.
 
-## Channel List
-
-```typescript
-encoding: {
-  x?: EncodingChannel,           // horizontal position
-  y?: EncodingChannel,           // vertical position
-  color?: EncodingChannel,       // series differentiation
-  size?: EncodingChannel,        // bubble/dot scaling (quantitative)
-  detail?: EncodingChannel,      // grouping without visual mapping
-  opacity?: EncodingChannel,     // data-driven opacity
-  shape?: EncodingChannel,       // point shape (circle, square, diamond, etc.)
-  strokeDash?: EncodingChannel,  // data-driven dash patterns
-  text?: EncodingChannel,        // text content for text marks
-  tooltip?: EncodingChannel | EncodingChannel[],  // tooltip fields
-  x2?: EncodingChannel,          // secondary x (ranges)
-  y2?: EncodingChannel,          // secondary y (ranges)
-  theta?: EncodingChannel,       // angular position (arc marks)
-  radius?: EncodingChannel,      // radial position (arc marks)
-  angle?: EncodingChannel,       // rotation angle for point/text marks
-  href?: EncodingChannel,        // hyperlink URL from data field
-  order?: EncodingChannel,       // stacking/layering order
-}
-```
+For the full channel surface and `EncodingChannel` shape, load `Encoding` and `EncodingChannel` from `index.d.ts`. The behavioral notes below explain how the engine interprets channels at compile time — none of which is encoded in the types.
 
 ## Inline Encoding Sugar
 

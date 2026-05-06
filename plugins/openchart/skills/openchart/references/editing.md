@@ -23,24 +23,7 @@ There are two categories of callbacks: spec-modifying edits (flow through `onEdi
 
 ### Spec-Modifying Edits (onEdit)
 
-`onEdit` receives a discriminated union keyed by `type`:
-
-```typescript
-type ElementEdit =
-  | { type: 'annotation';           annotation: TextAnnotation;    offset: AnnotationOffset }
-  | { type: 'annotation-connector'; annotation: TextAnnotation;    endpoint: 'from' | 'to'; offset: AnnotationOffset }
-  | { type: 'range-label';          annotation: RangeAnnotation;   labelOffset: AnnotationOffset }
-  | { type: 'refline-label';        annotation: RefLineAnnotation; labelOffset: AnnotationOffset }
-  | { type: 'chrome';               key: ChromeKey;                text: string; offset: AnnotationOffset }
-  | { type: 'series-label';         series: string;                offset: AnnotationOffset }
-  | { type: 'legend';               offset: AnnotationOffset }
-  | { type: 'legend-toggle';        series: string;                hidden: boolean }
-  | { type: 'delete';               element: ElementRef }
-  | { type: 'text-edit';            element: ElementRef;           oldText: string; newText: string }
-
-type AnnotationOffset = { dx?: number; dy?: number }
-type ChromeKey = 'title' | 'subtitle' | 'source' | 'byline' | 'footer'
-```
+`onEdit` receives a `ElementEdit` discriminated union keyed by `type`. Variants cover annotation/connector drag, range/refline label drag, chrome drag, series-label drag, legend drag, legend toggle, delete, and text-edit. Load `ElementEdit`, `ElementRef`, `AnnotationOffset`, and `ChromeKey` from `index.d.ts` for the exact payload of each variant — the switch handlers below illustrate which fields each variant carries.
 
 ### UI State Callbacks (separate props)
 
@@ -60,16 +43,7 @@ These fire for selection and text editing interactions but don't imply spec chan
 
 ## ElementRef (Element Identity)
 
-`ElementRef` is a discriminated union that identifies any selectable/editable element:
-
-```typescript
-type ElementRef =
-  | { type: 'annotation';    index: number; id?: string }
-  | { type: 'chrome';        key: ChromeKey }
-  | { type: 'series-label';  series: string }
-  | { type: 'legend' }
-  | { type: 'legend-entry';  series: string; index: number }
-```
+`ElementRef` is a discriminated union that identifies any selectable/editable element (annotation by index, chrome by key, series-label by series name, legend, or legend-entry). Load `ElementRef` from `index.d.ts` for the exact variant shapes.
 
 Helper constructors avoid manually building these objects:
 

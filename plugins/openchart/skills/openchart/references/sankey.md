@@ -27,30 +27,18 @@ If your app uses class-based dark mode (not `prefers-color-scheme`), pass `darkM
 
 ## SankeySpec
 
-```typescript
-{
-  type: 'sankey',
-  data: DataRow[],           // flat rows with source, target, value columns
-  encoding: {
-    source: { field: string, type: 'nominal' },
-    target: { field: string, type: 'nominal' },
-    value: { field: string, type: 'quantitative' },
-    color?: { field: string, type: 'nominal' },
-  },
-  nodeWidth?: number,        // pixel width of node rectangles. Default: 12
-  nodePadding?: number,      // vertical spacing between nodes. Default: 16
-  nodeAlign?: 'left' | 'right' | 'center' | 'justify',  // Default: 'justify'
-  iterations?: number,       // layout relaxation passes. Default: 6
-  linkStyle?: 'gradient' | 'source' | 'target' | 'neutral',  // Default: 'gradient'
-  linkOpacity?: number,        // link fill opacity 0-1. Default: 0.5 light, 0.75 dark
-  chrome?: Chrome,
-  legend?: LegendConfig,
-  theme?: ThemeConfig,
-  darkMode?: DarkMode,
-  animation?: AnimationSpec,
-  valueFormat?: string,       // d3-format for tooltip values. ".0f%" appends %, "$~s" for $10k
-}
-```
+For the full shape (`SankeySpec`, sankey `Encoding`, sankey-specific layout fields), load `SankeySpec` from `index.d.ts`. Behavioral defaults the type doesn't show:
+
+| Field | Default |
+| --- | --- |
+| `nodeWidth` | 12px |
+| `nodePadding` | 16px |
+| `nodeAlign` | `'justify'` |
+| `iterations` | 6 layout relaxation passes |
+| `linkStyle` | `'gradient'` |
+| `linkOpacity` | 0.5 light / 0.75 dark (auto-adjusted unless explicitly set) |
+
+`valueFormat` accepts d3-format strings with literal suffix extension (e.g. `".0f%"` appends %, `"$~s"` for $10k).
 
 ## Layout Options
 
