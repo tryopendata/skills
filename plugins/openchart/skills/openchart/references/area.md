@@ -41,40 +41,9 @@ Show a vertical line that snaps to the nearest data point on hover:
 
 Renders a dashed vertical line at the hovered data point's x-coordinate. Only applies to line and area charts. Off by default.
 
-## Spec
+## Spec shape
 
-```typescript
-{
-  mark: "area" | {
-    type: "area",
-    interpolate?: "linear"|"monotone"|"step"|"step-before"|"step-after"|"basis"|"cardinal"|"natural",
-    fill?: string | GradientDef,   // solid color or gradient fill (see gradients.md)
-    stroke?: string,               // top-line stroke color
-    strokeWidth?: number,
-    point?: boolean | "transparent",  // show point markers on each data point
-    opacity?: number,
-  },
-  data: DataRow[],
-  encoding: {
-    x: { field: string, type: "temporal"|"ordinal", axis?, scale? },
-    y: { field: string, type: "quantitative", axis?, scale? },
-    y2?: { field: string, type: "quantitative" },  // upper/lower band boundary
-    color?: { field: string, type: "nominal"|"ordinal" },
-    size?: { field: string, type: "quantitative" },
-    detail?: { field: string, type: "nominal" },
-    opacity?: { field: string, type: "quantitative" },
-    strokeDash?: { field: string, type: "nominal"|"ordinal" },
-    tooltip?: { field: string } | { field: string }[],
-  },
-  chrome?: Chrome,
-  annotations?: Annotation[],
-  labels?: LabelConfig,
-  legend?: LegendConfig,
-  responsive?: boolean,
-  theme?: ThemeConfig,
-  darkMode?: DarkMode,
-}
-```
+For the full `MarkDef` for `mark: "area"` (`interpolate`, `fill`, `stroke`, `strokeWidth`, `point`, `opacity`) and the full encoding surface, load `MarkDef`, `Encoding`, and `ChartSpec` from `index.d.ts`. Behavioral notes specific to area follow.
 
 ## Confidence Band / Range Area
 

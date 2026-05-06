@@ -26,30 +26,11 @@ Rankings, comparisons, and categorical data. Covers both horizontal bars and ver
 | size | No | quantitative |
 | detail | No | nominal |
 
-## Spec
+## Spec shape
 
-```typescript
-{
-  mark: "bar" | { type: "bar", orient?: "horizontal" | "vertical" },
-  data: DataRow[],
-  encoding: {
-    // Horizontal: x=quantitative, y=nominal/ordinal
-    // Vertical:   x=nominal/ordinal/temporal, y=quantitative
-    x: { field: string, type: FieldType, axis?, scale? },
-    y: { field: string, type: FieldType, axis?, scale? },
-    color?: { field: string, type: "nominal"|"ordinal"|"quantitative" },
-  },
-  chrome?: Chrome,
-  annotations?: Annotation[],
-  labels?: LabelConfig,
-  legend?: LegendConfig,
-  responsive?: boolean,
-  theme?: ThemeConfig,
-  darkMode?: DarkMode,
-}
-```
+For the full `MarkDef` for `mark: "bar"` and the encoding surface, load `MarkDef`, `Encoding`, and `ChartSpec` from `index.d.ts`. Behavioral notes specific to bar follow.
 
-Use `color` with a nominal/ordinal field to create multi-series bars. By default, multiple rows per category are **stacked** (cumulative segments). Set `stack: null` on the quantitative encoding channel to produce **grouped** (side-by-side) bars instead. See [encoding-channels.md](encoding-channels.md) for details.
+**Color = stacked by default.** Adding a `color` encoding with a nominal/ordinal field produces stacked bars (cumulative segments). For side-by-side comparison bars, set `stack: null` on the **quantitative** channel (`x` for horizontal bars, `y` for vertical columns). For percentage stacking, use `stack: "normalize"`. See [encoding-channels.md](encoding-channels.md) for the full per-mark stack default table.
 
 **Format strings:** Both `axis.format` and `labels.format` support d3-format strings with an optional literal suffix (e.g., `".1f%"` outputs `12.5%`). Set both to keep axis ticks and bar value labels consistent. See [format-strings.md](format-strings.md) for the full reference.
 

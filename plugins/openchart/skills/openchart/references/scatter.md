@@ -12,27 +12,9 @@ Correlation between two quantitative variables. Optional size and color for 3rd/
 | size | No | quantitative |
 | detail | No | nominal |
 
-## Spec
+## Spec shape
 
-```typescript
-{
-  mark: "point",
-  data: DataRow[],
-  encoding: {
-    x: { field: string, type: "quantitative", axis?, scale? },
-    y: { field: string, type: "quantitative", axis?, scale? },
-    color?: { field: string, type: "nominal"|"ordinal" },
-    size?: { field: string, type: "quantitative" },
-  },
-  chrome?: Chrome,
-  annotations?: Annotation[],
-  labels?: LabelConfig,
-  legend?: LegendConfig,
-  responsive?: boolean,
-  theme?: ThemeConfig,
-  darkMode?: DarkMode,
-}
-```
+For the full `MarkDef` for `mark: "point"` and the encoding surface, load `MarkDef`, `Encoding`, and `ChartSpec` from `index.d.ts`. Behavioral notes specific to scatter follow.
 
 **Tips:**
 - Use `size` for bubble charts (3rd quantitative dimension)

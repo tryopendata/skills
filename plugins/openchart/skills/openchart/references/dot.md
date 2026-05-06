@@ -12,27 +12,9 @@ Distribution and spread of values across categories. Uses `mark: "circle"`.
 | size | No | quantitative |
 | detail | No | nominal |
 
-## Spec
+## Spec shape
 
-```typescript
-{
-  mark: "circle",
-  data: DataRow[],
-  encoding: {
-    x: { field: string, type: "quantitative", axis?, scale? },
-    y: { field: string, type: "nominal"|"ordinal", axis?, scale? },
-    color?: { field: string, type: "nominal"|"ordinal" },
-    size?: { field: string, type: "quantitative" },
-  },
-  chrome?: Chrome,
-  annotations?: Annotation[],
-  labels?: LabelConfig,
-  legend?: LegendConfig,
-  responsive?: boolean,
-  theme?: ThemeConfig,
-  darkMode?: DarkMode,
-}
-```
+For the full `MarkDef` for `mark: "circle"` and the encoding surface, load `MarkDef`, `Encoding`, and `ChartSpec` from `index.d.ts`.
 
 ## Example
 

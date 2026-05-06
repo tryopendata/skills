@@ -2,16 +2,9 @@
 
 Override visual properties for individual series by name. Useful for making reference series visually distinct from primary data.
 
-```typescript
-seriesStyles?: Record<string, {
-  lineStyle?: "solid"|"dashed"|"dotted",
-  showPoints?: boolean,
-  strokeWidth?: number,
-  opacity?: number,
-}>
-```
+`seriesStyles: Record<string, SeriesStyle>` on the chart spec. Field shape: `SeriesStyle` in `index.d.ts` (`lineStyle`, `showPoints`, `strokeWidth`, `opacity`).
 
-Series names come from the `color` encoding field values. Only specified series get overrides; others render normally.
+Series names are the values of the `color` encoding field. Only specified series get overrides; others render normally.
 
 ## Example
 

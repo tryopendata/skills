@@ -19,25 +19,9 @@ Part-to-whole composition. Both use `mark: "arc"`. Donut is preferred over pie (
 
 No x-axis. The `y` channel is the slice value, `color` is the category.
 
-## Spec
+## Spec shape
 
-```typescript
-{
-  mark: "arc" | { type: "arc", innerRadius?: number },
-  data: DataRow[],
-  encoding: {
-    y: { field: string, type: "quantitative" },
-    color: { field: string, type: "nominal"|"ordinal" },
-  },
-  chrome?: Chrome,
-  annotations?: Annotation[],
-  labels?: LabelConfig,
-  legend?: LegendConfig,
-  responsive?: boolean,
-  theme?: ThemeConfig,
-  darkMode?: DarkMode,
-}
-```
+For the full `MarkDef` for `mark: "arc"` and the encoding surface, load `MarkDef`, `Encoding`, and `ChartSpec` from `index.d.ts`. The arc-specific field worth knowing is `innerRadius` — `0` (default) is a pie; `> 0` is a donut.
 
 ## Builder
 

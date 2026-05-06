@@ -2,55 +2,30 @@
 
 Annotations are the editorial layer on top of data visualizations. They highlight insights, call out outliers, and provide context. Supported on charts and graphs.
 
-All annotation types share these base properties:
+The `Annotation` type is a discriminated union on `type` (`'text' | 'range' | 'refline' | 'rule'`). For the full per-variant shape (every field, every default), load `Annotation`, `TextAnnotation`, `RangeAnnotation`, `RuleAnnotation`, and `AnnotationDot` from `index.d.ts`. This file covers the *behavior* the types don't describe — anchoring, collision resolution, what specific fields actually do at render time, and which combinations are gotchas.
 
-```typescript
-{
-  id?: string,          // stable identifier surfaced in onEdit callbacks for reliable element matching
-  label?: string,       // human-readable label
-  fill?: string,        // fill color
-  stroke?: string,      // stroke color
-  opacity?: number,     // 0 to 1
-  zIndex?: number,      // render ordering (higher = on top)
-  responsive?: boolean, // when false, stays visible at compact breakpoints. Default true.
-}
-```
+## Text Annotation — behavior worth knowing
 
-## Text Annotation
+**`x` / `y` are data coordinates.** They resolve to pixels through the same scales as data marks, so annotations stay stable across responsive resizes. Always set them to the actual data point you're annotating; use `offset` to push the label into clear space.
 
-Callout at a specific data point.
+**`text` supports `\n`** for hard line breaks. Multi-line text is center-aligned by default — the renderer hardcodes `text-anchor: middle` for multi-line. If you need per-side alignment on multi-line text, you'll need to override at the renderer level.
 
-```typescript
-{
-  type: "text",
-  x: string | number,          // data coordinate
-  y: string | number,          // data coordinate
-  text: string,                // annotation text (supports \n for multiline)
-  subtitle?: string,           // muted second-tone line below `text` for supporting context (methodology, source). Separate block from `text` newlines.
-  dot?: boolean | {            // open-ring marker at the connector's data-point endpoint. true = default style. Object overrides:
-    radius?: number,           //   default 5
-    fill?: string,             //   default theme background (open-ring look)
-    stroke?: string,           //   default theme text color
-    strokeWidth?: number,      //   default 2
-  },
-  fontSize?: number,
-  fontWeight?: number,
-  offset?: { dx?: number, dy?: number },  // pixel offset from position
-  anchor?: "top"|"bottom"|"left"|"right"|"auto",
-  connector?: boolean | "straight" | "curve" | "drop-line",
-                                 // true / "straight": straight line. "curve": curved arrow with arrowhead.
-                                 // "drop-line": vertical line through the data point's x; label sits beside it
-                                 //              and auto-flips to the opposite side if it would overflow the chart area.
-                                 // false: no connector.
-  connectorOffset?: {
-    from?: { dx?: number, dy?: number },  // offset at the label end of the connector
-    to?: { dx?: number, dy?: number },    // offset at the data point end of the connector
-  },
-  background?: string,           // background color behind text for readability
-  halo?: boolean,                // paint-order stroke halo behind text. Default true. Set false for white text on colored backgrounds.
-  responsive?: boolean,          // hide at compact breakpoints. Default true. Set false to always show.
-}
-```
+**`subtitle`** renders a muted second-tone line below `text`. Use for "(methodology note)" or a source citation that belongs with the callout. Multi-line `text` still produces a multi-line primary block; `subtitle` is a separate block underneath.
+
+**`dot`** draws an open-ring marker at the connector's data-point endpoint (where the line meets the data). Useful when the connector ends in a busy region and the eye needs an explicit "this exact point" cue. `dot: true` uses the default style (transparent fill, theme-text stroke, radius 5); pass an `AnnotationDot` object to override `radius`, `fill`, `stroke`, or `strokeWidth`.
+
+**`anchor`** is the direction the label sits relative to the data point: `'top' | 'bottom' | 'left' | 'right' | 'auto'`. `'auto'` checks if the data point is in the upper or lower half of the chart and places the label in the opposite half with an 8px offset — that's it. Not intelligent whitespace detection. For predictable results with 2+ annotations, always specify explicit `anchor` and `offset`.
+
+**`connector`** is `boolean | 'straight' | 'curve' | 'drop-line'`:
+
+- `true` / `'straight'`: straight line from label to anchor point.
+- `'curve'`: curved arrow with arrowhead.
+- `'drop-line'`: vertical line through the data point's x; label sits beside the line and auto-flips to the opposite side if it would overflow the chart area. **Caveat:** the auto-flip only checks against the chart edge — it does not avoid neighboring marks or other annotations. Place these in clear regions.
+- `false`: no connector.
+
+**`halo`** is on by default — it paints a stroke halo behind the text using the theme's background color, knocking out chart lines that pass behind. Set `halo: false` when the annotation text is white or light-colored sitting on a colored background (the halo would make the text invisible). Use `background` instead for an explicit rect.
+
+**`responsive`** defaults to `true`, which means the annotation **hides at compact breakpoints (< 400px)**. Set `responsive: false` on annotations that must always be visible.
 
 **`subtitle`:** A second muted line under `text`. Use for "(methodology note)" or a source citation that belongs with the callout. Renders in a smaller, dimmer style than the primary text. Multi-line `text` (with `\n`) still produces a multi-line primary block; `subtitle` is a separate block underneath.
 
@@ -121,52 +96,25 @@ These are heuristic estimates. The engine can't know the precise rendered width 
 - **Never use `anchor: "auto"` with 2+ text annotations.** Specify explicit anchors and offsets for each one.
 - For scatter/bubble charts, use 40-100px offsets to push labels into empty quadrants, with connectors back to data points.
 
-## Range Annotation
+## Range Annotation — behavior worth knowing
 
-Highlighted region of the chart.
+`RangeAnnotation` (`type: 'range'`) highlights a region. Field shape: `RangeAnnotation` in `index.d.ts`. Behavioral notes:
 
-```typescript
-{
-  type: "range",
-  x1?: string | number,        // vertical band start
-  x2?: string | number,        // vertical band end
-  y1?: string | number,        // horizontal band start
-  y2?: string | number,        // horizontal band end
-  labelOffset?: { dx?: number, dy?: number },
-  labelAnchor?: "top"|"bottom"|"left"|"right"|"auto",
-}
-```
+- **Shape choice:** Set only `x1`/`x2` for a vertical band, only `y1`/`y2` for a horizontal band, all four for a rectangle.
+- **Opacity:** Keep low (0.1–0.2) so the data inside the band stays readable.
+- **Label centering:** `labelAnchor: 'top' | 'bottom' | 'auto'` centers the label horizontally over the range. `'left'` (default) and `'right'` position the label at the corresponding edge.
+- **Ordinal axis limitation:** Range annotations on ordinal x-axes may merge into one continuous band when multiple ranges are specified — ordinal scales position values at discrete band slots, not on a continuous number line, so two separate ranges (e.g. `2008–2010` and `2020–2022`) can render as one solid band spanning the full interval. For visually distinct shaded bands, switch the x-axis to `type: "temporal"` with `axis: { format: "%Y" }`. Range annotations work most reliably on temporal and quantitative axes.
 
-- Set only `x1`/`x2` for a vertical band
-- Set only `y1`/`y2` for a horizontal band
-- Set all four for a rectangle
-- Use low `opacity` (0.1-0.2) so the data shows through
-- **Centering labels:** Use `labelAnchor: "top"`, `"bottom"`, or `"auto"` to center the label horizontally over the range. `"left"` (default) and `"right"` position the label at the corresponding edge.
+## Reference Line — behavior worth knowing
 
-**Ordinal axis limitation:** Range annotations on ordinal (categorical) x-axes may merge into a single continuous band when multiple ranges are specified. Ordinal scales position values at discrete band positions rather than on a continuous number line, so two separate ranges (e.g., 2008-2010 and 2020-2022) can render as one solid band spanning the full interval. If you need visually distinct shaded bands, switch the x-axis to `type: "temporal"` with `axis: { format: "%Y" }`. Range annotations work most reliably on temporal and quantitative axes.
+`RuleAnnotation` (`type: 'refline'`, alias `'rule'`) draws a horizontal or vertical threshold line. Field shape: `RuleAnnotation` in `index.d.ts`. Behavioral notes:
 
-## Reference Line
-
-Horizontal or vertical threshold/baseline line.
-
-```typescript
-{
-  type: "refline" | "rule",    // "rule" is an alias for "refline"
-  x?: string | number,         // vertical line at this x value
-  y?: string | number,         // horizontal line at this y value
-  style?: "solid"|"dashed"|"dotted",
-  strokeDash?: number[],        // raw SVG dash pattern, e.g. [4, 4]. Overrides style.
-  strokeWidth?: number,
-  responsive?: boolean,         // hide at compact breakpoints. Default true.
-  labelOffset?: { dx?: number, dy?: number },
-  labelAnchor?: "top"|"bottom"|"left"|"right"|"auto",
-}
-```
-
-- Set `x` for a vertical reference line
-- Set `y` for a horizontal reference line
-- Use `style: "dashed"` for targets/thresholds
-- **Label placement:** For horizontal reflines: `labelAnchor: "top"` (default) and `"right"` place the label above at the right end; `"bottom"` places it below at the right end; `"left"` places it above at the left end (near the y-axis). For vertical reflines: `"left"` (default) and `"top"` place the label to the right near the top; `"right"` places it to the left near the top; `"bottom"` places it near the bottom. Use `labelOffset: { dx: N, dy: N }` for fine-tuning.
+- Set `x` for a vertical line, `y` for a horizontal line.
+- Use `style: 'dashed'` for targets/thresholds — dashed reads as "aspirational" vs solid "this is the data."
+- **Label placement on horizontal reflines:** `labelAnchor: 'top'` (default) and `'right'` place the label above at the right end; `'bottom'` places it below at the right end; `'left'` places it above at the left end (near the y-axis).
+- **Label placement on vertical reflines:** `'left'` (default) and `'top'` place the label to the right of the line near the top; `'right'` places it to the left of the line near the top; `'bottom'` places it near the bottom.
+- Use `labelOffset: { dx, dy }` for fine tuning.
+- **`labelAnchor: 'left' | 'right'` is silently ignored on reflines** — those values are accepted in the type but only render on `RangeAnnotation`. For a side label on a refline, set `label: ""` and add a separate `type: "text"` annotation positioned where you want the side label.
 
 ## Annotation Editing
 

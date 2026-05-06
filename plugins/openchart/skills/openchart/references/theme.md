@@ -1,33 +1,10 @@
 # Theme Customization
 
-Override default visual styling for any visualization type. All fields are optional and deep-merged onto the default theme.
+Override default visual styling for any visualization type. All fields are optional and deep-merged onto the default theme. For the full `ThemeConfig` shape (every field, every default), load `ThemeConfig` and `ThemeColors` from `index.d.ts`. This file covers behavioral notes and editorial guidance.
 
-## ThemeConfig
+## Shorthand: flat color array
 
-```typescript
-theme?: {
-  colors?: {
-    categorical?: string[],           // 10-color palette for nominal data
-    sequential?: Record<string, string[]>,  // named palettes: "blue", "green", "orange", "purple"
-    diverging?: Record<string, string[]>,   // named palettes: "redBlue", "brownTeal"
-    background?: string,              // canvas/container background
-    text?: string,                    // default text color
-    gridline?: string,                // gridline color
-    axis?: string,                    // axis line and tick color
-  },
-  fonts?: {
-    family?: string,                  // primary font (default: "Inter, sans-serif")
-    mono?: string,                    // monospace font for tabular numbers
-  },
-  spacing?: {
-    padding?: number,                 // chart container padding in px (default: 12)
-    chromeGap?: number,               // gap between chrome elements in px (default: 4)
-  },
-  borderRadius?: number,             // container and tooltip border radius (default: 4)
-}
-```
-
-**Shorthand:** `theme.colors` can also be a flat `string[]` instead of the nested object. It maps to `colors.categorical`:
+`theme.colors` can be a flat `string[]` instead of the nested `{ categorical, ... }` object. It maps to `colors.categorical`:
 
 ```json
 { "theme": { "colors": ["#0d9488", "#94a3b8", "#94a3b8"] } }
@@ -49,17 +26,17 @@ If you override `theme.colors.categorical`, your custom palette is also passed t
 
 ## Dark Mode
 
-```typescript
-darkMode?: "auto" | "force" | "off"
-```
+`darkMode?: 'auto' | 'force' | 'off'` (default `'off'`):
 
 | Value | Behavior |
 | --- | --- |
-| `"off"` | Always light mode (default) |
+| `"off"` | Always light mode |
 | `"auto"` | Respect `prefers-color-scheme` system setting |
 | `"force"` | Always dark mode |
 
-**What dark mode adapts:** background, text/secondary text, gridlines, axis lines, chrome text colors, and (where contrast equivalence helps) chrome accent colors. **What it does not adapt:** the categorical palette -- those colors render identically in both modes by design.
+**Class-based dark-mode apps:** `'auto'` only checks `prefers-color-scheme`. If your app toggles dark mode by toggling a CSS class (Astro, Next.js, Tailwind), observe the DOM class change and map it to `'force'`/`'off'` yourself — `'auto'` will not pick that up.
+
+**What dark mode adapts:** background, text/secondary text, gridlines, axis lines, chrome text colors, and (where contrast equivalence helps) chrome accent colors. **What it does not adapt:** the categorical palette — those colors render identically in both modes by design.
 
 ## Theme Provider (React)
 

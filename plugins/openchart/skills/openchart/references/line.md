@@ -17,31 +17,9 @@ Trends over time or ordered sequences. Connects data points with lines.
 
 Use `color` to differentiate 2-5 series. For 6+ series, filter to the top 5 or use `detail` to group without color encoding.
 
-## Spec
+## Spec shape
 
-```typescript
-{
-  mark: "line" | { type: "line", point?: boolean | "transparent", interpolate?: "linear"|"monotone"|"step"|"step-before"|"step-after"|"basis"|"cardinal"|"natural" },
-  data: DataRow[],
-  encoding: {
-    x: { field: string, type: "temporal"|"ordinal", axis?, scale? },
-    y: { field: string, type: "quantitative", axis?, scale? },
-    color?: { field: string, type: "nominal"|"ordinal" },
-    size?: { field: string, type: "quantitative" },
-    detail?: { field: string, type: "nominal" },
-    opacity?: { field: string, type: "quantitative" },
-    strokeDash?: { field: string, type: "nominal"|"ordinal" },
-    tooltip?: { field: string } | { field: string }[],
-  },
-  chrome?: Chrome,
-  annotations?: Annotation[],
-  labels?: { density?: "all"|"auto"|"endpoints"|"none", format?: string },
-  legend?: { position?: LegendPosition },
-  responsive?: boolean,
-  theme?: ThemeConfig,
-  darkMode?: "auto"|"force"|"off",
-}
-```
+For the full `MarkDef` for `mark: "line"` (`point`, `interpolate`, `stroke`, `strokeWidth`, `opacity`) and the full encoding surface, load `MarkDef`, `Encoding`, and `ChartSpec` from `index.d.ts`. Behavioral notes specific to line follow.
 
 **Tip (single series):** Use `labels: { density: "endpoints" }` to show only the first and last value per series.
 

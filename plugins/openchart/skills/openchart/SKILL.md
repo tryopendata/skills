@@ -15,6 +15,32 @@ description: >
 <!-- Remove migration note after 2026-07 -->
 > **Note:** SVG design capabilities (logos, icons, graphics) have moved to the `opendesign` plugin. Install with `/plugin install opendesign@opendata-skills`.
 
+## Source of truth: load the types first
+
+**Before authoring or modifying a spec, load the OpenChart type definitions.** They are the canonical source for field shapes, enums, and defaults. This skill complements the types — it does not replace them. When this skill and the types disagree, the types win.
+
+Try these locations in order; stop at the first one that resolves:
+
+1. **Installed package** (most common): `node_modules/@opendata-ai/openchart-core/dist/index.d.ts`. The full chart, table, graph, sankey, and tilemap spec surface is rolled into this single bundled `.d.ts`.
+2. **Source repo** (if you're working in the openchart monorepo): `packages/core/src/types/spec.ts` and `packages/core/src/types/layout.ts`. JSDoc comments here are richer than the bundled `.d.ts`.
+3. **Published CDN** (no local install, network available): `https://unpkg.com/@opendata-ai/openchart-core/dist/index.d.ts`.
+4. **Fallback:** if none of the above are reachable, use the type sketches in this skill and **flag the uncertainty** in your response so the user knows you authored without canonical types.
+
+The names worth grepping for once you have a types file open: `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec`, `Encoding`, `EncodingChannel`, `MarkDef`, `Chrome`, `Metric`, `EndpointLabelsConfig`, `Annotation` (union), `TextAnnotation`, `RangeAnnotation`, `RuleAnnotation`, `LegendConfig`, `LabelSpec`, `SeriesStyle`, `AnimationSpec`, `ThemeConfig`.
+
+## What this skill carries that the types don't
+
+The types tell you the shape of a valid spec. This skill carries the things types can't express:
+
+- **Behavioral defaults that live in the normalizer/compiler**, not in the type signature. (E.g. area defaults to overlap, not stacked. Bar defaults to stacked when colored.)
+- **Cross-field interactions and truth tables.** (E.g. how `legend.show`, `endpointLabels`, and the legacy end-of-line labels interact.)
+- **Runtime semantics.** (E.g. legend toggle recompiles, rebalances the y-axis, locks the color scale, hides per-series UI, refuses to hide the last visible series.)
+- **Editorial judgment.** (E.g. when to pick a bar vs a line, color strategy, annotation density, data-resolution budgets.)
+- **Worked examples** for common stories.
+- **Failure modes and gotchas** that you'd only learn after rendering and looking at the result.
+
+If you find yourself restating a field shape this skill already documents, prefer the types — they're authoritative and won't drift.
+
 **Core concept:** Write a VizSpec JSON object, render with `<Chart>` / `<DataTable>` / `<Graph>` / `<Sankey>` / `<TileMap>` (React/Vue/Svelte) or `createChart()` / `createTable()` / `createGraph()` / `createSankey()` / `createTileMap()` (vanilla JS). The engine validates, compiles, and renders. Specs are plain JSON, no imperative drawing. See https://github.com/tryopendata/openchart for the rendering engine.
 
 **CSS is required.** OpenChart's stylesheet must be loaded for proper rendering (chrome, tables, tooltips, brand watermark). Framework imports handle this automatically, but CDN/standalone HTML needs an explicit `<link>`:
@@ -28,7 +54,7 @@ See [rendering reference](references/rendering.md) for details.
 ## Chart Selection Decision Tree
 
 ```
-Single KPI to highlight      -> chrome.metric (one big hero number) or chrome.metrics (KPI row of label+value+delta)
+Single KPI / KPI row         -> spec.metrics: Metric[] (label+value+delta, rendered between subtitle and chart)
 Temporal x-axis column?      -> 1 series: line | 2-5 series: line + color | 6+: filter to top 5
 Categorical + numeric?       -> Ranked list: bar (horizontal) | Periodic (Q1, Jan): bar (vertical) | 2-6 composition: arc
 Two numeric columns?         -> point (optional size/color for 3rd/4th dims)
@@ -105,122 +131,64 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 - **Design polish:** design-review + visual-qa + editorial-writing
 - **D3 infographic:** d3-core-patterns + infographic-design + (topic-specific D3 ref)
 
-## Shared Spec Structure
+## Spec discriminant
 
-Charts use `mark` as their discriminant. Tables and graphs use `type`.
+- **Charts** use `mark` (`"line"`, `"bar"`, `"area"`, `"arc"`, `"point"`, `"circle"`, `"text"`, `"rule"`, `"tick"`, `"rect"`).
+- **Tables, graphs, sankey, tilemap** use `type` (`"table"` | `"graph"` | `"sankey"` | `"tilemap"`).
 
-```typescript
-// Charts
-{
-  mark: string | MarkDef,    // REQUIRED: "line", "bar", "arc", etc. (see Mark section)
-  chrome?: { ... },
-  metrics?: Metric[],        // KPI row between subtitle and chart area
-  theme?: ThemeConfig,
-  darkMode?: "auto"|"force"|"off",
-  responsive?: boolean,
-  animation?: AnimationSpec, // true | AnimationConfig. Off by default. See animation.md
-  crosshair?: boolean,       // vertical snap line on hover for line/area. Off by default.
-  endpointLabels?: boolean | EndpointLabelsConfig, // chip+swatch labels at the trailing edge of multi-series line/area. Auto-enabled when there are 2+ series; auto-suppresses the traditional legend (see Endpoint Labels section below). Set false to opt out.
-  hiddenSeries?: string[],   // series names (color-field values) to hide on first render. The vanilla adapter also maintains its own runtime set when users click legend entries -- recompiles, rebalances the y-axis, locks the color scale to the unfiltered domain, and hides per-series UI (endpoint markers, dot annotations, series-anchored text annotations).
-  seriesStyles?: { [seriesName]: SeriesStyle }, // per-series overrides (lineStyle, showPoints, strokeWidth, opacity). See series-styles.md.
-  display?: "full" | "sparkline", // 'sparkline' strips chrome/axes/legend/watermark/animation/crosshair for inline KPI cards.
-}
+For the full top-level shape — every optional field, exact enum values, defaults — load `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec` from `index.d.ts` (see "Source of truth" above).
 
-// Tables, graphs, sankey, and tilemap
-{
-  type: "table" | "graph" | "sankey" | "tilemap",  // REQUIRED: discriminant for non-chart specs
-  chrome?: { ... },
-  theme?: ThemeConfig,
-  darkMode?: "auto"|"force"|"off",
-  responsive?: boolean,
-  animation?: AnimationSpec, // Tables and sankey. Same API as charts. See animation.md
-}
-```
+**Behavior worth knowing that the types don't tell you:**
 
-**Chrome** (shared by all types):
-```typescript
-chrome?: {
-  eyebrow?: string | ChromeText,   // uppercase kicker rendered above the title (e.g. "Equities · Single Ticker"). Tracks slightly, tinted with the accent color.
-  title?: string | ChromeText,
-  subtitle?: string | ChromeText,
-  source?: string | ChromeText,    // bottom-left attribution
-  byline?: string | ChromeText,    // author/org line, bottom-left under source
-  footer?: string | ChromeText,
-  brand?: string | ChromeText,     // bottom-right brand block paired with a small accent dot. When set, suppresses the default tryOpenData.ai watermark.
-}
-```
+- `animation` is **off by default**. Set `true` for sensible per-mark entrance defaults; pass an `AnimationConfig` for per-phase control. See [animation.md](references/animation.md).
+- `crosshair` is **off by default** and only renders on line/area charts.
+- `endpointLabels` is **auto-on for ≥2-series line/area** and auto-suppresses the traditional legend in that case. See the "Endpoint Labels" section below for the full suppression truth table.
+- `hiddenSeries` on the spec hides series on first render. The vanilla adapter also maintains a separate runtime hidden set populated by legend clicks; that triggers full engine recompile (y-axis rebalance, locked color scale, per-series UI hide). See "Legend Toggle (Runtime)" below.
+- `display: 'sparkline'` strips chrome, axes, legend, watermark, animation, and crosshair for inline KPI-card use. Explicit per-field overrides still win (set `chrome.title` and you'll still get a title in sparkline mode).
 
-**ChromeText:** `{ text: string, fontSize?: number, fontWeight?: number, fontFamily?: string, color?: string }`. All chrome fields support `\n` for explicit line breaks; text also auto-wraps at the container width.
+**Chrome elements** (`chrome.eyebrow` / `title` / `subtitle` / `source` / `byline` / `footer` / `brand`): each takes `string | ChromeText`. The `eyebrow` is a tracked, accent-tinted kicker above the title. The `brand` is a right-anchored block on the footer row paired with a small accent dot — setting it suppresses the default `tryOpenData.ai` watermark. All chrome text supports `\n` for explicit line breaks and auto-wraps at the container width. Exact field shape: see `Chrome` and `ChromeText` in `index.d.ts`.
 
-**KPI metric row (charts only):** Use `metrics: Metric[]` at the top level (not inside `chrome`) for a horizontal row of KPI cells rendered between the subtitle and the chart area. Each cell is `{ label, value, delta?, secondary?, ... }`. Auto-stripped in sparkline mode and at narrow/short containers.
+**KPI metric row** (charts only): `metrics: Metric[]` at the top level (not inside `chrome`) renders a horizontal row of label+value cells between the subtitle and the chart area. Each cell can carry a delta and a secondary value. Auto-stripped in sparkline mode and at narrow/short containers, or when value text would overflow its cell. Exact field shape: see `Metric` in `index.d.ts`.
 
 ## Mark (Charts Only)
 
-`mark` can be a string or an object with additional properties:
+`mark` is either a string (`"line"`, `"area"`, `"bar"`, `"arc"`, `"point"`, `"circle"`, `"text"`, `"rule"`, `"tick"`, `"rect"`) or an object — see `MarkDef` in `index.d.ts` for the full field set (`type`, `point`, `interpolate`, `orient`, `innerRadius`, `fill`, `stroke`, `strokeWidth`, `opacity`, etc.).
 
-```typescript
-// Simple string form
-mark: "line" | "area" | "bar" | "arc" | "point" | "circle" | "text" | "rule" | "tick" | "rect"
+**Behavior the types don't tell you:**
 
-// Object form with additional config
-mark: {
-  type: MarkType,                        // REQUIRED: same values as the string form
-  point?: boolean | "transparent",       // show point markers on line/area marks
-  interpolate?: "linear" | "monotone" | "step" | "step-before" | "step-after" | "basis" | "cardinal" | "natural",
-  orient?: "horizontal" | "vertical",   // override inferred bar orientation
-  innerRadius?: number,                  // >0 makes arc marks render as donuts
-  fill?: string | GradientDef,          // solid color or gradient fill for all marks
-}
-```
+- **Bar orientation is inferred from encoding types.** `x: nominal/ordinal/temporal + y: quantitative` = vertical column. `x: quantitative + y: nominal/ordinal` = horizontal bar. Override with `mark: { type: "bar", orient: "horizontal" | "vertical" }` only when the inference is wrong.
+- **`mark: "arc"` is a pie by default.** Pass `innerRadius > 0` to get a donut.
+- **`mark.fill` accepts a `GradientDef`** for linear or radial gradients. Gradients can also appear as conditional color values in `encoding.color`. See [gradients.md](references/gradients.md).
+- **Default entrance animation depends on mark type** when `animation: true`. Bars clip-reveal from the baseline; lines draw progressively; areas draw + fade; arcs scale from center; points pop in with scale + fade; text/rules/ticks fade in. See [animation.md](references/animation.md) for per-mark defaults and per-phase overrides.
+
+**Collapsed mark aliases (don't use these):**
+
+| Old mark | Use instead |
+| --- | --- |
+| `"column"` | `"bar"` (engine infers vertical from encoding) |
+| `"pie"` | `"arc"` |
+| `"donut"` | `{ type: "arc", innerRadius: 40 }` |
+| `"scatter"` | `"point"` |
+| `"dot"` | `"circle"` |
 
 **Examples:**
 ```json
-{ "mark": "bar" }
 { "mark": { "type": "line", "point": true, "interpolate": "monotone" } }
 { "mark": { "type": "arc", "innerRadius": 40 } }
-{ "mark": { "type": "bar", "orient": "horizontal" } }
 { "mark": { "type": "bar", "fill": { "gradient": "linear", "stops": [{"offset": 0, "color": "#1b7fa3"}, {"offset": 1, "color": "#1b7fa3", "opacity": 0.4}] } } }
 ```
 
-**Gradient fills:** `mark.fill` accepts a `GradientDef` for linear or radial gradients. Gradients can also be used as conditional color values in encoding for per-mark gradients. See [gradients reference](references/gradients.md) for details.
-
-**Mark type determines default entrance animation.** When `animation: true` is set, each mark type gets an appropriate animation: bars use clip-path reveal from the baseline, lines draw progressively, areas draw + fade, arcs scale from center, and points pop in with scale + fade. Text, rules, and ticks fade in. See [animation reference](references/animation.md) for per-mark defaults and overrides.
-
 ## Encoding Channels (Charts Only)
 
-Charts map data to visuals via encoding channels: x, y, color, size, detail, opacity, shape, strokeDash, text, tooltip, x2, y2, theta, radius. See [encoding channels reference](references/encoding-channels.md) for the full channel list and conditional encoding examples.
+Charts map data to visuals via encoding channels: `x`, `y`, `color`, `size`, `detail`, `opacity`, `shape`, `strokeDash`, `text`, `tooltip`, `x2`, `y2`, `theta`, `radius`, `order`. Each channel is an `EncodingChannel` (`field`, `type`, `aggregate`, `axis`, `scale`, `bin`, `timeUnit`, `sort`, `format`, `title`, `stack`, `condition`, `value`). For the full shape and enum values: load `Encoding` and `EncodingChannel` from `index.d.ts`.
 
-**EncodingChannel:**
-```typescript
-{
-  field: string,             // REQUIRED: column name in data
-  type: FieldType,           // REQUIRED: "quantitative"|"temporal"|"nominal"|"ordinal"
-  aggregate?: AggregateOp,   // "count"|"sum"|"mean"|"median"|"min"|"max"|"variance"|"stdev"|"distinct"|"q1"|"q3"
-  axis?: {
-    title?: string,          // axis title (default: field name). Deprecated alias: `label`
-    format?: string,         // d3-format string, e.g. ",.0f" "$,.2f" ".1%"
-    tickCount?: number,      // override tick count
-    grid?: boolean,          // show gridlines
-    labelAngle?: number,     // tick label rotation in degrees. Deprecated alias: `tickAngle`
-    labelColor?: string,     // color override for tick labels and axis title. Use in dual-axis charts to match axis to its series.
-  },
-  scale?: {
-    domain?: [number, number] | string[],  // explicit domain
-    type?: "linear"|"log"|"time"|"band"|"point"|"ordinal"|"utc"|"pow"|"sqrt"|"symlog"|"quantile"|"quantize"|"threshold",
-    nice?: boolean,          // clean tick values (default: true)
-    zero?: boolean,          // include zero (default: true for quantitative)
-  },
-  bin?: boolean | BinParams,        // inline bin (auto-generates BinTransform)
-  timeUnit?: TimeUnit,              // inline timeUnit (auto-generates TimeUnitTransform)
-  sort?: 'ascending'|'descending'|null, // categorical domain sort (default: ascending)
-  format?: string,                  // d3-format for tooltip/display values
-  title?: string,                   // custom tooltip label (overrides field name)
-  stack?: boolean|"zero"|"normalize"|"center"|null,  // stacking mode (default: stacked)
-                                     // null/false = grouped, "normalize" = percentage, "center" = streamgraph
-  condition?: { test: FilterPredicate, value: any },  // conditional encoding
-  value?: any,               // fallback when condition test is false
-}
-```
+**Behavior the types don't tell you:**
+
+- `field` + `type` is the minimum for any channel. `type` must be one of `"quantitative" | "temporal" | "nominal" | "ordinal"` — picking the wrong one is the most common spec authoring bug (see Spec Anti-Patterns below).
+- `axis.format` is **d3-format with a literal-suffix extension** (e.g. `".1f%"`). The literal suffix is OpenChart's add-on; native d3 doesn't support it. See [format-strings.md](references/format-strings.md) and the Format Strings section below for the percent-form pitfall.
+- `scale.nice: true` is the default for quantitative and temporal scales — it rounds the domain outward to clean tick values. On temporal scales this can shift the domain by years; set `nice: false` when you need precise control.
+- `stack` defaults differ by mark: bar = stacked when colored, area = overlap when colored, line = n/a. See the per-mark default table in [encoding-channels.md](references/encoding-channels.md).
+- See [encoding-channels.md](references/encoding-channels.md) for conditional encoding examples and the full per-channel guide.
 
 ## Data Transforms (Charts Only)
 
@@ -295,35 +263,17 @@ When two series have incompatible value ranges (e.g., revenue in millions vs. he
 
 ## Legend Configuration (Charts Only)
 
-```typescript
-legend?: {
-  position?: "top"|"right"|"bottom"|"bottom-right"|"inline",
-  show?: boolean,     // default: true. Set false to hide legend entirely.
-  columns?: number,   // columns for horizontal layout (controls row wrapping)
-  symbolLimit?: number, // max entries before "+N more" truncation
-  maxRows?: number,   // max rows for top-positioned legends (default: 2)
-}
-```
+`legend` accepts `position`, `show`, `columns`, `symbolLimit`, `maxRows`, `offset`, `exclude`. Full shape: `LegendConfig` in `index.d.ts`.
 
-Position is responsive by default (the engine picks based on container width). Set explicitly to override. Use `show: false` to hide the legend when it's redundant (e.g., bar charts where the y-axis already labels each category).
+**Behavior:** Position is responsive by default — the engine picks `top` / `right` / `bottom` / `bottom-right` / `inline` based on container width. Set `position` to override. Use `show: false` when the legend is redundant (e.g. bar charts where the y-axis already labels each category). For multi-series line/area, leaving `show` unset triggers auto-suppression in favor of the endpoint chip column — see the truth table below.
 
 ## Endpoint Labels (Multi-Series Line/Area)
 
-For multi-series line/area charts, the engine renders a column of **chip+swatch labels** at the trailing edge of each series (rounded pill with a colored bar swatch + label + last value). This is enabled by default for ≥2-series line/area; disabled otherwise.
+For multi-series line/area charts, the engine renders a column of **chip+swatch labels** at the trailing edge of each series (rounded pill with a colored bar swatch + label + last value). Auto-on for ≥2 series; off for single-series and non-line/area.
 
-```typescript
-endpointLabels?: boolean | {
-  show?: boolean,         // explicit on/off; undefined = auto by series count
-  valueField?: string,    // defaults to encoding.y.field
-  format?: string,        // d3-format; defaults to encoding.y.axis.format
-  width?: number,         // wrap width for long names. Default 96.
-  showMarker?: boolean,   // open-circle marker on the line at the right edge. Default true.
-  showLeader?: boolean,   // thin leader from swatch back to line endpoint after collision-sweep. Default false.
-  markerStyle?: { fill?, stroke?, strokeWidth?, radius? },
-}
-```
+`endpointLabels` accepts `boolean | EndpointLabelsConfig` (`show`, `valueField`, `format`, `width`, `showMarker`, `showLeader`, `markerStyle`). Full shape: `EndpointLabelsConfig` in `index.d.ts`.
 
-**Suppression truth table** (≥2-series line/area). The traditional legend, the endpoint column, and the legacy end-of-line labels are three knobs that interact:
+**Suppression truth table** (≥2-series line/area). The traditional legend, the endpoint column, and the legacy end-of-line labels are three knobs that interact. The implementation lives in `packages/engine/src/legend/suppression.ts` and is the single source of truth — if this table ever drifts, the engine wins.
 
 | `legend.show` | `endpointLabels` | Traditional legend | Endpoint column | End-of-line labels |
 |---|---|---|---|---|
@@ -356,20 +306,16 @@ Pass `onLegendToggle` to observe these clicks; you don't need to wire up `hidden
 
 ## Label Density (Charts Only)
 
-```typescript
-labels?: {
-  density?: "all"|"auto"|"endpoints"|"none",  // default: "auto"
-  format?: string,           // d3-format for label values (supports literal suffix)
-  prefix?: string,           // literal string prepended to each formatted label value
-}
-```
+`labels` accepts `density`, `format`, `prefix` (full shape: `LabelSpec` in `index.d.ts`). The choice that actually drives the chart is `density`:
 
-| Mode | Behavior | Use when |
+| `density` | Behavior | Use when |
 | --- | --- | --- |
-| `auto` | Show labels with collision detection | Default, most charts |
-| `all` | Show every label, no collision detection | Few data points, precise values matter |
-| `endpoints` | First and last per series only | Line charts, emphasize start/end |
-| `none` | No labels (tooltips + legend only) | Dense data, clean look |
+| `"auto"` (default) | Show labels with collision detection | Most charts |
+| `"all"` | Show every label, no collision detection | Few data points, precise values matter |
+| `"endpoints"` | First and last per series only (legacy end-of-line labels on line/area) | Single-series line emphasizing start/end |
+| `"none"` | No labels (tooltips + legend only) | Dense data, clean look |
+
+For **multi-series line/area**, prefer `endpointLabels` (the chip+swatch column) over `density: "endpoints"` (the legacy fallback). The chip column wraps long names and resolves collisions; the legacy labels reserve a large right margin for long series names.
 
 ## Format Strings
 
@@ -387,7 +333,7 @@ Both `axis.format` and `labels.format` accept [d3-format](https://d3js.org/d3-fo
 
 ## Per-Series Styling (Charts Only)
 
-Override visual properties (lineStyle, showPoints, strokeWidth, opacity) for individual series by name via `seriesStyles`. See [series styles reference](references/series-styles.md).
+Use `seriesStyles: Record<string, SeriesStyle>` to override visuals for individual series, keyed by the color-field value. Use this for "highlight one series, dim the rest" patterns or for a dashed reference series alongside primary data. Field shape: `SeriesStyle` in `index.d.ts`. Editorial guidance + examples: [series-styles.md](references/series-styles.md).
 
 ## Data Resolution
 
@@ -422,7 +368,7 @@ Run these checks before outputting a spec. These catch the issues that most ofte
 | **Y-domain fits the data** | Domain ceiling should be ~5-10% above the highest data value. `[0, 55]` for data peaking at 48.8 wastes space. Use `[0, 52]`. **For bar/column charts with narrow data ranges** (e.g., values between 200 and 280), don't default the floor to 0 - it makes variations invisible. Set the domain floor near the minimum value. Exception: charts where zero is a meaningful baseline (percent change from 0, counts). |
 | **Annotations clear of data AND each other** | The engine auto-resolves annotation-to-annotation collisions, but start with good separation for cleaner results. Prefer 0-2 text annotations; use reflines for additional callouts. On scatter/bubble, use 40-100px offsets into empty quadrants with connectors. When using 2+ text annotations, verify with `playwright-cli`. |
 | **Subtitle is intentional about wrapping** | Unintentional wrapping with orphaned fragments looks broken. Abbreviate, restructure, or use `\n` for explicit line breaks. Use shorthand keys in the subtitle (e.g., `"LI = low-income"`) rather than spelling everything out. |
-| **Endpoint labels won't eat the chart** | `labels: { density: "endpoints" }` reserves horizontal pixel space beyond the last data point for label text. This creates visible right-side padding that can't be removed with `nice: false` or explicit domains. If right-side whitespace is unacceptable, use `density: "none"` with text annotations at the final data points. Also: series names > 15 chars reserve a huge right margin. Use `"none"` + `legend: { position: "top" }` instead, or abbreviate series names. |
+| **Endpoint labels won't eat the chart** | The default chip+swatch column (`endpointLabels`) wraps long names at `width` (default 96px) and resolves collisions, so it handles long series names well. Only the legacy fallback (`labels: { density: "endpoints" }` with no `endpointLabels` and no top legend) reserves a huge right margin for long names — if you've forced that path, either abbreviate series names or switch to `legend: { position: "top" }, endpointLabels: false`. |
 | **Axis ticks show units** | Percentages should show `10%` not `10`. Use `format: ".0f%"` when data is already in percent form (e.g., 10 meaning 10%). Use `format: ".0%"` only when data is in decimal form (0.10 meaning 10%). Large numbers should use SI suffixes: `format: "~s"` turns 10000 into `10k` and 1000000 into `1M`. For currency: `format: "$~s"` gives `$10k`, `$1M`. See the Format Strings table above. |
 | **Consistent color palette across related charts** | If multiple charts in the same article cover the same dimension (e.g., poverty), use the same color mapping (blue = low, red = high) so the reader builds a mental model. |
 
