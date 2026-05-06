@@ -28,7 +28,7 @@ See [rendering reference](references/rendering.md) for details.
 ## Chart Selection Decision Tree
 
 ```
-Single value to highlight    -> Use chrome.title as a big number display
+Single KPI to highlight      -> chrome.metric (one big hero number) or chrome.metrics (KPI row of label+value+delta)
 Temporal x-axis column?      -> 1 series: line | 2-5 series: line + color | 6+: filter to top 5
 Categorical + numeric?       -> Ranked list: bar (horizontal) | Periodic (Q1, Jan): bar (vertical) | 2-6 composition: arc
 Two numeric columns?         -> point (optional size/color for 3rd/4th dims)
@@ -114,11 +114,16 @@ Charts use `mark` as their discriminant. Tables and graphs use `type`.
 {
   mark: string | MarkDef,    // REQUIRED: "line", "bar", "arc", etc. (see Mark section)
   chrome?: { ... },
+  metrics?: Metric[],        // KPI row between subtitle and chart area
   theme?: ThemeConfig,
   darkMode?: "auto"|"force"|"off",
   responsive?: boolean,
   animation?: AnimationSpec, // true | AnimationConfig. Off by default. See animation.md
   crosshair?: boolean,       // vertical snap line on hover for line/area. Off by default.
+  endpointLabels?: boolean | EndpointLabelsConfig, // chip+swatch labels at the trailing edge of multi-series line/area. Auto-enabled when there are 2+ series; auto-suppresses the traditional legend (see Endpoint Labels section below). Set false to opt out.
+  hiddenSeries?: string[],   // series names (color-field values) to hide on first render. The vanilla adapter also maintains its own runtime set when users click legend entries -- recompiles, rebalances the y-axis, locks the color scale to the unfiltered domain, and hides per-series UI (endpoint markers, dot annotations, series-anchored text annotations).
+  seriesStyles?: { [seriesName]: SeriesStyle }, // per-series overrides (lineStyle, showPoints, strokeWidth, opacity). See series-styles.md.
+  display?: "full" | "sparkline", // 'sparkline' strips chrome/axes/legend/watermark/animation/crosshair for inline KPI cards.
 }
 
 // Tables, graphs, sankey, and tilemap
@@ -135,17 +140,19 @@ Charts use `mark` as their discriminant. Tables and graphs use `type`.
 **Chrome** (shared by all types):
 ```typescript
 chrome?: {
-  title?: string | { text: string, style?: ChromeTextStyle },
-  subtitle?: string | { text: string, style?: ChromeTextStyle },
-  source?: string | { text: string, style?: ChromeTextStyle },
-  byline?: string | { text: string, style?: ChromeTextStyle },
-  footer?: string | { text: string, style?: ChromeTextStyle },
+  eyebrow?: string | ChromeText,   // uppercase kicker rendered above the title (e.g. "Equities · Single Ticker"). Tracks slightly, tinted with the accent color.
+  title?: string | ChromeText,
+  subtitle?: string | ChromeText,
+  source?: string | ChromeText,    // bottom-left attribution
+  byline?: string | ChromeText,    // author/org line, bottom-left under source
+  footer?: string | ChromeText,
+  brand?: string | ChromeText,     // bottom-right brand block paired with a small accent dot. When set, suppresses the default tryOpenData.ai watermark.
 }
 ```
 
-**ChromeTextStyle:** `{ fontSize?: number, fontWeight?: number, fontFamily?: string, color?: string }`
+**ChromeText:** `{ text: string, fontSize?: number, fontWeight?: number, fontFamily?: string, color?: string }`. All chrome fields support `\n` for explicit line breaks; text also auto-wraps at the container width.
 
-All chrome text fields support `\n` for explicit line breaks. Text also auto-wraps at the container width.
+**KPI metric row (charts only):** Use `metrics: Metric[]` at the top level (not inside `chrome`) for a horizontal row of KPI cells rendered between the subtitle and the chart area. Each cell is `{ label, value, delta?, secondary?, ... }`. Auto-stripped in sparkline mode and at narrow/short containers.
 
 ## Mark (Charts Only)
 
@@ -300,6 +307,53 @@ legend?: {
 
 Position is responsive by default (the engine picks based on container width). Set explicitly to override. Use `show: false` to hide the legend when it's redundant (e.g., bar charts where the y-axis already labels each category).
 
+## Endpoint Labels (Multi-Series Line/Area)
+
+For multi-series line/area charts, the engine renders a column of **chip+swatch labels** at the trailing edge of each series (rounded pill with a colored bar swatch + label + last value). This is enabled by default for ≥2-series line/area; disabled otherwise.
+
+```typescript
+endpointLabels?: boolean | {
+  show?: boolean,         // explicit on/off; undefined = auto by series count
+  valueField?: string,    // defaults to encoding.y.field
+  format?: string,        // d3-format; defaults to encoding.y.axis.format
+  width?: number,         // wrap width for long names. Default 96.
+  showMarker?: boolean,   // open-circle marker on the line at the right edge. Default true.
+  showLeader?: boolean,   // thin leader from swatch back to line endpoint after collision-sweep. Default false.
+  markerStyle?: { fill?, stroke?, strokeWidth?, radius? },
+}
+```
+
+**Suppression truth table** (≥2-series line/area). The traditional legend, the endpoint column, and the legacy end-of-line labels are three knobs that interact:
+
+| `legend.show` | `endpointLabels` | Traditional legend | Endpoint column | End-of-line labels |
+|---|---|---|---|---|
+| unset | unset | hidden (auto-suppressed) | shown (default) | hidden |
+| `true` | unset | shown | shown | hidden |
+| unset | `false` | shown (auto-suppress revoked) | hidden | hidden |
+| `false` | `false` | hidden | hidden | shown (last-resort) |
+| `true` | `false` | shown | hidden | hidden |
+| `false` | `true` | hidden | shown | hidden |
+| `true` | `true` | shown | shown | hidden |
+
+Single-series charts: column hidden by default (nothing to identify).
+
+**Common patterns:**
+- Default multi-series: leave both unset -- you get the endpoint column, no traditional legend.
+- "I want a top legend instead": `legend: { position: 'top' }, endpointLabels: false`.
+- "Both legend and endpoint column": `legend: { show: true }` (endpointLabels stays auto-on).
+
+## Legend Toggle (Runtime)
+
+Clicking a legend entry hides/shows the corresponding series at runtime. This goes through engine recompile (not CSS hide), so:
+
+- The y-axis **rebalances** to the remaining visible series.
+- The color scale **stays locked** -- remaining lines keep their original palette colors (engine injects a stable `scale.domain` from the unfiltered data).
+- **Per-series UI hides** with the line: endpoint chip, leader, dot annotation, and any text annotation anchored to that series.
+- The **last visible series can't be hidden** (the toggle is a no-op).
+- Range annotations and reference lines pass through unchanged (they anchor to constant axis values, not series).
+
+Pass `onLegendToggle` to observe these clicks; you don't need to wire up `hiddenSeries` yourself for default behavior. Use `hiddenSeries` on the spec to start with specific series hidden on first render.
+
 ## Label Density (Charts Only)
 
 ```typescript
@@ -364,6 +418,7 @@ Run these checks before outputting a spec. These catch the issues that most ofte
 | **Data resolution is appropriate** | Check total rows in the data array. Over 150 per series? Aggregate to a coarser time grain or sample. A 25-year time series should use annual or quarterly data, not monthly. See Data Resolution table. |
 | **Color encodes the story** | If one variable drives the narrative, color should reinforce it. Use the decision table in [color-strategy.md](references/color-strategy.md) to pick the right strategy and `theme.colors` array. Don't leave a scatter plot monochrome when a gradient would make the pattern obvious. |
 | **Bar stacking is intentional** | If using `color` encoding on a bar chart, verify stacking mode. Default is stacked (`stack: "zero"`), which adds values together visually. For side-by-side comparison bars (e.g., 2018 vs 2022), set `stack: null` on the quantitative encoding. Stacked bars sum values visually, so a comparison chart will show bars extending to the sum of both values. |
+| **Area stacking is intentional** | Area charts default to **overlap** (each series drawn over the others, semi-transparent). For composition/share-over-time, opt in with `stack: "zero"` on the y-channel (or `"normalize"` for percentage stacking, `"center"` for streamgraph). This is the opposite of bars: bars default to stacked, areas default to overlap. |
 | **Y-domain fits the data** | Domain ceiling should be ~5-10% above the highest data value. `[0, 55]` for data peaking at 48.8 wastes space. Use `[0, 52]`. **For bar/column charts with narrow data ranges** (e.g., values between 200 and 280), don't default the floor to 0 - it makes variations invisible. Set the domain floor near the minimum value. Exception: charts where zero is a meaningful baseline (percent change from 0, counts). |
 | **Annotations clear of data AND each other** | The engine auto-resolves annotation-to-annotation collisions, but start with good separation for cleaner results. Prefer 0-2 text annotations; use reflines for additional callouts. On scatter/bubble, use 40-100px offsets into empty quadrants with connectors. When using 2+ text annotations, verify with `playwright-cli`. |
 | **Subtitle is intentional about wrapping** | Unintentional wrapping with orphaned fragments looks broken. Abbreviate, restructure, or use `\n` for explicit line breaks. Use shorthand keys in the subtitle (e.g., `"LI = low-income"`) rather than spelling everything out. |
@@ -398,7 +453,9 @@ Rendering and component behaviors that aren't obvious from the spec alone.
 | Gotcha | Behavior | Fix |
 | --- | --- | --- |
 | Refline labels only support top/bottom | `labelAnchor` on refline annotations only accepts `"top"` or `"bottom"`. Left/right values are accepted in the type but have no visible effect on reflines (they do work on range annotations). | Set `label: ""` on the refline and add a separate `type: "text"` annotation positioned where you want a side label. |
-| Endpoint labels don't wrap | `\n` in series names does NOT create line breaks in endpoint labels. Long names consume chart width. | Shorten series names in the data instead. |
+| Endpoint chip labels wrap by width, not `\n` | The chip+swatch column wraps long series names at `endpointLabels.width` (default 96px). `\n` in the series name does not create a hard break. | Either shorten the series name in the data, or raise `width` if you have horizontal room. |
+| Area defaults to overlap, not stacked | Multi-series area charts now overlap by default. Setting `color` without `stack: "zero"` on the y-channel produces semi-transparent overlapping fills, not a stacked composition. | For share-over-time, opt in with `encoding: { y: { ..., stack: "zero" } }`. For percentage, use `"normalize"`. |
+| `connector: 'drop-line'` only flips against the chart edge | The drop-line connector renders a vertical line through the data point's x and lays the label beside it. The auto-flip only checks against the chart area edge -- it does not avoid neighboring marks or other annotations. | Place the annotation away from cluttered regions; if collisions persist, switch to `connector: 'curve'` with a manual `offset`. |
 | DataTable CSS overrides unreliable | Custom CSS targeting `.oc-table-wrapper td` may not apply due to CSS specificity. | Use the DataTable `style` prop for inline overrides: `<DataTable style={{ paddingLeft: 10 }} spec={...} />`. |
 | Scatter plots auto-set `zero: false` | Unlike other chart types, scatter/point marks automatically set `scale.zero: false` on both axes if not explicitly configured. This means scatter domains fit tightly to data. | To include zero, explicitly set `scale: { zero: true }` on the relevant axis. Be aware that scatter and bar/line charts handle zero differently by default. |
 | Constant colors require `mark.fill`, not encoding | `encoding.color: { value: "#hex" }` will error. The color encoding channel requires a `field` that maps to data. | Use `mark: { type: "bar", fill: "#1b7fa3" }` for constant colors across all marks. |

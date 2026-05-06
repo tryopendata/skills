@@ -26,7 +26,7 @@ Position-based encodings (bars, lines, point/scatter) beat area and angle-based 
 | Part-to-whole | Arc/donut (2-5 categories) | Angle is adequate for small category counts |
 | Correlation | Point (scatter) | Two position channels show relationship directly |
 | Distribution / spread | Circle (dot/strip plot) | Individual values visible, shows density |
-| Composition over time | Stacked area | Volume + trend together in one view |
+| Composition over time | Stacked area (`mark: "area"` + `encoding.y.stack: "zero"`) | Volume + trend together in one view. Note: area defaults to overlap, so you must opt into stacking explicitly. |
 | Before / after comparison | Grouped bar (vertical) | Side-by-side position makes difference obvious |
 | Flow between stages/processes | Sankey | Width encodes volume, path shows where values move |
 

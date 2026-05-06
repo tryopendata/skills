@@ -78,16 +78,27 @@ Always pair log scales with SI-suffix formats (`"~s"` or `"$~s"`) for readable t
 
 ## Stack Control
 
-The `stack` property on quantitative encoding channels controls how multi-series bar/column charts handle overlapping categories. Follows Vega-Lite conventions.
+The `stack` property on a quantitative encoding channel controls how multi-series bar/column/area charts handle overlapping values. Follows Vega-Lite conventions.
+
+**Defaults differ by mark:**
+
+| Mark | Default | Why |
+| --- | --- | --- |
+| `bar` (vertical column or horizontal bar) | **Stacked** (`"zero"`) when colored | Bars side-by-side overlap visually; stacking is the readable default |
+| `area` | **Overlap** (no stacking) when colored | Each series fills from baseline; semi-transparent layers show through |
+| `line` | n/a | Lines never stack -- they always overlay |
+
+**Values:**
 
 | Value | Behavior |
 | --- | --- |
-| `undefined` / `true` / `"zero"` | Stacked (default). Segments stack cumulatively. |
-| `null` / `false` | Grouped/dodged. Bars render side-by-side within each category. |
+| `undefined` | Mark default (see table above). |
+| `true` / `"zero"` | Stacked from zero. Cumulative. |
+| `null` / `false` | Grouped/dodged on bars (side-by-side); overlap on area. |
 | `"normalize"` | Percentage stacking. Domain becomes [0, 1]; each category sums to 100%. |
-| `"center"` | Streamgraph. Stacked layers centered symmetrically around zero. |
+| `"center"` | Streamgraph. Stacked layers centered symmetrically around a baseline. |
 
-Set `stack` on the **quantitative** channel (x for horizontal bars, y for vertical columns).
+Set `stack` on the **quantitative** channel (x for horizontal bars, y for vertical columns and area).
 
 **Grouped horizontal bar:**
 ```json

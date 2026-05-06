@@ -41,6 +41,12 @@ is equivalent to:
 
 The flat form is more convenient for highlight+gray patterns where you just need to set ordered colors matching your data array.
 
+## Default Categorical Palette
+
+The default `colors.categorical` palette is an **OKLCH cyan-led** sequence designed to read as vibrant on both light and dark backgrounds. It's **mode-agnostic**: the same hex values are used in light and dark mode. The dark-mode adapter explicitly preserves the categorical palette across modes (it does not desaturate cyan into teal, the way a naive contrast-equivalence adapter would).
+
+If you override `theme.colors.categorical`, your custom palette is also passed through unchanged across modes -- pick colors that work in both. For line strokes specifically, the engine applies a small per-color light-mode darkening (`adaptForLightLineStroke`) to saturated colors so they meet contrast on white backgrounds; achromatic (low-saturation) colors and already-dark colors pass through unchanged.
+
 ## Dark Mode
 
 ```typescript
@@ -52,6 +58,8 @@ darkMode?: "auto" | "force" | "off"
 | `"off"` | Always light mode (default) |
 | `"auto"` | Respect `prefers-color-scheme` system setting |
 | `"force"` | Always dark mode |
+
+**What dark mode adapts:** background, text/secondary text, gridlines, axis lines, chrome text colors, and (where contrast equivalence helps) chrome accent colors. **What it does not adapt:** the categorical palette -- those colors render identically in both modes by design.
 
 ## Theme Provider (React)
 

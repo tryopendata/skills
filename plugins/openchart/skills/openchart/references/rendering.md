@@ -158,6 +158,8 @@ sankey.destroy();
 ## Event Handlers
 
 **Charts:** `onMarkClick`, `onMarkHover`, `onMarkLeave`, `onLegendToggle`, `onAnnotationClick`, `onEdit`
+
+`onLegendToggle` is **observation only** — the vanilla adapter already wires legend clicks into the engine (recompiles, rebalances y-axis, locks color scale, hides per-series UI). You don't need to handle it for default behavior. See [editing.md](editing.md#legend-toggle) for the full toggle semantics and how to start with hidden series via `hiddenSeries`.
 **Tables:** `onRowClick`, `onSortChange`, `onSearchChange`, `onPageChange`
 **Graphs:** `onNodeClick`, `onNodeDoubleClick`, `onSelectionChange`
 

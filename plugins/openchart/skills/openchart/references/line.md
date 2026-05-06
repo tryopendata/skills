@@ -43,9 +43,13 @@ Use `color` to differentiate 2-5 series. For 6+ series, filter to the top 5 or u
 }
 ```
 
-**Tip:** Use `labels: { density: "endpoints" }` for line charts to show only the first and last value per series.
+**Tip (single series):** Use `labels: { density: "endpoints" }` to show only the first and last value per series.
 
-**Caution with `endpoints` and long series names:** Endpoint labels include the series name from the `color` field. Long names like `"Waukegan (68% low-income)"` reserve a large right margin, creating dead space. If series names are more than ~15 characters, either abbreviate them or use `labels: { density: "none" }` with `legend: { position: "top" }` instead.
+**Multi-series default — endpoint chip column:** For ≥2-series line/area charts, the engine renders a column of chip+swatch labels at the trailing edge of each line by default (rounded pill with a colored bar swatch + name + last value), and auto-suppresses the traditional legend. Disable with `endpointLabels: false`. See the *Endpoint Labels (Multi-Series Line/Area)* section in SKILL.md for the full suppression truth table.
+
+**Caution with `density: "endpoints"` and long series names (legacy end-of-line labels):** When `endpointLabels: false` and `legend: { show: false }`, the engine falls back to the legacy end-of-line labels — these include the series name and reserve a large right margin for long names. If series names are >15 chars, either abbreviate them or use the chip column instead.
+
+**Runtime legend toggle:** Clicking a legend entry hides/shows that series via engine recompile. The y-axis rebalances, the color scale stays locked (other lines keep their original colors), and per-series UI hides — endpoint chip, marker, dot annotation, and any text annotation anchored to that series. The last visible series can't be hidden.
 
 ## Crosshair
 

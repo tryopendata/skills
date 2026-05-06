@@ -338,7 +338,11 @@ case 'delete':
 
 ## Legend Toggle
 
-Click a legend entry to show/hide a series. Fires `onEdit({ type: 'legend-toggle', series, hidden })`. The consumer decides how to apply this (filter data, track hidden series in state, etc.).
+Click a legend entry to show/hide a series. The vanilla adapter wires this up by default — it tracks a runtime hidden-series set, recompiles, rebalances the y-axis to the remaining visible series, and locks the color scale so remaining lines keep their original palette colors. Per-series UI hides too: endpoint chip, marker, dot annotation, and any text annotation anchored to the hidden series. The last visible series can't be hidden (no-op).
+
+`onEdit({ type: 'legend-toggle', series, hidden })` and the dedicated `onLegendToggle(series, hidden)` callback are **observation only** — fire after the toggle has been applied internally. You don't need to handle them to get the default behavior. Use them to mirror the state into your own store, persist to a URL, or override behavior.
+
+To start with specific series hidden on first render, set `hiddenSeries: string[]` on the spec. Author-set hidden series can be re-shown at runtime by clicking the legend (the runtime-shown set takes precedence over the user-hidden set).
 
 ## Keyboard Shortcuts
 

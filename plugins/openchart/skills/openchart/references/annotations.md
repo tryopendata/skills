@@ -6,11 +6,13 @@ All annotation types share these base properties:
 
 ```typescript
 {
+  id?: string,          // stable identifier surfaced in onEdit callbacks for reliable element matching
   label?: string,       // human-readable label
   fill?: string,        // fill color
   stroke?: string,      // stroke color
   opacity?: number,     // 0 to 1
   zIndex?: number,      // render ordering (higher = on top)
+  responsive?: boolean, // when false, stays visible at compact breakpoints. Default true.
 }
 ```
 
@@ -24,11 +26,22 @@ Callout at a specific data point.
   x: string | number,          // data coordinate
   y: string | number,          // data coordinate
   text: string,                // annotation text (supports \n for multiline)
+  subtitle?: string,           // muted second-tone line below `text` for supporting context (methodology, source). Separate block from `text` newlines.
+  dot?: boolean | {            // open-ring marker at the connector's data-point endpoint. true = default style. Object overrides:
+    radius?: number,           //   default 5
+    fill?: string,             //   default theme background (open-ring look)
+    stroke?: string,           //   default theme text color
+    strokeWidth?: number,      //   default 2
+  },
   fontSize?: number,
   fontWeight?: number,
   offset?: { dx?: number, dy?: number },  // pixel offset from position
   anchor?: "top"|"bottom"|"left"|"right"|"auto",
-  connector?: boolean | "curve",  // true: straight line, "curve": curved arrow, false: none
+  connector?: boolean | "straight" | "curve" | "drop-line",
+                                 // true / "straight": straight line. "curve": curved arrow with arrowhead.
+                                 // "drop-line": vertical line through the data point's x; label sits beside it
+                                 //              and auto-flips to the opposite side if it would overflow the chart area.
+                                 // false: no connector.
   connectorOffset?: {
     from?: { dx?: number, dy?: number },  // offset at the label end of the connector
     to?: { dx?: number, dy?: number },    // offset at the data point end of the connector
@@ -38,6 +51,14 @@ Callout at a specific data point.
   responsive?: boolean,          // hide at compact breakpoints. Default true. Set false to always show.
 }
 ```
+
+**`subtitle`:** A second muted line under `text`. Use for "(methodology note)" or a source citation that belongs with the callout. Renders in a smaller, dimmer style than the primary text. Multi-line `text` (with `\n`) still produces a multi-line primary block; `subtitle` is a separate block underneath.
+
+**`dot`:** Draws an open-ring marker at the connector's data-point end (where the line meets the data). Useful when the connector ends in a busy region and the eye needs an explicit "this exact point" cue. Default style is an open ring (transparent fill, theme-text stroke, radius 5).
+
+**`'drop-line'` connector:** Renders a vertical line through the data point's x-coordinate, with the label sitting beside the line. The label auto-flips to the opposite side if it would overflow the chart area. Good for time-series callouts where you want the eye to follow the x-position down to the axis. Note: only flips against the chart edge -- it does not avoid neighboring marks or other annotations, so place it in a clear region.
+
+**Series-anchored text annotations:** When a text annotation's `(x, y)` lands on a colored series and the user toggles that series off via the legend, the annotation is suppressed (it would drift onto a different scale). It comes back when the series is re-shown. Range and refline annotations pass through legend toggles unchanged because they anchor to constant axis values, not series.
 
 **Tips:**
 - Use `\n` in `text` for multi-line annotations
