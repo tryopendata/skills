@@ -112,7 +112,7 @@ curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/compose/preview' 
   -d '{"joins": [{"target": "census/saipe", "source_column": "jurisdiction_name", "join_column": "name"}]}'
 
 # 3. Download the full joined result
-curl -H "Authorization: Bearer $OPENDATA_API_KEY" \
+curl -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   'https://api.tryopendata.ai/v1/datasets/nces/naep/compose/download.csv?target=census/saipe&source_column=jurisdiction_name&join_column=name' \
   -o enriched.csv
 ```
@@ -146,7 +146,7 @@ Use `POST /v1/query` to join multiple datasets in a single SQL query. Reference 
 ```bash
 # Join NAEP scores with poverty rates by state
 curl -X POST 'https://api.tryopendata.ai/v1/query' \
-  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
+  -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   -H 'Content-Type: application/json' \
   -d '{"sql": "SELECT n.jurisdiction_name, AVG(n.score) as avg_score, s.poverty_rate FROM \"nces/naep\" n JOIN \"census/saipe\" s ON n.jurisdiction_name = s.name AND n.year = s.year WHERE n.year = ? GROUP BY n.jurisdiction_name, s.poverty_rate ORDER BY avg_score DESC", "params": [2024]}'
 ```
@@ -198,12 +198,12 @@ For large datasets, prefer server-side aggregation. Try SQL first, fall back to 
 ```bash
 # Option A: SQL (more flexible)
 curl -X POST ".../datasets/provider/dataset/query" \
-  -H "Authorization: Bearer $OPENDATA_API_KEY" \
+  -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   -H "Content-Type: application/json" \
   -d '{"sql": "SELECT year, category, COUNT(*) as count FROM data WHERE year >= 2000 GROUP BY 1, 2 ORDER BY 1"}'
 
 # Option B: REST aggregation (more reliable)
-curl -H "Authorization: Bearer $OPENDATA_API_KEY" \
+curl -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   ".../datasets/provider/dataset?aggregate=count(id)&group_by=year&filter%5Byear%5D%5Bgte%5D=2000&limit=100"
 ```
 

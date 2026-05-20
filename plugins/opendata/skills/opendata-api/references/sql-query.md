@@ -189,7 +189,7 @@ Use quoted slash notation for dataset names with hyphens (dot notation won't par
 **Economic indicators (with params):**
 ```bash
 curl -X POST 'https://api.tryopendata.ai/v1/query' \
-  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
+  -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   -H 'Content-Type: application/json' \
   -d '{"sql": "SELECT g.date, g.value as gdp, u.value as unemployment FROM fred.gdp g JOIN \"fred/unemployment-rate\" u ON g.date = u.date WHERE EXTRACT(YEAR FROM g.date) >= ? ORDER BY g.date", "params": [2020]}'
 ```
@@ -197,7 +197,7 @@ curl -X POST 'https://api.tryopendata.ai/v1/query' \
 **With CTEs:**
 ```bash
 curl -X POST 'https://api.tryopendata.ai/v1/query' \
-  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
+  -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   -H 'Content-Type: application/json' \
   -d '{"sql": "WITH recent_gdp AS (SELECT date, value FROM fred.gdp WHERE EXTRACT(YEAR FROM date) >= 2020) SELECT r.date, r.value as gdp, c.value as cpi FROM recent_gdp r JOIN fred.cpi c ON r.date = c.date ORDER BY r.date"}'
 ```
@@ -229,9 +229,13 @@ curl -X POST 'https://api.tryopendata.ai/v1/query' \
 | Row limit | 10,000 | 10,000 |
 | Memory | 512 MB | 512 MB |
 
-## Fallback Strategy
+## Troubleshooting
 
-**If the SQL endpoint fails with a 5xx error**, use the REST aggregation endpoint (`?aggregate=...&group_by=...`) for the same analysis. REST aggregation is more reliable for common operations like counts, averages, and group-by queries.
+**Query returns 400:** Check the error body for details. Common issues: invalid column name (use `GET .../columns` to verify schema), blocked function, or parameter count mismatch.
+
+**Query times out (408):** Add `LIMIT`, narrow `WHERE` filters, or reduce `timeout_ms`. For very large datasets, pre-filter with a CTE before aggregating.
+
+**REST alternative for simple aggregations:** If you only need `COUNT`, `AVG`, `SUM`, or `GROUP BY` without joins/CTEs/window functions, the REST endpoint (`?aggregate=avg(score)&group_by=year`) works for straightforward cases.
 
 ## Error Codes
 
@@ -248,7 +252,7 @@ curl -X POST 'https://api.tryopendata.ai/v1/query' \
 **Basic filter and sort:**
 ```bash
 curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/query' \
-  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
+  -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   -H 'Content-Type: application/json' \
   -d '{"sql": "SELECT * FROM data WHERE year >= 2020 ORDER BY year DESC LIMIT 10"}'
 ```
@@ -256,7 +260,7 @@ curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/query' \
 **Aggregation with GROUP BY:**
 ```bash
 curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/query' \
-  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
+  -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   -H 'Content-Type: application/json' \
   -d '{"sql": "SELECT jurisdiction, AVG(score) as avg_score FROM data WHERE year = 2024 GROUP BY jurisdiction ORDER BY avg_score DESC"}'
 ```
@@ -264,7 +268,7 @@ curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/query' \
 **Window function (with params):**
 ```bash
 curl -X POST 'https://api.tryopendata.ai/v1/datasets/worldbank/gdp-per-capita/query' \
-  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
+  -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   -H 'Content-Type: application/json' \
   -d '{"sql": "SELECT country_name, year, gdp_per_capita, LAG(gdp_per_capita) OVER (PARTITION BY country_name ORDER BY year) as prev_year FROM data WHERE country_name = ? ORDER BY year DESC LIMIT 10", "params": ["United States"]}'
 ```
@@ -272,7 +276,7 @@ curl -X POST 'https://api.tryopendata.ai/v1/datasets/worldbank/gdp-per-capita/qu
 **CTE for top-N per group:**
 ```bash
 curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/query' \
-  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
+  -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   -H 'Content-Type: application/json' \
   -d '{"sql": "WITH ranked AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY subject ORDER BY score DESC) as rn FROM data WHERE year = 2024) SELECT * FROM ranked WHERE rn <= 5"}'
 ```
@@ -280,7 +284,7 @@ curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/query' \
 **Year-over-year percent change:**
 ```bash
 curl -X POST 'https://api.tryopendata.ai/v1/datasets/fred/gdp/query' \
-  -H 'Authorization: Bearer $OPENDATA_API_KEY' \
+  -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   -H 'Content-Type: application/json' \
   -d '{"sql": "SELECT date, value as gdp, ROUND(100.0 * (value - LAG(value) OVER (ORDER BY date)) / LAG(value) OVER (ORDER BY date), 1) as yoy_pct_change FROM data WHERE EXTRACT(YEAR FROM date) >= 2020 ORDER BY date"}'
 ```

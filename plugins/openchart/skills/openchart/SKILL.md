@@ -28,6 +28,12 @@ Try these locations in order; stop at the first one that resolves:
 
 The names worth grepping for once you have a types file open: `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec`, `Encoding`, `EncodingChannel`, `MarkDef`, `Chrome`, `Metric`, `EndpointLabelsConfig`, `Annotation` (union), `TextAnnotation`, `RangeAnnotation`, `RuleAnnotation`, `LegendConfig`, `LabelSpec`, `SeriesStyle`, `AnimationSpec`, `ThemeConfig`.
 
+## Rendering via MCP
+
+If you have access to the OpenData MCP `visualize` tool, use it to render specs interactively. Pass the spec object and data array directly to `visualize` -- it handles rendering, theming, and responsive layout. The spec format is the same OpenChart JSON described in this skill.
+
+When `visualize` is not available, output the spec as JSON for the user to render with `<Chart>` / `createChart()` (see [rendering reference](references/rendering.md)).
+
 ## What this skill carries that the types don't
 
 The types tell you the shape of a valid spec. This skill carries the things types can't express:

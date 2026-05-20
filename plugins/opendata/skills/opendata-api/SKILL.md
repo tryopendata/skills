@@ -14,7 +14,7 @@ Query datasets stored as Parquet files through a REST API backed by DuckDB. The 
 All endpoints require authentication in production. Pass an API key via `Authorization: Bearer` header:
 
 ```bash
-curl -H "Authorization: Bearer od_live_..." \
+curl -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   "https://api.tryopendata.ai/v1/datasets/fred/cpi?limit=5"
 ```
 
@@ -22,23 +22,43 @@ Local dev (`localhost:8000`) does not require auth when running the standalone o
 
 ## Quick Start
 
-The dataset path IS the query endpoint. Just GET the dataset path with query params:
+**For analysis (aggregations, joins, window functions), use SQL:**
+
+```bash
+# Average CPI by year, most recent first
+curl -X POST "https://api.tryopendata.ai/v1/datasets/fred/cpi/query" \
+  -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"sql": "SELECT EXTRACT(YEAR FROM date) as year, AVG(value) as avg_cpi FROM data GROUP BY 1 ORDER BY 1 DESC LIMIT 10"}'
+```
+
+**Parameterized queries (avoids escaping issues):**
+
+```bash
+curl -X POST "https://api.tryopendata.ai/v1/datasets/owid/gdp/query" \
+  -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"sql": "SELECT * FROM data WHERE country_name = ? AND year >= ? ORDER BY year", "params": ["United States", 2020]}'
+```
+
+**For simple row fetches (no aggregation), use the REST endpoint:**
 
 ```bash
 # Get the 5 most recent CPI values
-curl -H "Authorization: Bearer od_live_..." \
+curl -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   "https://api.tryopendata.ai/v1/datasets/fred/cpi?limit=5&sort=-date"
-#                                           ^^^^^^^^^^^^^^^^
-#                              This path returns data directly.
-
-# Filter, sort, aggregate - all via query params on the same path
-curl -H "Authorization: Bearer od_live_..." \
-  'https://api.tryopendata.ai/v1/datasets/owid/gdp?filter[year][gte]=2020&sort=-gdp_per_capita&limit=10'
 ```
 
-**Do NOT append `/query` to GET requests.** `GET /v1/datasets/fred/cpi/query` will fail with a `SUBDATASET_NOT_FOUND` error because the API interprets `query` as a subdataset name. The `POST /query` endpoint is a separate SQL interface (see below).
+**Do NOT append `/query` to GET requests.** `GET /v1/datasets/fred/cpi/query` will fail with a `SUBDATASET_NOT_FOUND` error because the API interprets `query` as a subdataset name. The `POST /query` endpoint is a separate SQL interface (see [sql-query.md](references/sql-query.md)).
 
 All data endpoints live under `/v1/datasets/`.
+
+## MCP Tools (Preferred When Available)
+
+If you have access to OpenData MCP tools (`search_datasets`, `query_dataset`, `query_sql`), prefer them over direct API calls. The MCP tools handle auth, pagination, and response formatting automatically. **Use `query_sql` for analytical queries** (aggregations, joins, window functions) and `query_dataset` for simple row fetches. Fall back to the REST API below only when:
+- MCP tools are not connected
+- You need endpoints the MCP doesn't cover (graph intelligence, composition, activity feeds)
+- You need raw HTTP control (custom headers, streaming, specific formats)
 
 ## Endpoints
 
@@ -154,11 +174,19 @@ curl 'https://api.tryopendata.ai/v1/datasets/nces/naep?filter%5Byear%5D=2024'
 
 **`aggregate` and `nest_fields` are mutually exclusive.** You get a 400 error if you combine them. Aggregation produces flat summary rows; nesting produces grouped hierarchical data.
 
-**SQL endpoint may return 5xx errors.** The POST `/query` endpoint can fail with server-side errors. When this happens, fall back to REST aggregation (`aggregate` + `group_by` params) for the same analysis. The REST endpoint is more reliable for straightforward aggregations.
+**If a SQL query returns an error**, check the error response body for details. Common causes: invalid column names (verify with `GET .../columns`), syntax issues, or timeout on very large datasets. For simple aggregations that don't need SQL features (window functions, CTEs, joins), the REST `aggregate` + `group_by` params are an alternative.
 
 **Sorting on computed aggregation columns works.** When using `aggregate` + `group_by`, you can sort on the computed column names (e.g., `sort=-count_event_id` for `aggregate=count(event_id)`). Invalid sort fields return a 400 with `valid_values` showing available options.
 
 **Always use `api.tryopendata.ai` for POST endpoints.** The frontend at `tryopendata.ai/api/` proxies GET requests only. POST requests to `tryopendata.ai/api/v1/query` return 405. Use `api.tryopendata.ai/v1/query` directly for SQL and cross-dataset queries.
+
+**Set a User-Agent header in API requests.** Some CDN/WAF configurations may block requests with missing or generic user agents. Include a descriptive identifier:
+
+```bash
+curl -H "User-Agent: claude-code/opendata-skill" \
+  -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
+  "https://api.tryopendata.ai/v1/datasets/fred/cpi?limit=5"
+```
 
 ## SQL Query
 
@@ -198,7 +226,7 @@ curl -X POST 'https://api.tryopendata.ai/v1/datasets/nces/naep/compose/preview' 
   -d '{"joins": [{"target": "census/saipe", "source_column": ["state", "year"], "join_column": ["name", "year"]}]}'
 
 # 3. Download the full join as CSV (auth required)
-curl -H "Authorization: Bearer od_live_..." \
+curl -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
   'https://api.tryopendata.ai/v1/datasets/nces/naep/compose/download.csv?target=census/saipe&source_column=jurisdiction_name&join_column=name' \
   -o composed.csv
 ```
