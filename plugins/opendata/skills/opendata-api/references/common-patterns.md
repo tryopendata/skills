@@ -185,7 +185,7 @@ Check `debug.query.filters` to confirm filters were parsed correctly, and `debug
 Not all datasets have clean schemas. Before building analysis around a dataset:
 
 1. **Check column descriptions** via `/columns` — if descriptions are null or use opaque codes, the dataset may be hard to use without domain knowledge
-2. **Check for views** via `/views` — curated views often provide human-readable labels and pre-filtered subsets
+2. **Check for views** via `/meta` (`available_views`) — curated views often provide human-readable labels and pre-filtered subsets. Use colon syntax in SQL to query them: `FROM "bls/cpi-u:enriched"`
 3. **Sample a few rows** — confirm values match what the column descriptions claim (e.g., verify whether a "price" column is in dollars, cents, or index points)
 4. **Inspect null rates** — some columns exist in the schema but are null across all records
 

@@ -11,12 +11,27 @@ Query datasets stored as Parquet files through a REST API backed by DuckDB. The 
 
 ## Authentication
 
-All endpoints require authentication in production. Pass an API key via `Authorization: Bearer` header:
+All endpoints require authentication in production. Before making API calls, resolve a Bearer token using this sequence:
+
+1. **Check env var**: If `OPENDATA_API_KEY` is set, use it.
+2. **Check auth.json**: Read `~/.config/opendata/auth.json`. If it exists, extract the token:
+   - `method: "api_key"` -> use the `api_key` field
+   - `method: "clerk"` -> use the `access_token` field (check `expires_at` hasn't passed)
+   - Legacy format (no `method` field, just `api_key`) -> use the `api_key` field
+3. **Prompt to authenticate**: If neither source has a token:
+   - Check if the `opendata` CLI is installed (`which opendata`)
+   - If installed: run `opendata auth login` and let the user authenticate
+   - If not installed: tell the user to install it (`brew install tryopendata/opendata/opendata` or `curl -fsSL https://raw.githubusercontent.com/tryopendata/opendata/main/scripts/install-cli.sh | bash`), then run `opendata auth login`
+   - As a fallback, the user can set `OPENDATA_API_KEY` manually with a key from https://tryopendata.ai/settings/api-keys
+
+Once resolved, pass the token via `Authorization: Bearer` header:
 
 ```bash
-curl -H "Authorization: Bearer ${OPENDATA_API_KEY}" \
+curl -H "Authorization: Bearer $TOKEN" \
   "https://api.tryopendata.ai/v1/datasets/fred/cpi?limit=5"
 ```
+
+If you get a 401 during a session, re-run the resolution sequence (the token may have expired).
 
 Local dev (`localhost:8000`) does not require auth when running the standalone opendata server (`make quickstart`). The backend server (`make dev-all`) requires auth for write endpoints but allows unauthenticated reads.
 
@@ -143,7 +158,7 @@ If you get a `SUBDATASET_NOT_FOUND` error, the dataset likely has subdatasets. C
 | `format`          | `format=csv`             | Output format (json, csv, tsv, xlsx)       | [output-formats.md](references/output-formats.md)           |
 | `aggregate`       | `aggregate=avg(score)`   | Aggregate functions                        | [aggregation.md](references/aggregation.md)                 |
 | `group_by`        | `group_by=year`          | Group rows by column                       | [aggregation.md](references/aggregation.md)                 |
-| `view`            | `view=timeseries`        | Apply a named view                         |                                                             |
+| `view`            | `view=enriched`          | Apply a named view (for SQL, prefer colon syntax: `FROM "bls/cpi-u:enriched"`) | [sql-query.md](references/sql-query.md) |
 | `expand`          | `expand=area`            | Expand joined dimensions inline            |                                                             |
 | `include_sources` | `include_sources=true`   | Show `_source_url`, `_source_page` columns |                                                             |
 | `response_format` | `response_format=columnar` | Response shape: `objects` (default) or `columnar` (compact) | [output-formats.md](references/output-formats.md)           |
@@ -248,6 +263,8 @@ The `GET /v1/search` endpoint supports three modes:
 **Autocomplete:** `GET /v1/search/suggest?q=con` returns dataset names matching the prefix for typeahead.
 
 All search results include graph intelligence fields (`importance`, `bridge_score`, `community_id`, `community_label`, `graph_available`). Graph scores contribute to search ranking via a multiplicative boost.
+
+**View results:** Search may return dataset views alongside regular datasets. View results have `result_type: "view"`, a `view_name` field, and a `parent_ref` linking to the parent dataset. Query views using colon syntax: `FROM "provider/dataset:view_name"`.
 
 ## Enriched Metadata
 

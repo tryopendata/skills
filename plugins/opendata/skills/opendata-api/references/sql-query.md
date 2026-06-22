@@ -121,6 +121,38 @@ The dataset is available as two table references:
 
 Use `data` for single-dataset queries. The qualified name is useful for clarity or when cross-referencing in documentation.
 
+## Views (Colon Syntax)
+
+Many datasets have named views that add human-readable columns via JOINs, computed fields, or filters. Reference views using colon syntax in SQL: `"provider/dataset:view_name"`.
+
+```sql
+-- Enriched view: adds area_name, item_name, date instead of raw codes
+SELECT * FROM "bls/cpi-u:enriched" WHERE date > '2024-01-01' LIMIT 10
+
+-- Cross-dataset with views
+SELECT a.date, a.item_name, a.cpi_value, b.industry_name
+FROM "bls/cpi-u:enriched" a
+JOIN "bls/ppi:enriched" b ON a.date = b.date
+LIMIT 10
+```
+
+**Discovering views:** Check `GET /v1/datasets/{provider}/{dataset}/meta` for `available_views` and `default_view`. Each view lists its effective columns (the output schema after JOINs/computed fields).
+
+**Single-dataset alternative:** You can also pass a `view` field in the request body instead of colon syntax:
+```json
+{"sql": "SELECT * FROM data LIMIT 10", "view": "enriched"}
+```
+
+**Cross-dataset:** Use colon syntax in SQL or pass a `view_map` in the request body:
+```json
+{
+  "sql": "SELECT * FROM \"bls/cpi-u\" a JOIN \"bls/ppi\" b ON a.date = b.date LIMIT 10",
+  "view_map": {"bls/cpi-u": "enriched", "bls/ppi": "enriched"}
+}
+```
+
+**Error handling:** Referencing a non-existent view returns `VIEW_NOT_FOUND` with the list of available views for that dataset.
+
 ## Allowed SQL Features
 
 | Category | Allowed |
