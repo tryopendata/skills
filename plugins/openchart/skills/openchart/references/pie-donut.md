@@ -23,6 +23,8 @@ No x-axis. The `y` channel is the slice value, `color` is the category.
 
 For the full `MarkDef` for `mark: "arc"` and the encoding surface, load `MarkDef`, `Encoding`, and `ChartSpec` from `index.d.ts`. The arc-specific field worth knowing is `innerRadius` — `0` (default) is a pie; `> 0` is a donut.
 
+**Half-donut (election-style results):** restrict the sweep with `startAngle`/`endAngle` in radians. `mark: { type: "arc", innerRadius: 0.55, startAngle: -Math.PI/2, endAngle: Math.PI/2 }` gives a Datawrapper-style semicircle. The engine resizes a partial sweep to fill the chart area, so the half-donut renders at full size rather than half. (For a seat-dot hemicycle rather than proportional wedges, use `mark: "parliament"` instead.)
+
 ## Builder
 
 ```typescript
@@ -58,3 +60,12 @@ const spec = pieChart(data, "source", "share", {
   }
 }
 ```
+
+## Waffle: part-to-whole as counts
+
+When the story is "how many out of 100" (concrete counts, not just an angle), reach for `mark: "waffle"` instead of arc. It draws a unit grid where each cell is a fraction of the whole.
+
+- **Encoding:** `color` is the category (required); the quantitative share goes on `y` (aliased as `theta`, the same part-to-whole channel arc uses). No positional axes.
+- **`units`** (default 100) sets the total cell count -- the "x of 100" framing. **`columns`** (default 10) sets grid width; rows derive from `units / columns` (so the default is a 10x10 square).
+- Shares normalize to `units` via largest-remainder rounding, so cells always sum exactly. A small nonzero share can round to **0 cells** -- there's deliberately no minimum-one-cell floor -- but the category still appears in the legend.
+- Use `color.highlight` to single out one category against grayed cells.

@@ -50,7 +50,7 @@ When choosing colors, find the row that best describes your data story:
 - Second unique value -> `colors[1]`
 - Third -> `colors[2]`, etc.
 
-To highlight a specific series, sort data so the protagonist appears first, then set `theme.colors` to `["#accent", "#94a3b8", "#94a3b8", ...]`.
+To highlight a specific series, sort data so the protagonist appears first, then set `theme.colors` to `["#accent", "#94a3b8", "#94a3b8", ...]`. For charts where the first series *is* the protagonist, `theme.seriesStrategy: "accent-neutral"` automates this (accent + surface-aware grays for 2-4 series; see theme.md).
 
 **Caveat:** "first unique value" depends on chart type and data order. For bar charts, the first data row renders as the topmost bar. For line charts, the first unique value in the `color` field (based on row order) gets `colors[0]`. If data comes from an external source and row order isn't controlled, explicitly set enough entries in `theme.colors` to cover all series, placing the accent color at the correct index position.
 
@@ -78,6 +78,16 @@ When to use: scatter plots, bubble charts, or any chart where a quantitative dim
 ```
 
 Where `poverty_tier` is a derived field with values like "Low", "Medium", "High" bucketed from the continuous `poverty_rate`.
+
+## Continuous and Binned Color Legends
+
+When `encoding.color` is `type: "quantitative"` (a true continuous ramp, not a bucketed ordinal), the engine renders a **continuous legend automatically** -- a gradient bar with min/max labels for a sequential ramp, or min/neutral/max for a diverging one. You don't configure this on `legend`; it's derived from the color scale type. This is the default-on behavior for sequential/heatmap charts (rect heatmaps, calendar, quantitative-color scatter).
+
+- **Binned swatches instead of a gradient bar:** set the color channel's `scale.type` to `"quantile"`, `"quantize"`, or `"threshold"`. You get discrete swatches with one boundary label per class break (default 5 bins).
+- **Pick the ramp** with `scale.scheme` (sequential: `blue`, `green`, `orange`, `purple`, `teal`; diverging: `redBlue`, `brownTeal`) or an explicit `scale.range`.
+- **Hide it** with the Vega-Lite idiom `encoding.color.legend = null`.
+
+The tier-bucketing recipe above (mapping a quantitative field to an ordinal one) is still the right move when you want a *categorical* legend with named tiers; use the continuous legend when the raw gradient is the story.
 
 ## Per-Row Color Assignment
 

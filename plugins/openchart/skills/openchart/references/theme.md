@@ -24,6 +24,23 @@ The default `colors.categorical` palette is an **OKLCH cyan-led** sequence desig
 
 If you override `theme.colors.categorical`, your custom palette is also passed through unchanged across modes -- pick colors that work in both. For line strokes specifically, the engine applies a small per-color light-mode darkening (`adaptForLightLineStroke`) to saturated colors so they meet contrast on white backgrounds; achromatic (low-saturation) colors and already-dark colors pass through unchanged.
 
+## Series Strategy
+
+`theme.seriesStrategy?: 'palette' | 'accent-neutral'` (default `'palette'`) controls categorical color assignment by series count:
+
+- `'palette'` -- full categorical palette, always (the default).
+- `'accent-neutral'` -- 1 series gets the accent (first palette color) only; 2-4 series get accent for the first plus neutral grays for the rest; 5+ fall back to the full palette. The grays are surface-aware: darkest-first on light backgrounds, brightest-first on dark.
+
+This automates the highlight+gray convention without hand-building a color array, but it always accents the *first* series -- if the protagonist isn't first in the data, sort it first or use the manual array (see color-strategy.md).
+
+## Light/Dark Token Pairs
+
+Every color field in `ThemeConfig` (including chrome element `color`) accepts a `TokenValue`: a plain string, or `{ "light": "#fff1e5", "dark": "#1a1311" }`. With a pair, dark mode uses your explicit dark value instead of deriving one algorithmically. Plain strings behave as before.
+
+## Presets
+
+Three named `ThemeConfig` presets are exported from `@opendata-ai/openchart-core`: `editorial` (the default look), `essay` (serif titles, warm background, generous spacing), `wire` (monospace, dense, tight chrome). Pass one as the `theme` prop/option, optionally spreading your own overrides on top.
+
 ## Dark Mode
 
 `darkMode?: 'auto' | 'force' | 'off'` (default `'off'`):

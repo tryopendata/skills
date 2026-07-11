@@ -28,6 +28,11 @@ Position-based encodings (bars, lines, point/scatter) beat area and angle-based 
 | Distribution / spread | Circle (dot/strip plot) | Individual values visible, shows density |
 | Composition over time | Stacked area (`mark: "area"` + `encoding.y.stack: "zero"`) | Volume + trend together in one view. Note: area defaults to overlap, so you must opt into stacking explicitly. |
 | Before / after comparison | Grouped bar (vertical) | Side-by-side position makes difference obvious |
+| Change between two values per category | Range (`mark: "range"`, dumbbell / arrow) | Two dots + connector read as "moved from A to B"; arrow style makes direction explicit |
+| Part-to-whole as tangible counts | Waffle (`mark: "waffle"`, "x of 100") | Unit squares make a share concrete ("27 of every 100") where a pie only shows an angle |
+| Election / legislature seat share | Parliament (`mark: "parliament"`, hemicycle) | One dot per seat in a hemicycle is the convention readers expect for chamber composition; add a majority line |
+| Daily value across a year | Calendar heatmap (`mark: "calendar"`) | Weeks-by-weekdays grid exposes weekly/seasonal rhythm in daily data |
+| Distribution with many observations | Beeswarm (`mark: "beeswarm"`) | Every observation is a dot; grouped lanes compare distributions without hiding individuals |
 | Flow between stages/processes | Sankey | Width encodes volume, path shows where values move |
 
 ## Data-Ink Ratio

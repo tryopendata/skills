@@ -23,16 +23,24 @@ Try these locations in order; stop at the first one that resolves:
 
 1. **Installed package** (most common): `node_modules/@opendata-ai/openchart-core/dist/index.d.ts`. The full chart, table, graph, sankey, and tilemap spec surface is rolled into this single bundled `.d.ts`.
 2. **Source repo** (if you're working in the openchart monorepo): `packages/core/src/types/spec.ts` and `packages/core/src/types/layout.ts`. JSDoc comments here are richer than the bundled `.d.ts`.
-3. **Published CDN** (no local install, network available): `https://unpkg.com/@opendata-ai/openchart-core/dist/index.d.ts`.
-4. **Fallback:** if none of the above are reachable, use the type sketches in this skill and **flag the uncertainty** in your response so the user knows you authored without canonical types.
+3. **Published CDN** (no local install, network available): `https://unpkg.com/@opendata-ai/openchart-core/dist/index.d.ts` (redirects to the latest published version).
+4. **GitHub raw** (if unpkg is unreachable, or you want the richer source JSDoc): `https://raw.githubusercontent.com/tryopendata/openchart/main/packages/core/src/types/spec.ts`. For version-exact types, pin to a release tag instead of `main`: `https://raw.githubusercontent.com/tryopendata/openchart/core-v<version>/packages/core/src/types/spec.ts`, matching `<version>` to the installed `@opendata-ai/*` package version. Note `main` may document unpublished surface.
+5. **Fallback:** if none of the above are reachable (no filesystem, no network fetch), use the type sketches in this skill and **flag the uncertainty** in your response so the user knows you authored without canonical types.
 
-The names worth grepping for once you have a types file open: `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec`, `Encoding`, `EncodingChannel`, `MarkDef`, `Chrome`, `Metric`, `EndpointLabelsConfig`, `Annotation` (union), `TextAnnotation`, `RangeAnnotation`, `RuleAnnotation`, `LegendConfig`, `LabelSpec`, `SeriesStyle`, `AnimationSpec`, `ThemeConfig`.
+The names worth grepping for once you have a types file open: `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec`, `MarkType` (the 16-mark union), `Encoding`, `EncodingChannel`, `MarkDef`, `Chrome`, `Metric`, `EndpointLabelsConfig`, `Annotation` (union), `TextAnnotation`, `RangeAnnotation`, `RuleAnnotation`, `LegendConfig`, `LabelSpec`, `SeriesStyle`, `AnimationSpec`, `ThemeConfig`, `A11yConfig`, `SeriesSearchConfig`, `YouDrawItConfig`.
 
 ## Rendering via MCP
 
 If you have access to the OpenData MCP `visualize` tool, use it to render specs interactively. Pass the spec object and data array directly to `visualize` -- it handles rendering, theming, and responsive layout. The spec format is the same OpenChart JSON described in this skill.
 
 When `visualize` is not available, output the spec as JSON for the user to render with `<Chart>` / `createChart()` (see [rendering reference](references/rendering.md)).
+
+**Structured outputs (tool-use / constrained generation).** OpenChart ships a published JSON Schema and a generated `llms.txt`, both derived from the spec types so they never drift:
+
+- **JSON Schema** for constraining an LLM tool call to a valid spec. Import from the core `./schema` subpath (not the type barrel): `@opendata-ai/openchart-core/schema` is the full VizSpec union (usable directly as an Anthropic tool `input_schema`); `@opendata-ai/openchart-core/schema/chart.schema.json` is the chart-only subset covering all 16 marks; `.../table.schema.json` is the table subset. Files also live at `packages/core/schema/*.schema.json` and on unpkg/GitHub raw for fetch-only agents.
+- **`llms.txt`** at the repo root (`https://raw.githubusercontent.com/tryopendata/openchart/main/llms.txt`) is the compact narrative surface: install, core concept, the mark-encoding table, and validation notes. Prefer it as a quick primer when you can't load the full `.d.ts`.
+
+**Validate before rendering.** `validateSpec(spec)` from `@opendata-ai/openchart-engine` returns `{ valid, errors, normalized }`. Each error carries a machine-readable `code`, the offending `path`, and a repair-friendly `suggestion`. Field references are checked against the columns in the provided `data`, and a misspelled field name gets a Levenshtein-based `Did you mean "..."?` clause pointing at the nearest real column -- use that clause to auto-repair typos in a generate-validate loop.
 
 ## What this skill carries that the types don't
 
@@ -65,11 +73,16 @@ Temporal x-axis column?      -> 1 series: line | 2-5 series: line + color | 6+: 
 Categorical + numeric?       -> Ranked list: bar (horizontal) | Periodic (Q1, Jan): bar (vertical) | 2-6 composition: arc
 Two numeric columns?         -> point (optional size/color for 3rd/4th dims)
 Categorical + series + num?  -> stacked bar (use color for series)
-Distribution/spread?         -> circle (strip plot)
+Distribution/spread?         -> circle (strip plot) | many observations per group: beeswarm
+Change between two values?   -> range (dumbbell / arrow / floating bar per category)
+Part-to-whole as counts?     -> waffle ("x of 100" unit grid)
+Election / legislature seats?-> parliament (hemicycle) | half-donut result: arc + startAngle/endAngle
+Daily value over a year?     -> calendar (GitHub-style heatmap)
 Nodes + edges / network?     -> graph (force/radial/hierarchical layout)
 Flow between stages?         -> sankey (source/target/value)
 US state-level data?         -> tilemap (state codes + values, equal-weight grid)
 Tabular data overview?       -> table (with sparklines, heatmaps, bars)
+Scroll-driven narrative?     -> chart story (base spec + patch steps, see references/story.md)
 Default                      -> bar
 ```
 
@@ -89,6 +102,12 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 | `mark: "rule"` | Reference lines (horizontal or vertical) | x or y: quantitative/temporal | - |
 | `mark: "tick"` | Tick marks for distributions | x: quantitative, y: nominal/ordinal | - |
 | `mark: "rect"` | Rectangles for heatmaps | x: ordinal/nominal, y: ordinal/nominal, color: quantitative | - |
+| `mark: "lollipop"` | Ranked categorical values (dot on a stem) | x: quantitative, y: nominal/ordinal | [references/dot.md](references/dot.md) |
+| `mark: "beeswarm"` | Distribution, one dot per observation | one axis quantitative, other optional nominal (lanes) | [references/dot.md](references/dot.md) |
+| `mark: "range"` | Change between two values (dumbbell / arrow / floating bar) | category + start + end (x/x2 or y/y2) | - |
+| `mark: "waffle"` | Part-to-whole as counts ("x of 100") | color: nominal, y/theta: quantitative share | [references/pie-donut.md](references/pie-donut.md) |
+| `mark: "calendar"` | Daily value over weeks/years (GitHub heatmap) | x: temporal (daily), color: quantitative | - |
+| `mark: "parliament"` | Election / legislature seats (hemicycle) | color: nominal (party), y/theta: quantitative seats | - |
 | `type: "table"` | Data tables with visual features | columns + data rows | [references/table.md](references/table.md) |
 | `type: "graph"` | Networks, relationships, hierarchies | nodes + edges | [references/graph.md](references/graph.md) |
 | `type: "sankey"` | Flows between stages/processes | source + target + value | [references/sankey.md](references/sankey.md) |
@@ -96,7 +115,16 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 
 **Bar orientation:** The engine infers orientation from encoding. `x: nominal/ordinal + y: quantitative` = vertical (column-style). `x: quantitative + y: nominal/ordinal` = horizontal bar. Override with `mark: { type: "bar", orient: "horizontal" | "vertical" }`.
 
-**Arc variants:** `mark: "arc"` renders a pie chart by default. Add `innerRadius > 0` to get a donut: `mark: { type: "arc", innerRadius: 40 }`.
+**Arc variants:** `mark: "arc"` renders a pie chart by default. Add `innerRadius > 0` to get a donut: `mark: { type: "arc", innerRadius: 40 }`. For an election-style half-donut, restrict the sweep with `startAngle`/`endAngle` in radians (`mark: { type: "arc", innerRadius: 40, startAngle: -Math.PI/2, endAngle: Math.PI/2 }`); the engine resizes a partial sweep to fill the chart area so a half-donut isn't drawn at half size.
+
+**New-mark behavior the types don't tell you:**
+
+- **`range`** needs the second value channel: `x` + `x2` (horizontal, the common editorial form with `y` as the category) or `y` + `y2` (vertical). `style` picks the form: `"dumbbell"` (default, muted start dot + accent end dot + connector), `"arrow"` (arrowhead at the x2/y2 end, strongest "change over time" read), or `"bar"` (plain floating range bar). `colorByDirection: true` colors increases with the theme's positive color and decreases with negative; a field-based `encoding.color` wins over it. Use this mark for dumbbell/change plots rather than faking one with two overlaid point series.
+- **`waffle`** takes `color` (the category) and a quantitative share via `y` (aliased as `theta`, same channel arc uses). `units` (default 100) sets total cells, `columns` (default 10) the grid width. Shares normalize to `units` via largest-remainder rounding so cells always sum exactly; a small nonzero share can round to 0 cells (there's no minimum-one-cell floor), but it still appears in the legend.
+- **`calendar`** takes `x` (temporal, one row per day) and `color` (quantitative per-day value). Multi-year data stacks one band per year sharing a single color scale. Date math is UTC, so `"2024-01-15"` parses as UTC midnight. Days with no data render as empty achromatic cells, distinct from the scale minimum. `weekStart` ("monday" default / "sunday") sets the top row; `cellRadius` rounds the cells.
+- **`parliament`** takes `color` (party) and seat count via `y`/`theta`. Only `shape: "hemicycle"` ships (concentric semicircular arcs). Parties fill left-to-right in **data order**, so sort your rows by political spectrum yourself. `majorityLine` (default true) draws the threshold line and "N to win" label; `seatRadius` defaults to `"auto"`.
+- **`beeswarm`** takes one quantitative positional channel (the value axis) plus an optional nominal channel for grouped lanes; `size` scales dot area. The cross axis is pure pixel-space with no scale, so tall stacks can overflow a short container -- cap the `size` range or give it vertical room.
+- **`lollipop`** is a semantic alias for the dot/stem renderer (`x` quantitative, `y` category): a dot on a stem from the baseline. Negative values extend the stem left of the baseline.
 
 **Collapsed mark types:** These mark aliases no longer exist as separate values. Use the canonical marks instead:
 
@@ -129,6 +157,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 | Entrance animations, easing, stagger, reduced motion | [animation.md](references/animation.md) |
 | Sankey diagram (flows between stages) | [sankey.md](references/sankey.md) |
 | US state tile grid map | [tilemap.md](references/tilemap.md) |
+| Scroll-driven chart story (scrollytelling) | [story.md](references/story.md) |
 | Final design quality check | [design-review.md](references/design-review.md) |
 | Checking rendered output for defects | [visual-qa.md](references/visual-qa.md) |
 
@@ -139,7 +168,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 
 ## Spec discriminant
 
-- **Charts** use `mark` (`"line"`, `"bar"`, `"area"`, `"arc"`, `"point"`, `"circle"`, `"text"`, `"rule"`, `"tick"`, `"rect"`).
+- **Charts** use `mark` (16 marks: `"bar"`, `"line"`, `"area"`, `"point"`, `"circle"`, `"arc"`, `"text"`, `"rule"`, `"tick"`, `"rect"`, `"lollipop"`, `"beeswarm"`, `"range"`, `"waffle"`, `"calendar"`, `"parliament"`).
 - **Tables, graphs, sankey, tilemap** use `type` (`"table"` | `"graph"` | `"sankey"` | `"tilemap"`).
 
 For the full top-level shape — every optional field, exact enum values, defaults — load `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec` from `index.d.ts` (see "Source of truth" above).
@@ -151,6 +180,10 @@ For the full top-level shape — every optional field, exact enum values, defaul
 - `endpointLabels` is **auto-on for ≥2-series line/area** and auto-suppresses the traditional legend in that case. See the "Endpoint Labels" section below for the full suppression truth table.
 - `hiddenSeries` on the spec hides series on first render. The vanilla adapter also maintains a separate runtime hidden set populated by legend clicks; that triggers full engine recompile (y-axis rebalance, locked color scale, per-series UI hide). See "Legend Toggle (Runtime)" below.
 - `display: 'sparkline'` strips chrome, axes, legend, watermark, animation, and crosshair for inline KPI-card use. Explicit per-field overrides still win (set `chrome.title` and you'll still get a title in sparkline mode).
+- `seriesSearch` (`boolean | { placeholder }`) renders a typeahead "find your country" input over a categorical `color` encoding; selecting values highlights them (multi-select chips). Mutually exclusive with edit mode (search wins).
+- `youDrawIt` (`{ from, prompt?, revealLabel?, comparisonLine? }`) is the NYT "draw your guess before the reveal" format. Line marks only, single-series only; mutually exclusive with edit mode and seriesSearch. The vanilla instance exposes `resetDrawing()` / `revealDrawing()` and an `onReveal(guess)` callback.
+- `mark.fillPattern: 'auto'` layers a per-series SVG pattern (hatch, dots, crosshatch) over each fill so filled marks (bar/area/arc) stay distinguishable without color vision; `'none'` (default) is solid fills.
+- Accessibility is automatic: openchart generates alt text, ARIA labels, and a hidden screen-reader data table. Override the alt text with top-level `description` (Vega-Lite sugar) or `a11y.description` (`a11y.description` wins); set `a11y.hidden: true` to `aria-hidden` a purely decorative chart. The engine also emits console warnings when adjacent series or text fall below WCAG contrast, naming the nearest passing color.
 
 **Chrome elements** (`chrome.eyebrow` / `title` / `subtitle` / `source` / `byline` / `footer` / `brand`): each takes `string | ChromeText`. The `eyebrow` is a tracked, accent-tinted kicker above the title. The `brand` is a right-anchored block on the footer row paired with a small accent dot — setting it suppresses the default `tryOpenData.ai` watermark. All chrome text supports `\n` for explicit line breaks and auto-wraps at the container width. Exact field shape: see `Chrome` and `ChromeText` in `index.d.ts`.
 
@@ -158,7 +191,7 @@ For the full top-level shape — every optional field, exact enum values, defaul
 
 ## Mark (Charts Only)
 
-`mark` is either a string (`"line"`, `"area"`, `"bar"`, `"arc"`, `"point"`, `"circle"`, `"text"`, `"rule"`, `"tick"`, `"rect"`) or an object — see `MarkDef` in `index.d.ts` for the full field set (`type`, `point`, `interpolate`, `orient`, `innerRadius`, `fill`, `stroke`, `strokeWidth`, `opacity`, etc.).
+`mark` is either a string (one of the 16 marks: `"bar"`, `"line"`, `"area"`, `"point"`, `"circle"`, `"arc"`, `"text"`, `"rule"`, `"tick"`, `"rect"`, `"lollipop"`, `"beeswarm"`, `"range"`, `"waffle"`, `"calendar"`, `"parliament"`) or an object — see `MarkDef` in `index.d.ts` for the full field set (`type`, `point`, `interpolate`, `orient`, `innerRadius`, `startAngle`, `endAngle`, `fill`, `stroke`, `strokeWidth`, `opacity`, `fillPattern`, plus per-mark fields like `style`/`colorByDirection` for range, `units`/`columns` for waffle, `weekStart` for calendar, `shape`/`seatRadius`/`majorityLine` for parliament, etc.).
 
 **Behavior the types don't tell you:**
 
@@ -416,7 +449,7 @@ Rendering and component behaviors that aren't obvious from the spec alone.
 
 ## Custom D3.js Infographics
 
-When a visualization goes beyond what declarative specs can handle (creative metaphors, unusual layouts, treemaps, generative art, scrollytelling), fall back to raw D3.js + SVG. Note: sankey and tilemap are first-class types with their own spec formats. See [references/sankey.md](references/sankey.md) and [references/tilemap.md](references/tilemap.md). Use the D3 reference only for heavily customized layouts. These references cover D3 implementation patterns:
+When a visualization goes beyond what declarative specs can handle (creative metaphors, unusual layouts, treemaps, generative art), fall back to raw D3.js + SVG. Note: sankey and tilemap are first-class types with their own spec formats (see [references/sankey.md](references/sankey.md) and [references/tilemap.md](references/tilemap.md)), and **scrollytelling is now first-class too** -- use the chart story API (base spec + patch steps) instead of hand-rolling D3 scroll effects (see [references/story.md](references/story.md)). Use the D3 reference only for heavily customized layouts. These references cover D3 implementation patterns:
 
 | Topic | Reference |
 | --- | --- |
