@@ -27,7 +27,7 @@ Try these locations in order; stop at the first one that resolves:
 4. **GitHub raw** (if unpkg is unreachable, or you want the richer source JSDoc): `https://raw.githubusercontent.com/tryopendata/openchart/main/packages/core/src/types/spec.ts`. For version-exact types, pin to a release tag instead of `main`: `https://raw.githubusercontent.com/tryopendata/openchart/core-v<version>/packages/core/src/types/spec.ts`, matching `<version>` to the installed `@opendata-ai/*` package version. Note `main` may document unpublished surface.
 5. **Fallback:** if none of the above are reachable (no filesystem, no network fetch), use the type sketches in this skill and **flag the uncertainty** in your response so the user knows you authored without canonical types.
 
-The names worth grepping for once you have a types file open: `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec`, `MarkType` (the 16-mark union), `Encoding`, `EncodingChannel`, `MarkDef`, `Chrome`, `Metric`, `EndpointLabelsConfig`, `Annotation` (union), `TextAnnotation`, `RangeAnnotation`, `RuleAnnotation`, `LegendConfig`, `LabelSpec`, `SeriesStyle`, `AnimationSpec`, `ThemeConfig`, `A11yConfig`, `SeriesSearchConfig`, `YouDrawItConfig`.
+The names worth grepping for once you have a types file open: `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec`, `MarkType` (the 16-mark union), `Encoding`, `EncodingChannel`, `MarkDef`, `Chrome`, `Metric`, `EndpointLabelsConfig`, `Annotation` (union), `TextAnnotation`, `RangeAnnotation`, `RefLineAnnotation`, `LegendConfig`, `LabelSpec`, `SeriesStyle`, `AnimationSpec`, `ThemeConfig`, `A11yConfig`, `SeriesSearchConfig`, `YouDrawItConfig`.
 
 ## Rendering via MCP
 
@@ -46,7 +46,7 @@ When `visualize` is not available, output the spec as JSON for the user to rende
 
 The types tell you the shape of a valid spec. This skill carries the things types can't express:
 
-- **Behavioral defaults that live in the normalizer/compiler**, not in the type signature. (E.g. area defaults to overlap, not stacked. Bar defaults to stacked when colored.)
+- **Behavioral defaults that live in the normalizer/compiler**, not in the type signature. (E.g. bar and area both default to stacked when colored; grouped/overlap behavior requires explicit `stack: null`.)
 - **Cross-field interactions and truth tables.** (E.g. how `legend.show`, `endpointLabels`, and the legacy end-of-line labels interact.)
 - **Runtime semantics.** (E.g. legend toggle recompiles, rebalances the y-axis, locks the color scale, hides per-series UI, refuses to hide the last visible series.)
 - **Editorial judgment.** (E.g. when to pick a bar vs a line, color strategy, annotation density, data-resolution budgets.)
@@ -95,7 +95,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 | `mark: "line"` | Trends over time | x: temporal/ordinal, y: quantitative | [references/line.md](references/line.md) |
 | `mark: "area"` | Trends with volume emphasis | x: temporal/ordinal, y: quantitative | [references/area.md](references/area.md) |
 | `mark: "bar"` | Rankings (horizontal) or periodic/categorical (vertical) | Orientation inferred from encoding (see below) | [references/bar.md](references/bar.md) |
-| `mark: "arc"` | Part-to-whole (2-5 categories) | y: quantitative, color: nominal/ordinal | [references/pie-donut.md](references/pie-donut.md) |
+| `mark: "arc"` | Part-to-whole (2-5 categories) | theta: quantitative, color: nominal/ordinal | [references/pie-donut.md](references/pie-donut.md) |
 | `mark: "point"` | Correlation between two variables | x: quantitative, y: quantitative | [references/scatter.md](references/scatter.md) |
 | `mark: "circle"` | Distribution, strip plots | x: quantitative, y: nominal/ordinal | [references/dot.md](references/dot.md) |
 | `mark: "text"` | Text labels positioned by x/y | x: any, y: any, text: nominal | - |
@@ -105,9 +105,9 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 | `mark: "lollipop"` | Ranked categorical values (dot on a stem) | x: quantitative, y: nominal/ordinal | [references/dot.md](references/dot.md) |
 | `mark: "beeswarm"` | Distribution, one dot per observation | one axis quantitative, other optional nominal (lanes) | [references/dot.md](references/dot.md) |
 | `mark: "range"` | Change between two values (dumbbell / arrow / floating bar) | category + start + end (x/x2 or y/y2) | - |
-| `mark: "waffle"` | Part-to-whole as counts ("x of 100") | color: nominal, y/theta: quantitative share | [references/pie-donut.md](references/pie-donut.md) |
+| `mark: "waffle"` | Part-to-whole as counts ("x of 100") | color: nominal, theta: quantitative share | [references/pie-donut.md](references/pie-donut.md) |
 | `mark: "calendar"` | Daily value over weeks/years (GitHub heatmap) | x: temporal (daily), color: quantitative | - |
-| `mark: "parliament"` | Election / legislature seats (hemicycle) | color: nominal (party), y/theta: quantitative seats | - |
+| `mark: "parliament"` | Election / legislature seats (hemicycle) | color: nominal (party), theta: quantitative seats | - |
 | `type: "table"` | Data tables with visual features | columns + data rows | [references/table.md](references/table.md) |
 | `type: "graph"` | Networks, relationships, hierarchies | nodes + edges | [references/graph.md](references/graph.md) |
 | `type: "sankey"` | Flows between stages/processes | source + target + value | [references/sankey.md](references/sankey.md) |
@@ -120,9 +120,9 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 **New-mark behavior the types don't tell you:**
 
 - **`range`** needs the second value channel: `x` + `x2` (horizontal, the common editorial form with `y` as the category) or `y` + `y2` (vertical). `style` picks the form: `"dumbbell"` (default, muted start dot + accent end dot + connector), `"arrow"` (arrowhead at the x2/y2 end, strongest "change over time" read), or `"bar"` (plain floating range bar). `colorByDirection: true` colors increases with the theme's positive color and decreases with negative; a field-based `encoding.color` wins over it. Use this mark for dumbbell/change plots rather than faking one with two overlaid point series.
-- **`waffle`** takes `color` (the category) and a quantitative share via `y` (aliased as `theta`, same channel arc uses). `units` (default 100) sets total cells, `columns` (default 10) the grid width. Shares normalize to `units` via largest-remainder rounding so cells always sum exactly; a small nonzero share can round to 0 cells (there's no minimum-one-cell floor), but it still appears in the legend.
+- **`waffle`** takes `color` (the category) and a quantitative share via `theta` (the same part-to-whole channel arc uses; `y` is still accepted as a deprecated alias). `units` (default 100) sets total cells, `columns` (default 10) the grid width. Shares normalize to `units` via largest-remainder rounding so cells always sum exactly; a small nonzero share can round to 0 cells (there's no minimum-one-cell floor), but it still appears in the legend.
 - **`calendar`** takes `x` (temporal, one row per day) and `color` (quantitative per-day value). Multi-year data stacks one band per year sharing a single color scale. Date math is UTC, so `"2024-01-15"` parses as UTC midnight. Days with no data render as empty achromatic cells, distinct from the scale minimum. `weekStart` ("monday" default / "sunday") sets the top row; `cellRadius` rounds the cells.
-- **`parliament`** takes `color` (party) and seat count via `y`/`theta`. Only `shape: "hemicycle"` ships (concentric semicircular arcs). Parties fill left-to-right in **data order**, so sort your rows by political spectrum yourself. `majorityLine` (default true) draws the threshold line and "N to win" label; `seatRadius` defaults to `"auto"`.
+- **`parliament`** takes `color` (party) and seat count via `theta` (`y` is still accepted as a deprecated alias). Only `shape: "hemicycle"` ships (concentric semicircular arcs). Parties fill left-to-right in **data order**, so sort your rows by political spectrum yourself. `majorityLine` (default true) draws the threshold line and "N to win" label; `seatRadius` defaults to `"auto"`.
 - **`beeswarm`** takes one quantitative positional channel (the value axis) plus an optional nominal channel for grouped lanes; `size` scales dot area. The cross axis is pure pixel-space with no scale, so tall stacks can overflow a short container -- cap the `size` range or give it vertical room.
 - **`lollipop`** is a semantic alias for the dot/stem renderer (`x` quantitative, `y` category): a dot on a stem from the baseline. Negative values extend the stem left of the baseline.
 
@@ -219,14 +219,14 @@ For the full top-level shape — every optional field, exact enum values, defaul
 
 ## Encoding Channels (Charts Only)
 
-Charts map data to visuals via encoding channels: `x`, `y`, `color`, `size`, `detail`, `opacity`, `shape`, `strokeDash`, `text`, `tooltip`, `x2`, `y2`, `theta`, `radius`, `order`. Each channel is an `EncodingChannel` (`field`, `type`, `aggregate`, `axis`, `scale`, `bin`, `timeUnit`, `sort`, `format`, `title`, `stack`, `condition`, `value`). For the full shape and enum values: load `Encoding` and `EncodingChannel` from `index.d.ts`.
+Charts map data to visuals via encoding channels: `x`, `y`, `color`, `size`, `detail`, `key`, `x2`, `y2`, `opacity`, `strokeDash`, `angle`, `text`, `tooltip`, `theta`, `facet`. Each channel is an `EncodingChannel` (`field`, `type`, `aggregate`, `axis`, `scale`, `bin`, `timeUnit`, `sort`, `format`, `title`, `stack`, `condition`, `value`). For the full shape and enum values: load `Encoding` and `EncodingChannel` from `index.d.ts`.
 
 **Behavior the types don't tell you:**
 
 - `field` + `type` is the minimum for any channel. `type` must be one of `"quantitative" | "temporal" | "nominal" | "ordinal"` — picking the wrong one is the most common spec authoring bug (see Spec Anti-Patterns below).
 - `axis.format` is **d3-format with a literal-suffix extension** (e.g. `".1f%"`). The literal suffix is OpenChart's add-on; native d3 doesn't support it. See [format-strings.md](references/format-strings.md) and the Format Strings section below for the percent-form pitfall.
 - `scale.nice: true` is the default for quantitative and temporal scales — it rounds the domain outward to clean tick values. On temporal scales this can shift the domain by years; set `nice: false` when you need precise control.
-- `stack` defaults differ by mark: bar = stacked when colored, area = overlap when colored, line = n/a. See the per-mark default table in [encoding-channels.md](references/encoding-channels.md).
+- `stack` defaults to stacked (`"zero"`) when colored for both bar and area; line = n/a. Set `stack: null` for grouped/overlap behavior. See the per-mark default table in [encoding-channels.md](references/encoding-channels.md).
 - See [encoding-channels.md](references/encoding-channels.md) for conditional encoding examples and the full per-channel guide.
 
 ## Data Transforms (Charts Only)
@@ -403,7 +403,7 @@ Run these checks before outputting a spec. These catch the issues that most ofte
 | **Data resolution is appropriate** | Check total rows in the data array. Over 150 per series? Aggregate to a coarser time grain or sample. A 25-year time series should use annual or quarterly data, not monthly. See Data Resolution table. |
 | **Color encodes the story** | If one variable drives the narrative, color should reinforce it. Use the decision table in [color-strategy.md](references/color-strategy.md) to pick the right strategy and `theme.colors` array. Don't leave a scatter plot monochrome when a gradient would make the pattern obvious. |
 | **Bar stacking is intentional** | If using `color` encoding on a bar chart, verify stacking mode. Default is stacked (`stack: "zero"`), which adds values together visually. For side-by-side comparison bars (e.g., 2018 vs 2022), set `stack: null` on the quantitative encoding. Stacked bars sum values visually, so a comparison chart will show bars extending to the sum of both values. |
-| **Area stacking is intentional** | Area charts default to **overlap** (each series drawn over the others, semi-transparent). For composition/share-over-time, opt in with `stack: "zero"` on the y-channel (or `"normalize"` for percentage stacking, `"center"` for streamgraph). This is the opposite of bars: bars default to stacked, areas default to overlap. |
+| **Area stacking is intentional** | Area charts default to **stacked** (`stack: "zero"`) when colored, same as bars. For side-by-side/overlap comparison, set `stack: null` on the y-channel (or `"normalize"` for percentage stacking, `"center"` for streamgraph). |
 | **Y-domain fits the data** | Domain ceiling should be ~5-10% above the highest data value. `[0, 55]` for data peaking at 48.8 wastes space. Use `[0, 52]`. **For bar/column charts with narrow data ranges** (e.g., values between 200 and 280), don't default the floor to 0 - it makes variations invisible. Set the domain floor near the minimum value. Exception: charts where zero is a meaningful baseline (percent change from 0, counts). |
 | **Annotations clear of data AND each other** | The engine auto-resolves annotation-to-annotation collisions, but start with good separation for cleaner results. Prefer 0-2 text annotations; use reflines for additional callouts. On scatter/bubble, use 40-100px offsets into empty quadrants with connectors. When using 2+ text annotations, verify with `playwright-cli`. |
 | **Subtitle is intentional about wrapping** | Unintentional wrapping with orphaned fragments looks broken. Abbreviate, restructure, or use `\n` for explicit line breaks. Use shorthand keys in the subtitle (e.g., `"LI = low-income"`) rather than spelling everything out. |
@@ -439,7 +439,7 @@ Rendering and component behaviors that aren't obvious from the spec alone.
 | --- | --- | --- |
 | Refline labels only support top/bottom | `labelAnchor` on refline annotations only accepts `"top"` or `"bottom"`. Left/right values are accepted in the type but have no visible effect on reflines (they do work on range annotations). | Set `label: ""` on the refline and add a separate `type: "text"` annotation positioned where you want a side label. |
 | Endpoint chip labels wrap by width, not `\n` | The chip+swatch column wraps long series names at `endpointLabels.width` (default 96px). `\n` in the series name does not create a hard break. | Either shorten the series name in the data, or raise `width` if you have horizontal room. |
-| Area defaults to overlap, not stacked | Multi-series area charts now overlap by default. Setting `color` without `stack: "zero"` on the y-channel produces semi-transparent overlapping fills, not a stacked composition. | For share-over-time, opt in with `encoding: { y: { ..., stack: "zero" } }`. For percentage, use `"normalize"`. |
+| Area defaults to stacked, not overlap | Multi-series area charts stack from a zero baseline by default when colored, same as bars. Setting `color` without `stack: null` on the y-channel produces a stacked composition, not overlapping semi-transparent fills. | For overlap/side-by-side, opt out with `encoding: { y: { ..., stack: null } }`. |
 | `connector: 'drop-line'` only flips against the chart edge | The drop-line connector renders a vertical line through the data point's x and lays the label beside it. The auto-flip only checks against the chart area edge -- it does not avoid neighboring marks or other annotations. | Place the annotation away from cluttered regions; if collisions persist, switch to `connector: 'curve'` with a manual `offset`. |
 | DataTable CSS overrides unreliable | Custom CSS targeting `.oc-table-wrapper td` may not apply due to CSS specificity. | Use the DataTable `style` prop for inline overrides: `<DataTable style={{ paddingLeft: 10 }} spec={...} />`. |
 | Scatter plots auto-set `zero: false` | Unlike other chart types, scatter/point marks automatically set `scale.zero: false` on both axes if not explicitly configured. This means scatter domains fit tightly to data. | To include zero, explicitly set `scale: { zero: true }` on the relevant axis. Be aware that scatter and bar/line charts handle zero differently by default. |

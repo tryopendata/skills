@@ -2,7 +2,9 @@
 
 Annotations are the editorial layer on top of data visualizations. They highlight insights, call out outliers, and provide context. Supported on charts and graphs.
 
-The `Annotation` type is a discriminated union on `type` (`'text' | 'range' | 'refline' | 'rule'`). For the full per-variant shape (every field, every default), load `Annotation`, `TextAnnotation`, `RangeAnnotation`, `RuleAnnotation`, and `AnnotationDot` from `index.d.ts`. This file covers the *behavior* the types don't describe — anchoring, collision resolution, what specific fields actually do at render time, and which combinations are gotchas.
+The `Annotation` type is a discriminated union on `type` (`'text' | 'range' | 'refline'`). For the full per-variant shape (every field, every default), load `Annotation`, `TextAnnotation`, `RangeAnnotation`, `RefLineAnnotation`, and `AnnotationDot` from `index.d.ts`. This file covers the *behavior* the types don't describe — anchoring, collision resolution, what specific fields actually do at render time, and which combinations are gotchas.
+
+> `'rule'` is accepted at runtime as a deprecated alias for `'refline'` (the engine rewrites it with a console warning), but the TypeScript type no longer includes it. Always use `'refline'` in new specs.
 
 ## Text Annotation — behavior worth knowing
 
@@ -107,7 +109,7 @@ These are heuristic estimates. The engine can't know the precise rendered width 
 
 ## Reference Line — behavior worth knowing
 
-`RuleAnnotation` (`type: 'refline'`, alias `'rule'`) draws a horizontal or vertical threshold line. Field shape: `RuleAnnotation` in `index.d.ts`. Behavioral notes:
+`RefLineAnnotation` (`type: 'refline'`) draws a horizontal or vertical threshold line. Field shape: `RefLineAnnotation` in `index.d.ts`. Behavioral notes:
 
 - Set `x` for a vertical line, `y` for a horizontal line.
 - Use `style: 'dashed'` for targets/thresholds — dashed reads as "aspirational" vs solid "this is the data."
