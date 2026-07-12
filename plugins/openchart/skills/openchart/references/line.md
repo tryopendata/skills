@@ -64,6 +64,14 @@ Set the y-domain ceiling to roughly 5-10% above the highest data value. A chart 
 
 **Per-series styling:** Use `seriesStyles` to differentiate reference series from primary data (e.g., dashed lines for benchmarks, reduced opacity for context series). See [series-styles.md](series-styles.md) for the full spec.
 
+## Slope and Bump Recipes
+
+Both are line marks, not separate types. They differ from a standard line only in encoding and label config.
+
+**Slope chart** (two time points, "who gained, who lost"): keep `x` to exactly two ordinal values and let each series read as a single connecting segment. Hide the y-axis (`y.axis: false`, `y.scale.zero: false` so the segments spread), suppress the legend, and label both ends with `endpointLabels: { ends: "both", content: "label value" }`. The both-end name+value labels replace the axis.
+
+**Bump chart** (rank position over time): put rank on `y` as quantitative with `scale: { reverse: true, zero: false }` so rank 1 sits at the top, and set `y.axis: { values: [1,2,3,...], format: "ordinal" }` for `1st/2nd/3rd` tick labels. Use `mark: { type: "line", interpolate: "monotone", point: true }` so the rank lines curve between seasons with a dot at each position. Label ends with `endpointLabels: { ends: "both", content: "label", showMarker: false }`.
+
 ## Builder
 
 ```typescript

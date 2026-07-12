@@ -35,6 +35,8 @@ Position-based encodings (bars, lines, point/scatter) beat area and angle-based 
 | Distribution with many observations | Beeswarm (`mark: "beeswarm"`) | Every observation is a dot; grouped lanes compare distributions without hiding individuals |
 | Flow between stages/processes | Sankey | Width encodes volume, path shows where values move |
 
+Two line-mark recipes cover common ranking-over-time stories: a **slope chart** (change between two time points, "who gained and who lost") and a **bump chart** (rank position over several periods, "who overtook whom"). See the *Slope and Bump Recipes* section in [line.md](line.md).
+
 ## Data-Ink Ratio
 
 Tufte's principle: maximize the share of ink devoted to data. Every non-data element (decorative gridlines, background fills, border boxes) should earn its place or get removed.
