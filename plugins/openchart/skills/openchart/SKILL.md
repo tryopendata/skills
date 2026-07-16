@@ -2,12 +2,12 @@
 name: openchart
 description: >
   Generates OpenChart (https://github.com/tryopendata/openchart) chart, table, graph, sankey,
-  and tilemap specs from data, and guides editorial design decisions. Use when creating visualizations,
-  building charts, rendering data tables, generating VizSpec JSON, creating network graphs,
-  building sankey/flow diagrams, building US state tile grid maps, answering questions about OpenChart
-  types and encoding rules, or making design decisions about chart type selection, color strategy,
-  typography, annotations, and editorial framing. Also covers custom D3.js infographics for cases
-  beyond declarative specs.
+  tilemap, and geo map specs from data, and guides editorial design decisions. Use when creating
+  visualizations, building charts, rendering data tables, generating VizSpec JSON, creating network
+  graphs, building sankey/flow diagrams, building US state tile grid maps, building choropleth or
+  symbol maps from TopoJSON, answering questions about OpenChart types and encoding rules, or making
+  design decisions about chart type selection, color strategy, typography, annotations, and
+  editorial framing. Also covers custom D3.js infographics for cases beyond declarative specs.
 ---
 
 # Data Visualization with OpenChart
@@ -21,13 +21,13 @@ description: >
 
 Try these locations in order; stop at the first one that resolves:
 
-1. **Installed package** (most common): `node_modules/@opendata-ai/openchart-core/dist/index.d.ts`. The full chart, table, graph, sankey, and tilemap spec surface is rolled into this single bundled `.d.ts`.
+1. **Installed package** (most common): `node_modules/@opendata-ai/openchart-core/dist/index.d.ts`. The full chart, table, graph, sankey, tilemap, and map spec surface is rolled into this single bundled `.d.ts`.
 2. **Source repo** (if you're working in the openchart monorepo): `packages/core/src/types/spec.ts` and `packages/core/src/types/layout.ts`. JSDoc comments here are richer than the bundled `.d.ts`.
 3. **Published CDN** (no local install, network available): `https://unpkg.com/@opendata-ai/openchart-core/dist/index.d.ts` (redirects to the latest published version).
 4. **GitHub raw** (if unpkg is unreachable, or you want the richer source JSDoc): `https://raw.githubusercontent.com/tryopendata/openchart/main/packages/core/src/types/spec.ts`. For version-exact types, pin to a release tag instead of `main`: `https://raw.githubusercontent.com/tryopendata/openchart/core-v<version>/packages/core/src/types/spec.ts`, matching `<version>` to the installed `@opendata-ai/*` package version. Note `main` may document unpublished surface.
 5. **Fallback:** if none of the above are reachable (no filesystem, no network fetch), use the type sketches in this skill and **flag the uncertainty** in your response so the user knows you authored without canonical types.
 
-The names worth grepping for once you have a types file open: `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec`, `MarkType` (the 16-mark union), `Encoding`, `EncodingChannel`, `MarkDef`, `Chrome`, `Metric`, `EndpointLabelsConfig`, `Annotation` (union), `TextAnnotation`, `RangeAnnotation`, `RefLineAnnotation`, `LegendConfig`, `LabelSpec`, `SeriesStyle`, `AnimationSpec`, `ThemeConfig`, `A11yConfig`, `SeriesSearchConfig`, `YouDrawItConfig`.
+The names worth grepping for once you have a types file open: `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec`, `MapSpec` (+ `MapGeo`, `MapPointsLayer`), `MarkType` (the 16-mark union), `Encoding`, `EncodingChannel`, `MarkDef`, `Chrome`, `Metric`, `EndpointLabelsConfig`, `Annotation` (union), `TextAnnotation`, `RangeAnnotation`, `RefLineAnnotation`, `LegendConfig`, `LabelSpec`, `SeriesStyle`, `AnimationSpec`, `ThemeConfig`, `A11yConfig`, `SeriesSearchConfig`, `YouDrawItConfig`.
 
 ## Rendering via MCP
 
@@ -55,7 +55,7 @@ The types tell you the shape of a valid spec. This skill carries the things type
 
 If you find yourself restating a field shape this skill already documents, prefer the types — they're authoritative and won't drift.
 
-**Core concept:** Write a VizSpec JSON object, render with `<Chart>` / `<DataTable>` / `<Graph>` / `<Sankey>` / `<TileMap>` (React/Vue/Svelte) or `createChart()` / `createTable()` / `createGraph()` / `createSankey()` / `createTileMap()` (vanilla JS). The engine validates, compiles, and renders. Specs are plain JSON, no imperative drawing. See https://github.com/tryopendata/openchart for the rendering engine.
+**Core concept:** Write a VizSpec JSON object, render with `<Chart>` / `<DataTable>` / `<Graph>` / `<Sankey>` / `<TileMap>` / `<GeoMap>` (React/Vue/Svelte) or `createChart()` / `createTable()` / `createGraph()` / `createSankey()` / `createTileMap()` / `createMap()` (vanilla JS). The engine validates, compiles, and renders. Specs are plain JSON, no imperative drawing. See https://github.com/tryopendata/openchart for the rendering engine.
 
 **CSS is required.** OpenChart's stylesheet must be loaded for proper rendering (chrome, tables, tooltips, brand watermark). Framework imports handle this automatically, but CDN/standalone HTML needs an explicit `<link>`:
 
@@ -81,6 +81,7 @@ Daily value over a year?     -> calendar (GitHub-style heatmap)
 Nodes + edges / network?     -> graph (force/radial/hierarchical layout)
 Flow between stages?         -> sankey (source/target/value)
 US state-level data?         -> tilemap (state codes + values, equal-weight grid)
+Real geography / shapes?     -> map (TopoJSON choropleth; counties, countries, or points over a basemap)
 Tabular data overview?       -> table (with sparklines, heatmaps, bars)
 Scroll-driven narrative?     -> chart story (base spec + patch steps, see references/story.md)
 Default                      -> bar
@@ -112,6 +113,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 | `type: "graph"` | Networks, relationships, hierarchies | nodes + edges | [references/graph.md](references/graph.md) |
 | `type: "sankey"` | Flows between stages/processes | source + target + value | [references/sankey.md](references/sankey.md) |
 | `type: "tilemap"` | US state-level data (equal-weight grid) | state codes + values | [references/tilemap.md](references/tilemap.md) |
+| `type: "map"` | Real geography: choropleth + symbol maps | TopoJSON + join key + color value; optional lat/lon points | [references/map.md](references/map.md) |
 
 **Bar orientation:** The engine infers orientation from encoding. `x: nominal/ordinal + y: quantitative` = vertical (column-style). `x: quantitative + y: nominal/ordinal` = horizontal bar. Override with `mark: { type: "bar", orient: "horizontal" | "vertical" }`.
 
@@ -157,6 +159,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 | Entrance animations, easing, stagger, reduced motion | [animation.md](references/animation.md) |
 | Sankey diagram (flows between stages) | [sankey.md](references/sankey.md) |
 | US state tile grid map | [tilemap.md](references/tilemap.md) |
+| Geo map: choropleth, symbol/point layer, projections, TopoJSON joins | [map.md](references/map.md) |
 | Scroll-driven chart story (scrollytelling) | [story.md](references/story.md) |
 | Final design quality check | [design-review.md](references/design-review.md) |
 | Checking rendered output for defects | [visual-qa.md](references/visual-qa.md) |
@@ -169,9 +172,9 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 ## Spec discriminant
 
 - **Charts** use `mark` (16 marks: `"bar"`, `"line"`, `"area"`, `"point"`, `"circle"`, `"arc"`, `"text"`, `"rule"`, `"tick"`, `"rect"`, `"lollipop"`, `"beeswarm"`, `"range"`, `"waffle"`, `"calendar"`, `"parliament"`).
-- **Tables, graphs, sankey, tilemap** use `type` (`"table"` | `"graph"` | `"sankey"` | `"tilemap"`).
+- **Tables, graphs, sankey, tilemap, geo maps** use `type` (`"table"` | `"graph"` | `"sankey"` | `"tilemap"` | `"map"`).
 
-For the full top-level shape — every optional field, exact enum values, defaults — load `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec` from `index.d.ts` (see "Source of truth" above).
+For the full top-level shape — every optional field, exact enum values, defaults — load `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec`, `MapSpec` from `index.d.ts` (see "Source of truth" above).
 
 **Behavior worth knowing that the types don't tell you:**
 
@@ -422,12 +425,13 @@ Run these checks before outputting a spec. These catch the issues that most ofte
 | Bar chart for time series | Use line for temporal data; bar with vertical orientation for periodic categories |
 | Using chart mark for network data | Use `type: "graph"` with nodes + edges |
 | Using chart mark for US state data | Use `type: "tilemap"` with state code keys |
+| Hand-rolling D3 for choropleths or symbol maps | Use `type: "map"` with TopoJSON from us-atlas/world-atlas. See [map.md](references/map.md) |
 | Not specifying axis format for currency/pct | Add `axis: { format: "$,.0f" }` or `".1f%"` |
 | Using `".1%"` when data is already in percent form | `".1%"` multiplies by 100 (d3 convention). If data is `12.5` meaning 12.5%, use `".1f%"` (literal suffix) |
 | Axis format and label format inconsistent | Set both `axis.format` and `labels.format` to the same pattern so ticks and data labels match |
 | Using `darkMode: "auto"` in class-based dark mode apps | `"auto"` checks `prefers-color-scheme` only. For class-based toggles (Astro, Next.js), observe DOM and map to `"force"`/`"off"`. See [rendering](references/rendering.md) |
 | Temporal scale with `nice: true` (default) creating dead space | `nice` rounds the domain outward (e.g., `2010-01` becomes `2008`). Set `scale: { domain: ["2010-01", "2026-01"], nice: false }` for precise control |
-| Using `type` instead of `mark` for charts | Charts use `mark: "line"` (not `type: "line"`). Only tables, graphs, sankey, and tilemap use `type`. |
+| Using `type` instead of `mark` for charts | Charts use `mark: "line"` (not `type: "line"`). Only tables, graphs, sankey, tilemap, and geo maps use `type`. |
 
 For design anti-patterns (titles, color, annotations), see [design review](references/design-review.md).
 
@@ -449,7 +453,7 @@ Rendering and component behaviors that aren't obvious from the spec alone.
 
 ## Custom D3.js Infographics
 
-When a visualization goes beyond what declarative specs can handle (creative metaphors, unusual layouts, treemaps, generative art), fall back to raw D3.js + SVG. Note: sankey and tilemap are first-class types with their own spec formats (see [references/sankey.md](references/sankey.md) and [references/tilemap.md](references/tilemap.md)), and **scrollytelling is now first-class too** -- use the chart story API (base spec + patch steps) instead of hand-rolling D3 scroll effects (see [references/story.md](references/story.md)). Use the D3 reference only for heavily customized layouts. These references cover D3 implementation patterns:
+When a visualization goes beyond what declarative specs can handle (creative metaphors, unusual layouts, treemaps, generative art), fall back to raw D3.js + SVG. Note: sankey, tilemap, and geo maps (choropleth + symbol) are first-class types with their own spec formats (see [references/sankey.md](references/sankey.md), [references/tilemap.md](references/tilemap.md), and [references/map.md](references/map.md)), and **scrollytelling is now first-class too** -- use the chart story API (base spec + patch steps) instead of hand-rolling D3 scroll effects (see [references/story.md](references/story.md)). Use the D3 reference only for heavily customized layouts. These references cover D3 implementation patterns:
 
 | Topic | Reference |
 | --- | --- |

@@ -65,10 +65,10 @@ Only used with tabular `DataRow[]` input. Auto-generated for record maps.
 For the full shape, load `TileMapSpec` from `index.d.ts`. Behavior worth knowing:
 
 - `data` accepts either `Record<string, number | null>` (state code → value, encoding auto-generated) or `DataRow[]` (requires explicit `encoding.state` + `encoding.value`).
-- `palette` defaults to `'blue'`. Allowed values: `'blue' | 'green' | 'orange' | 'purple'`.
+- `palette` defaults to `'blue'`. Allowed values: `'blue' | 'green' | 'orange' | 'purple' | 'teal'`.
 - `watermark` defaults to `true`.
 - `darkMode` defaults to `'off'` here, unlike charts which default to `'auto'`.
-- `valueFormat` accepts d3-format with literal suffix extension (e.g. `".1f%"`, `"$,.0f"`, `"~s"`).
+- `valueFormat` accepts d3-format with literal suffix extension (e.g. `".1f%"`, `"$,.0f"`, `"~s"`). **Deprecated** in favor of `encoding.value.format` -- but `encoding` only exists for tabular `DataRow[]` input, so the record-map data shape (no `encoding`) still relies on the top-level `valueFormat`.
 
 ## Palette Options
 
@@ -80,6 +80,7 @@ Sequential color scales applied to tile fills. The color scale maps from `min(va
 | `'green'` | Green sequential ramp. |
 | `'orange'` | Orange sequential ramp. |
 | `'purple'` | Purple sequential ramp. |
+| `'teal'` | Teal sequential ramp. |
 
 In dark mode, palette stop order is reversed so higher values get lighter (more visible) colors against the dark background.
 
@@ -183,24 +184,29 @@ States without data get a neutral fill. Useful for highlighting a subset.
 | Situation | Use |
 | --- | --- |
 | US state-level data, equal visual weight per state | Tile map |
-| Geographic data needing accurate shapes/areas | Choropleth (GeoJSON projection, use D3 directly) |
+| Geographic data needing accurate shapes/areas (counties, countries, or emphasis on big states) | Geo map (`type: "map"`, first-class — see [map.md](map.md)) |
 | Comparing exact values across states | Bar chart (more precise than color) |
 | Time series by state | Line chart with color encoding |
 | Single-state deep dive | Bar or table |
 
 ## Value Formatting
 
-Use `valueFormat` to format values on tiles, in the gradient legend, and in tooltips:
+For tabular `DataRow[]` input, use `encoding.value.format` to format values on tiles, in the gradient legend, and in tooltips:
 
 ```json
 {
   "type": "tilemap",
-  "valueFormat": ".1f%",
-  "data": { "CA": 4.4, "TX": 17.6 }
+  "data": [{ "code": "CA", "rate": 4.4 }, { "code": "TX", "rate": 17.6 }],
+  "encoding": {
+    "state": { "field": "code", "type": "nominal" },
+    "value": { "field": "rate", "type": "quantitative", "format": ".1f%" }
+  }
 }
 ```
 
 Accepts d3-format strings with literal suffix extension. Common patterns: `".1f%"` (append %), `"$,.0f"` (currency), `"~s"` (SI like 10k).
+
+The top-level `valueFormat` still works and is the only option for the record-map data shape (`data: Record<string, number>`), which has no `encoding`, but it's deprecated for tabular input in favor of the encoding channel field.
 
 ## Legend
 
