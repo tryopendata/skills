@@ -8,13 +8,14 @@ Prefer this over hand-rolled D3 scroll effects. The story API rides the same eng
 
 ## Import
 
-The story API is a vanilla subpath. It is not exported from the main barrel:
+Framework wrappers exist in all three packages, and vanilla exposes the factory on a subpath (not the main barrel):
 
-```js
-import { createChartStory } from '@opendata-ai/openchart-vanilla/story';
+```tsx
+import { ChartStory } from '@opendata-ai/openchart-react'; // same name in vue/svelte
+// vanilla: import { createChartStory } from '@opendata-ai/openchart-vanilla/story';
+
+<ChartStory spec={baseSpec} steps={steps} narrative={narrative} />
 ```
-
-There is no React/Vue/Svelte wrapper yet; drive it from vanilla inside your framework's mount hook.
 
 ## Model: base spec + cumulative patch steps
 
@@ -73,4 +74,5 @@ Practical consequence: **design steps that stay within the morph gate when you w
 
 - **Patches are cumulative, not independent.** To *undo* something a prior step set, a later step must patch it back explicitly -- there's no automatic reset between steps. Scrolling backward re-resolves from the base, so reverse scrolling is consistent.
 - **`highlight: null` does not clear a prior highlight.** It maps to `undefined` in the patch, and a deep-merge skips `undefined`, so the accumulated highlight from an earlier step carries through. To actually de-highlight in a later step, pass an explicit `highlight: []`.
-- **Vanilla only.** Inside React/Vue/Svelte, create the story in a mount effect and `destroy()` on cleanup; don't expect a `<ChartStory>` component.
+- **Disable the entrance phase on the base spec.** With `animation: true`, a step change that lands while the entrance animation is still playing (roughly the first 1-3 seconds after mount, depending on mark count) snaps instead of tweening — a reader who scrolls immediately sees the first transition jump. Use `animation: { enter: false }` on the base spec; update/exit transitions stay enabled.
+- **Rapid scroll is safe.** Steps arriving mid-transition retarget from the current interpolated position (mid-morph paths freeze and crossfade); however fast the reader scrubs, the chart settles on the last step with nothing orphaned. Reduced motion snaps every step with no configuration.
