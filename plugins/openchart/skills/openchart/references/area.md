@@ -20,16 +20,16 @@ Same encoding as line charts. Use area when you want to emphasize the magnitude 
 
 ## Stacking (Multi-Series)
 
-**Multi-series area charts default to overlap, not stacked.** Each series renders as a semi-transparent fill drawn over the others. This is the opposite of bars (which default to stacked when colored).
+**Multi-series area charts default to stacked, not overlap.** Each series renders as a cumulative layer from a zero baseline. This matches bars (which also default to stacked when colored).
 
 | `encoding.y.stack` | Result |
 |---|---|
-| `undefined` (default) / `false` / `null` | Overlap. Each series fills from baseline to its own value, with reduced opacity so layers show through. Use for absolute values where comparing magnitudes per series matters. |
-| `"zero"` / `true` | Stacked from zero. Use for composition / share-over-time. |
+| `undefined` (default) / `true` / `"zero"` | Stacked from zero. Use for composition / share-over-time. |
+| `null` / `false` | Overlap. Each series fills from baseline to its own value, with reduced opacity so layers show through. Use for absolute values where comparing magnitudes per series matters. |
 | `"normalize"` | Percentage stack. Domain becomes [0, 1]; each x sums to 100%. Use for share-of-total trends. |
 | `"center"` | Streamgraph (centered around a baseline). Use for aesthetic flow visualization where exact values are secondary. |
 
-**Pick by story:** "How did each series move?" -> overlap. "How did the mix shift?" -> `"zero"` or `"normalize"`.
+**Pick by story:** "How did the mix shift?" -> stacked (default) or `"normalize"`. "How did each series move independently?" -> `stack: null` for overlap.
 
 ## Crosshair
 

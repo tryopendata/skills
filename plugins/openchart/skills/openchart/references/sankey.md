@@ -38,7 +38,7 @@ For the full shape (`SankeySpec`, sankey `Encoding`, sankey-specific layout fiel
 | `linkStyle` | `'gradient'` |
 | `linkOpacity` | 0.5 light / 0.75 dark (auto-adjusted unless explicitly set) |
 
-`valueFormat` accepts d3-format strings with literal suffix extension (e.g. `".0f%"` appends %, `"$~s"` for $10k).
+`encoding.value.format` accepts d3-format strings with literal suffix extension (e.g. `".0f%"` appends %, `"$~s"` for $10k). The top-level `valueFormat` is deprecated in favor of this.
 
 ## Layout Options
 
@@ -154,17 +154,19 @@ For the full shape (`SankeySpec`, sankey `Encoding`, sankey-specific layout fiel
 
 ## Value Formatting
 
-Use `valueFormat` to format flow values in tooltips and ARIA labels:
+Use `encoding.value.format` to format flow values in tooltips and ARIA labels:
 
 ```json
 {
   "type": "sankey",
-  "valueFormat": ".0f%",
+  "encoding": {
+    "value": { "field": "amount", "type": "quantitative", "format": ".0f%" }
+  },
   "data": [...]
 }
 ```
 
-Accepts d3-format strings with literal suffix extension. Common patterns: `".0f%"` (append %), `"$,.0f"` (currency), `"$~s"` (SI currency like $10k).
+Accepts d3-format strings with literal suffix extension. Common patterns: `".0f%"` (append %), `"$,.0f"` (currency), `"$~s"` (SI currency like $10k). The top-level `valueFormat` still works but is deprecated in favor of the encoding channel field.
 
 ## Dark Mode
 

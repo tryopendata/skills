@@ -10,40 +10,40 @@ The `Annotation` type is a discriminated union on `type` (`'text' | 'range' | 'r
 
 **`x` / `y` are data coordinates.** They resolve to pixels through the same scales as data marks, so annotations stay stable across responsive resizes. Always set them to the actual data point you're annotating; use `offset` to push the label into clear space.
 
-**`text` supports `\n`** for hard line breaks. Multi-line text is center-aligned by default — the renderer hardcodes `text-anchor: middle` for multi-line. If you need per-side alignment on multi-line text, you'll need to override at the renderer level.
+**`text` supports `\n`** for hard line breaks and **`**bold**` spans** for inline emphasis: `"Inflation peaked at **8.5%**"`. Emphasis belongs on the key phrase, not the whole block — that's the NYT/Datawrapper voice. Only matched pairs turn bold; an unmatched `**` renders literally. Bold spans work in `subtitle` too.
+
+**Text is never center-aligned.** Lines align on the edge facing the data point: left-aligned (ragged right) by default, right-aligned when `anchor: 'left'` puts the block to the left of the point. That's about how the lines sit against each other, not where the block lands: a `top`/`bottom` anchored block still straddles its data point horizontally, so "above" means above. Don't hand-compute a negative `dx` to re-center it — the engine already does.
 
 **`subtitle`** renders a muted second-tone line below `text`. Use for "(methodology note)" or a source citation that belongs with the callout. Multi-line `text` still produces a multi-line primary block; `subtitle` is a separate block underneath.
 
-**`dot`** draws an open-ring marker at the connector's data-point endpoint (where the line meets the data). Useful when the connector ends in a busy region and the eye needs an explicit "this exact point" cue. `dot: true` uses the default style (transparent fill, theme-text stroke, radius 5); pass an `AnnotationDot` object to override `radius`, `fill`, `stroke`, or `strokeWidth`.
+**The lede rule:** when a `subtitle` is present and you set no `fontWeight`, the primary `text` resolves to weight 700 and the subtitle stays 400. That's the "Feb. 25 / 2015 maximum" stack. Set `fontWeight` explicitly to opt out.
 
-**`anchor`** is the direction the label sits relative to the data point: `'top' | 'bottom' | 'left' | 'right' | 'auto'`. `'auto'` checks if the data point is in the upper or lower half of the chart and places the label in the opposite half with an 8px offset — that's it. Not intelligent whitespace detection. For predictable results with 2+ annotations, always specify explicit `anchor` and `offset`.
+**`dot`** draws an open-ring marker on the data point itself. You get one **by default** whenever a connector is enabled and carries no arrowhead — straight leaders and drop-lines included. An arrowed connector gets no marker unless you ask for one (the arrowhead already marks the spot). `dot: false` gives a bare label; an explicit `dot` always wins. Default style: theme-background fill (the open ring), stroke matching the connector, radius 4, strokeWidth 1.5. Pass an `AnnotationDot` object to override any of those.
 
-**`connector`** is `boolean | 'straight' | 'curve' | 'drop-line'`:
+**`anchor`** is the direction the label sits relative to the data point: `'top' | 'bottom' | 'left' | 'right' | 'auto'`. `'auto'` checks if the data point is in the upper or lower half of the chart and places the label in the opposite half with a 28px offset — that's it. Not intelligent whitespace detection. For predictable results with 2+ annotations, always specify explicit `anchor` and `offset`.
 
-- `true` / `'straight'`: straight line from label to anchor point.
-- `'curve'`: curved arrow with arrowhead.
+**`connector`** is `boolean | 'straight' | 'curve' | 'drop-line'` (or `{ type, arrow? }` for explicit arrow control):
+
+- `true` / `'straight'`: straight line from label to anchor point, no arrowhead. Gray hairline.
+- `'curve'`: single quadratic arc with a small open-V arrowhead, drawn in the label's text ink. This is the emphasis voice — use it for the one callout that carries the story.
 - `'drop-line'`: vertical line through the data point's x; label sits beside the line and auto-flips to the opposite side if it would overflow the chart area. **Caveat:** the auto-flip only checks against the chart edge — it does not avoid neighboring marks or other annotations. Place these in clear regions.
 - `false`: no connector.
+
+The connector leaves the text block (primary text plus subtitle, as one box) on the side facing the data point, with a 6px standoff, and stops short of the marker at the other end. **Short connectors are dropped:** a leader under 8px, or one whose data point sits inside the text block, is suppressed and only the marker renders. A plain `{ type: 'text' }` with no `offset` sits 28px off the point, so it draws a ring *and* a real leader with zero authoring — you only lose the line by pulling the label back onto its own marker.
 
 **`halo`** is on by default — it paints a stroke halo behind the text using the theme's background color, knocking out chart lines that pass behind. Set `halo: false` when the annotation text is white or light-colored sitting on a colored background (the halo would make the text invisible). Use `background` instead for an explicit rect.
 
 **`responsive`** defaults to `true`, which means the annotation **hides at compact breakpoints (< 400px)**. Set `responsive: false` on annotations that must always be visible.
 
-**`subtitle`:** A second muted line under `text`. Use for "(methodology note)" or a source citation that belongs with the callout. Renders in a smaller, dimmer style than the primary text. Multi-line `text` (with `\n`) still produces a multi-line primary block; `subtitle` is a separate block underneath.
-
-**`dot`:** Draws an open-ring marker at the connector's data-point end (where the line meets the data). Useful when the connector ends in a busy region and the eye needs an explicit "this exact point" cue. Default style is an open ring (transparent fill, theme-text stroke, radius 5).
-
-**`'drop-line'` connector:** Renders a vertical line through the data point's x-coordinate, with the label sitting beside the line. The label auto-flips to the opposite side if it would overflow the chart area. Good for time-series callouts where you want the eye to follow the x-position down to the axis. Note: only flips against the chart edge -- it does not avoid neighboring marks or other annotations, so place it in a clear region.
-
 **Series-anchored text annotations:** When a text annotation's `(x, y)` lands on a colored series and the user toggles that series off via the legend, the annotation is suppressed (it would drift onto a different scale). It comes back when the series is re-shown. Range and refline annotations pass through legend toggles unchanged because they anchor to constant axis values, not series.
 
 **Tips:**
-- Use `\n` in `text` for multi-line annotations
+- Use `\n` in `text` for multi-line annotations and `**bold**` for the key phrase inside a sentence
 - Text annotations get a paint-order stroke halo by default (using the theme's background color) that knocks out chart lines behind the text without needing an explicit background rect
 - Set `halo: false` when the annotation text is white or light-colored and sits on a colored element -- the halo would make the text invisible. Use `background` instead for an explicit rect.
-- Set `background` to a color string for an explicit background rect instead of the default halo
-- `connector` defaults to `true` (straight line from label to point)
-- `"curve"` connector draws a curved arrow with arrowhead
+- Set `background` to `true` (theme surface, follows light/dark) or a color string for an explicit background rect instead of the default halo
+- `connector` defaults to `true` (straight gray leader from label to point, with an open-ring marker on the point)
+- `"curve"` connector draws a single arc in the label's ink with an open-V arrowhead — reserve it for the one callout that carries the story
 - `anchor: "auto"` lets the engine pick a position (see details below)
 - `responsive: false` keeps the annotation visible at compact breakpoints (< 400px). Default behavior hides all annotations at compact sizes.
 
@@ -74,10 +74,12 @@ Understanding what the engine does (and doesn't do) helps you write annotations 
 - Resolves annotation `x`/`y` data coordinates to pixel positions via the same d3 scales used for data points
 - Nudges text annotations away from obstacle rects (legend bounds, band-scale mark bounds) so annotations don't land on the legend
 - Resolves annotation-to-annotation collisions using a greedy algorithm: if two text annotations overlap, the second one is repositioned to the nearest non-colliding spot (below, above, left, or right)
-- Recomputes connector origins after any nudging so connectors still point correctly
+- Rebuilds connectors after any nudge, clamp, or auto-placement so they still exit the text block on the side facing the point (the subtitle moves with its label, and the connector re-derives from the data point, not from its previous pulled-back end)
+- Suppresses a connector that would be shorter than 8px or would have to cross its own label
 - Hides annotations at compact breakpoints (< 400px width) unless the annotation has `responsive: false`
+- Demotes crowded callouts to numbered footnotes at narrow widths (thinning). Labels that sit in the chart margin — above a peak, below a trough — are fine; only labels escaping the chart entirely get demoted.
 
-**What `anchor: "auto"` actually does:** Checks if the data point is in the upper or lower half of the chart area. Upper half places the label below-right with an 8px offset; lower half places it above-right with an 8px offset. This is simple heuristic placement, not intelligent whitespace detection. For predictable results, always specify explicit `anchor` and `offset` values.
+**What `anchor: "auto"` actually does:** Checks if the data point is in the upper or lower half of the chart area. Upper half places the label below-right with a 28px offset; lower half places it above-right with a 28px offset. This is simple heuristic placement, not intelligent whitespace detection. For predictable results, always specify explicit `anchor` and `offset` values.
 
 **Practical limits of auto-collision resolution:** The engine's greedy algorithm works best when annotations start in different areas of the chart. If all annotations cluster in the same region, the nudging can push labels into awkward positions. Give the engine a head start by placing annotations in distinct zones.
 
@@ -85,9 +87,10 @@ Understanding what the engine does (and doesn't do) helps you write annotations 
 
 These rough estimates help you reason about whether annotations will fit. They match the engine's internal text measurement.
 
-- **Text width:** `characters * fontSize * 0.55` (default fontSize is 12). A 20-character annotation is roughly `20 * 12 * 0.55 = 132px`. Bold text (fontWeight 700) adds ~8% width.
-- **Text height:** `lines * fontSize * 1.3`. A single line at 12px = ~16px tall.
-- **Multi-line text** (`\n`): the widest line determines bounding box width. Multi-line text is center-aligned.
+- **Text width:** `characters * fontSize * 0.55` (default fontSize is 13). A 20-character annotation is roughly `20 * 13 * 0.55 = 143px`. Bold text (fontWeight 700, including `**bold**` spans) adds ~8% width.
+- **Text height:** `lines * fontSize * 1.3`. A single line at 13px = ~17px tall.
+- **Multi-line text** (`\n`): the widest line determines bounding box width. With `anchor: 'top'`/`'bottom'` the block is centered on the data point; with `anchor: 'left'`/`'right'` it hangs off the facing edge.
+- **`subtitle`:** adds another block underneath at 0.85x the primary font size, plus a 2px gap.
 
 These are heuristic estimates. The engine can't know the precise rendered width without a real font metric context. When placement is critical (scatter/bubble with multiple annotations), use the `playwright-cli` skill to screenshot and verify.
 

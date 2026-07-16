@@ -12,12 +12,12 @@ Part-to-whole composition. Both use `mark: "arc"`. Donut is preferred over pie (
 | Channel | Required | Allowed types |
 | --- | --- | --- |
 | x | No | (not used) |
-| y | Yes | quantitative |
+| theta | Yes | quantitative |
 | color | Yes | nominal, ordinal |
 | size | No | quantitative |
 | detail | No | nominal |
 
-No x-axis. The `y` channel is the slice value, `color` is the category.
+No x-axis. The `theta` channel is the slice value (canonical in v8), `color` is the category. `y` is still accepted as a deprecated alias for `theta` on arc/waffle/parliament marks.
 
 ## Spec shape
 
@@ -30,7 +30,7 @@ For the full `MarkDef` for `mark: "arc"` and the encoding surface, load `MarkDef
 ```typescript
 import { pieChart } from "@opendata-ai/openchart-core";
 
-// pieChart(data, category, value) - category maps to color, value maps to y
+// pieChart(data, category, value) - category maps to color, value maps to theta
 // For a pie: pieChart produces mark: "arc"
 // For a donut: pieChart(data, cat, val, { innerRadius: 40 }) produces mark: { type: "arc", innerRadius: 40 }
 const spec = pieChart(data, "source", "share", {
@@ -50,7 +50,7 @@ const spec = pieChart(data, "source", "share", {
     { "source": "Other", "share": 9 }
   ],
   "encoding": {
-    "y": { "field": "share", "type": "quantitative" },
+    "theta": { "field": "share", "type": "quantitative" },
     "color": { "field": "source", "type": "nominal" }
   },
   "chrome": {
@@ -65,7 +65,7 @@ const spec = pieChart(data, "source", "share", {
 
 When the story is "how many out of 100" (concrete counts, not just an angle), reach for `mark: "waffle"` instead of arc. It draws a unit grid where each cell is a fraction of the whole.
 
-- **Encoding:** `color` is the category (required); the quantitative share goes on `y` (aliased as `theta`, the same part-to-whole channel arc uses). No positional axes.
+- **Encoding:** `color` is the category (required); the quantitative share goes on `theta` (the same part-to-whole channel arc uses; `y` is still accepted as a deprecated alias). No positional axes.
 - **`units`** (default 100) sets the total cell count -- the "x of 100" framing. **`columns`** (default 10) sets grid width; rows derive from `units / columns` (so the default is a 10x10 square).
 - Shares normalize to `units` via largest-remainder rounding, so cells always sum exactly. A small nonzero share can round to **0 cells** -- there's deliberately no minimum-one-cell floor -- but the category still appears in the legend.
 - Use `color.highlight` to single out one category against grayed cells.

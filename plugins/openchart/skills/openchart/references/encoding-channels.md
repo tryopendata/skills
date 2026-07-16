@@ -63,7 +63,7 @@ The `stack` property on a quantitative encoding channel controls how multi-serie
 | Mark | Default | Why |
 | --- | --- | --- |
 | `bar` (vertical column or horizontal bar) | **Stacked** (`"zero"`) when colored | Bars side-by-side overlap visually; stacking is the readable default |
-| `area` | **Overlap** (no stacking) when colored | Each series fills from baseline; semi-transparent layers show through |
+| `area` | **Stacked** (`"zero"`) when colored | Composition/share-over-time is the readable default; matches bars |
 | `line` | n/a | Lines never stack -- they always overlay |
 
 **Values:**
