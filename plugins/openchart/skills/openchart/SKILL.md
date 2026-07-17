@@ -31,9 +31,14 @@ The names worth grepping for once you have a types file open: `ChartSpec`, `Tabl
 
 ## Rendering via MCP
 
-If you have access to the OpenData MCP `visualize` tool, use it to render specs interactively. Pass the spec object and data array directly to `visualize` -- it handles rendering, theming, and responsive layout. The spec format is the same OpenChart JSON described in this skill.
+If you have access to the OpenData MCP `openchart` tool, use it to render specs interactively -- it handles rendering, theming, and responsive layout. Two ways to call it:
 
-When `visualize` is not available, output the spec as JSON for the user to render with `<Chart>` / `createChart()` (see [rendering reference](references/rendering.md)).
+- **Quick chart:** pass `chartType` (`bar`, `line`, `area`, `point`, `arc`, `lollipop`, `circle`, `rect`, `tick`) plus the field names (`x`, `y`, `color`). Good for the common x/y shapes.
+- **Full control:** pass a `spec` object (the OpenChart JSON described in this skill) -- required for marks the quick `chartType` list doesn't cover (`range`, `waffle`, `calendar`, `parliament`, `beeswarm`, `text`, `rule`) and for any encoding/chrome/annotation options.
+
+Feed data with `sql` (the tool re-runs your previous `query_sql` -- preferred, don't copy rows) or inline `data` rows (keep under 1000). The tool's own description carries version-pinned links to the full schema for constrained generation.
+
+When the `openchart` tool is not available, output the spec as JSON for the user to render with `<Chart>` / `createChart()` (see [rendering reference](references/rendering.md)).
 
 **Structured outputs (tool-use / constrained generation).** OpenChart ships a published JSON Schema and a generated `llms.txt`, both derived from the spec types so they never drift:
 
