@@ -8,7 +8,7 @@ Real-geography maps rendered from TopoJSON: choropleths (features filled by a qu
 
 ```tsx
 import { GeoMap } from '@opendata-ai/openchart-react'; // same name in vue/svelte
-// vanilla: import { createMap } from '@opendata-ai/openchart-vanilla'
+// vanilla: import { createGeoMap } from '@opendata-ai/openchart-vanilla'
 
 <GeoMap spec={mapSpec} />
 ```
@@ -47,7 +47,7 @@ Both packages are public-domain data (US Census / Natural Earth) under ISC. Pass
 - `geo.projection`: `"albersUsa"` (default, AK/HI insets) | `"mercator"` | `"equalEarth"` | `"identity"` (pre-projected atlases only).
 - `encoding.key`: the data field that joins rows to feature ids. Required for choropleth; optional in basemap-only mode.
 - `encoding.color`: drives feature fill. Quantitative gets a **quantile** color scale (maps always bin by quantile) with a continuous legend; nominal gets categorical fills via `scale.domain`/`scale.range`.
-- For the full shape, load `MapSpec`, `MapGeo`, `MapEncoding`, `MapPointsLayer` from `index.d.ts`.
+- For the full shape, load `GeoMapSpec`, `GeoMapGeo`, `GeoMapEncoding`, `GeoMapPointsLayer` from `index.d.ts`.
 
 ## The join (where every geo tool dies)
 

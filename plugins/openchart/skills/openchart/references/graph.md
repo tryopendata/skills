@@ -30,7 +30,8 @@ encoding: {
 | Channel | Effect | Type constraint |
 | --- | --- | --- |
 | nodeColor | Color nodes by category or value | nominal, ordinal, quantitative |
-| nodeSize | Scale node radius by value (3-12px) | quantitative |
+| nodeSize | Scale node radius by value. `scale.type` defaults to `'sqrt'`; set `'linear'` for a linear ramp. `scale.range` sets the px extent (default `[3, 12]`) | quantitative |
+| nodeOpacity | Opacity mapping for nodes. Quantitative maps linearly to `[0.25, 1]`; `scale.range` overrides. No `edgeOpacity` channel exists (edge alpha is owned by interaction) | nominal, ordinal, quantitative |
 | edgeColor | Color edges by category or value | nominal, ordinal, quantitative |
 | edgeWidth | Scale edge width by value (0.5-4px) | quantitative |
 | edgeStyle | Map edge line style (solid/dashed/dotted) | nominal, ordinal |
@@ -38,9 +39,13 @@ encoding: {
 
 When `nodeColor` encoding is set, it takes precedence over community-based coloring from `layout.clustering`. Communities still affect spatial grouping, but colors come from the encoding.
 
+**Channel `sort`** (graph channels only): defaults to `'ascending'` for a stable category order. This is a deliberate divergence from chart channels, which keep data order. Remedy to restore data order: `sort: null`. **Channel `highlight`** (a value list, e.g. `nodeColor: { highlight: ['Design'] }`): emphasizes those categories on load and dims the rest. Distinct from the runtime `highlight()` verb and `interaction.hover.mode`.
+
 ## Node Overrides
 
-`nodeOverrides` is `Record<string, NodeOverride>` keyed by node id — useful for highlighting seed nodes. Override fields: `fill`, `radius`, `strokeWidth`, `stroke`, `alwaysShowLabel`. Load `NodeOverride` from `index.d.ts` for the exact shape.
+`nodeOverrides` is `Record<string, NodeOverride>` keyed by node id — useful for seed-node styling. Override fields: `fill`, `radius`, `strokeWidth`, `stroke`, `alwaysShowLabel`. Load `NodeOverride` from `index.d.ts` for the exact shape.
+
+Reach for `nodeOverrides` for seed-node styling and the `alwaysShowLabel` importance threshold (there is no label-visibility encoding channel). For runtime dimming/emphasis, prefer the `highlight()` verb over recompiling with overrides. Note `highlight({ category })` can't exempt a seed node; use the `{ nodeIds }` form for that.
 
 ## Layout Configuration
 
@@ -56,6 +61,39 @@ When `nodeColor` encoding is set, it takes precedence over community-based color
 | `force` | General networks | Default. Nodes repel, edges attract. Good for most graphs. |
 | `radial` | Hub-and-spoke | Arranges nodes in concentric circles. |
 | `hierarchical` | Trees, DAGs | Top-down or left-right arrangement. |
+
+Plain-language layout tuning (prefer these presets over raw d3 numbers):
+
+| Field | Values | Effect |
+| --- | --- | --- |
+| `seed` | number | Deterministic layout. Same spec + seed gives an identical settled layout within one execution path. |
+| `energy` | `gentle` / `balanced` / `energetic` | Repulsion preset. A raw `chargeStrength` wins over the preset. |
+| `settle` | `quick` / `balanced` / `thorough` | Cool-down speed. Higher = faster settle, less final refinement. |
+| `warmup` | `true` / number / `false` | Headless settle ticks before first paint (`true` = 100 ticks under a 250ms budget). Lives in `layout`, not `animation`: warmup reduces motion, so it survives `animation: false`. |
+
+## Animation
+
+Graphs animate by default (`animation: true`). This is the opposite of charts, which are opt-in. Opt out with `animation: false`. The `animation` object (`GraphAnimationConfig`) tunes each phase; the shared ease vocabulary is `'smooth'` / `'snappy'`.
+
+| Field | Default | Controls |
+| --- | --- | --- |
+| `enter` | `{ duration: 600, ease: 'smooth', stagger: true }` | Node/edge reveal on first render |
+| `update` | `{ duration: 300, ease: 'smooth' }` | Enter-fade for nodes added via `update()` |
+| `exit` | `{ duration: 300, ease: 'smooth' }` | Ghost fade-out for removed nodes/edges |
+| `camera` | `{ duration: 'auto' }` | Camera-flight easing (`zoomToFit`/`zoomToNode`/`flyTo`) |
+| `hover` | `{ duration: 150, ease: 'smooth' }` | Hover emphasis crossfade |
+
+## Interaction
+
+`interaction: GraphInteractionConfig` tunes hover/selection and opt-in physics feel.
+
+| Field | Default | Effect |
+| --- | --- | --- |
+| `hover.mode` | `neighbors` | Hover emphasis: `neighbors` / `category` / `node` / `none` |
+| `hover.dimOpacity` | `0.15` | Node dim tier for un-emphasized nodes |
+| `select.flyTo` | `false` | Selecting a node flies the camera to it |
+| `cursorRepulsion` | off | `true` or `{ radius, strength }`. Nodes drift from the pointer. Gated off under reduced-motion and above the node-count cap |
+| `springyDrag` | off | Springy node drag. User-initiated, so no reduced-motion gate |
 
 ## Viewport Behavior
 
@@ -113,16 +151,26 @@ const graph = createGraph(container, spec, {
 });
 
 // Instance API
-graph.update(newSpec);       // re-render with new spec
-graph.search("query");      // highlight matching nodes
-graph.clearSearch();         // clear search highlights
-graph.zoomToFit();           // fit all nodes in viewport
-graph.zoomToNode("node-1");  // zoom to specific node
-graph.selectNode("node-1");  // select a node
-graph.getSelectedNodes();    // get selected node ids
-graph.resize();              // recalculate dimensions
-graph.destroy();             // cleanup
+graph.update(newSpec);            // diff prev↔next; preserves positions on a visual-only change, local reheat on structural
+graph.search("query");           // highlight matching nodes
+graph.clearSearch();
+graph.getSearchMatches();         // ids matching the active query
+graph.highlight(target, opts);   // emphasize nodes: { nodeIds } | { category } | { search }; eased crossfade
+graph.clearHighlight();
+graph.getHighlight();             // currently highlighted ids, or null
+graph.getLegend();                // headless legend snapshot (node + edge categories)
+graph.zoomToFit(opts);           // fit all nodes; animated by default, { duration: 0 } snaps
+graph.zoomToNode("node-1", opts);// fly to a node and zoom in
+graph.flyTo({ x, y, k }, opts);  // fly the camera to a graph-space target
+graph.centerAt(x, y, opts);      // center on a point, keep zoom
+graph.getCamera();                // { x, y, k }
+graph.selectNode("node-1", opts);// select a node ({ fly: true } also flies to it)
+graph.getSelectedNodes();
+graph.resize();
+graph.destroy();
 ```
+
+Camera methods animate by default. Pass `{ duration: 0 }` to snap. `update()` no longer resets the camera and preserves selection for surviving node ids.
 
 ## Event Handlers
 
@@ -130,7 +178,15 @@ graph.destroy();             // cleanup
 | --- | --- | --- |
 | `onNodeClick` | `(node: Record<string, unknown>) => void` | Node clicked |
 | `onNodeDoubleClick` | `(node: Record<string, unknown>) => void` | Node double-clicked |
+| `onNodeHover` | `(node: Record<string, unknown> \| null) => void` | Node hover enter/leave |
+| `onEdgeHover` | `(edge: Record<string, unknown> \| null) => void` | Edge hover enter/leave |
 | `onSelectionChange` | `(nodeIds: string[]) => void` | Selection changes |
+| `onLegendHover` | `(entry: { field: string; value: string } \| null) => void` | Legend entry hover |
+| `onLegendToggle` | `(activeValues: string[]) => void` | Legend toggle state changes (empty = all) |
+| `onHighlightChange` | `(nodeIds: string[] \| null) => void` | Highlight set changes (programmatic or legend) |
+| `onCameraChange` | `(camera: { x: number; y: number; k: number }) => void` | Camera moves (rAF-coalesced) |
+
+Options: `tooltip` accepts `boolean \| { formatter }`; `legend` accepts `boolean \| { interactive?, counts? }` (set `legend: false` if you render your own); `fitOnLoad` (default true). In React/Vue/Svelte, function-valued options like `tooltip.formatter` are read live per-render, so they can change without recreating the graph.
 
 ## Interactions
 

@@ -27,7 +27,7 @@ Try these locations in order; stop at the first one that resolves:
 4. **GitHub raw** (if unpkg is unreachable, or you want the richer source JSDoc): `https://raw.githubusercontent.com/tryopendata/openchart/main/packages/core/src/types/spec.ts`. For version-exact types, pin to a release tag instead of `main`: `https://raw.githubusercontent.com/tryopendata/openchart/core-v<version>/packages/core/src/types/spec.ts`, matching `<version>` to the installed `@opendata-ai/*` package version. Note `main` may document unpublished surface.
 5. **Fallback:** if none of the above are reachable (no filesystem, no network fetch), use the type sketches in this skill and **flag the uncertainty** in your response so the user knows you authored without canonical types.
 
-The names worth grepping for once you have a types file open: `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec`, `MapSpec` (+ `MapGeo`, `MapPointsLayer`), `MarkType` (the 16-mark union), `Encoding`, `EncodingChannel`, `MarkDef`, `Chrome`, `Metric`, `EndpointLabelsConfig`, `Annotation` (union), `TextAnnotation`, `RangeAnnotation`, `RefLineAnnotation`, `LegendConfig`, `LabelSpec`, `SeriesStyle`, `AnimationSpec`, `ThemeConfig`, `A11yConfig`, `SeriesSearchConfig`, `YouDrawItConfig`.
+The names worth grepping for once you have a types file open: `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec`, `GeoMapSpec` (+ `GeoMapGeo`, `GeoMapPointsLayer`), `MarkType` (the 16-mark union), `Encoding`, `EncodingChannel`, `MarkDef`, `Chrome`, `Metric`, `EndpointLabelsConfig`, `Annotation` (union), `TextAnnotation`, `RangeAnnotation`, `RefLineAnnotation`, `LegendConfig`, `LabelSpec`, `SeriesStyle`, `AnimationSpec`, `ThemeConfig`, `A11yConfig`, `SeriesSearchConfig`, `YouDrawItConfig`.
 
 ## Rendering via MCP
 
@@ -60,7 +60,7 @@ The types tell you the shape of a valid spec. This skill carries the things type
 
 If you find yourself restating a field shape this skill already documents, prefer the types — they're authoritative and won't drift.
 
-**Core concept:** Write a VizSpec JSON object, render with `<Chart>` / `<DataTable>` / `<Graph>` / `<Sankey>` / `<TileMap>` / `<GeoMap>` (React/Vue/Svelte) or `createChart()` / `createTable()` / `createGraph()` / `createSankey()` / `createTileMap()` / `createMap()` (vanilla JS). The engine validates, compiles, and renders. Specs are plain JSON, no imperative drawing. See https://github.com/tryopendata/openchart for the rendering engine.
+**Core concept:** Write a VizSpec JSON object, render with `<Chart>` / `<DataTable>` / `<Graph>` / `<Sankey>` / `<TileMap>` / `<GeoMap>` (React/Vue/Svelte) or `createChart()` / `createTable()` / `createGraph()` / `createSankey()` / `createTileMap()` / `createGeoMap()` (vanilla JS). The engine validates, compiles, and renders. Specs are plain JSON, no imperative drawing. See https://github.com/tryopendata/openchart for the rendering engine.
 
 **CSS is required.** OpenChart's stylesheet must be loaded for proper rendering (chrome, tables, tooltips, brand watermark). Framework imports handle this automatically, but CDN/standalone HTML needs an explicit `<link>`:
 
@@ -179,7 +179,7 @@ Each type has a detailed reference with full spec, encoding rules, and examples.
 - **Charts** use `mark` (16 marks: `"bar"`, `"line"`, `"area"`, `"point"`, `"circle"`, `"arc"`, `"text"`, `"rule"`, `"tick"`, `"rect"`, `"lollipop"`, `"beeswarm"`, `"range"`, `"waffle"`, `"calendar"`, `"parliament"`).
 - **Tables, graphs, sankey, tilemap, geo maps** use `type` (`"table"` | `"graph"` | `"sankey"` | `"tilemap"` | `"map"`).
 
-For the full top-level shape — every optional field, exact enum values, defaults — load `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec`, `MapSpec` from `index.d.ts` (see "Source of truth" above).
+For the full top-level shape — every optional field, exact enum values, defaults — load `ChartSpec`, `TableSpec`, `GraphSpec`, `SankeySpec`, `TileMapSpec`, `GeoMapSpec` from `index.d.ts` (see "Source of truth" above).
 
 **Behavior worth knowing that the types don't tell you:**
 
